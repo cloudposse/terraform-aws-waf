@@ -1,7 +1,7 @@
 locals {
   byte_match_statement_rules = module.this.enabled && var.byte_match_statement_rules != null ? {
     for indx, rule in flatten(var.byte_match_statement_rules) :
-    format("%s-%s",
+    format("%s",
       lookup(rule, "name", null) != null ? rule.name : format("%s-%d", module.this.id, indx),
       rule.action,
     ) => rule
@@ -24,7 +24,7 @@ locals {
     for indx, rule in flatten(var.managed_rule_group_statement_rules) :
     format("%s-%s",
       lookup(rule, "name", null) != null ? rule.name : format("%s-%d", module.this.id, indx),
-      rule.action,
+      lookup(rule, "action", null) != null ? rule.action : rule.override_action,
     ) => rule
   } : {}
   rate_based_statement_rules = module.this.enabled && var.rate_based_statement_rules != null ? {
@@ -45,7 +45,7 @@ locals {
     for indx, rule in flatten(var.rule_group_reference_statement_rules) :
     format("%s-%s",
       lookup(rule, "name", null) != null ? rule.name : format("%s-%d", module.this.id, indx),
-      rule.action,
+      lookup(rule, "action", null) != null ? rule.action : rule.override_action,
     ) => rule
   } : {}
   regex_pattern_set_reference_statement_rules = module.this.enabled && var.regex_pattern_set_reference_statement_rules != null ? {
@@ -114,14 +114,17 @@ resource "aws_wafv2_web_acl" "default" {
       action {
         dynamic "allow" {
           for_each = rule.value.action == "allow" ? [1] : []
+
           content {}
         }
         dynamic "block" {
           for_each = rule.value.action == "block" ? [1] : []
+
           content {}
         }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []
+
           content {}
         }
       }
@@ -140,30 +143,31 @@ resource "aws_wafv2_web_acl" "default" {
               content {
                 dynamic "all_query_arguments" {
                   for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "body" {
                   for_each = lookup(field_to_match.value, "body", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "method" {
                   for_each = lookup(field_to_match.value, "method", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "query_string" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "single_header" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : [0]
+
                   content {
                     name = single_header.value.name
                   }
@@ -171,6 +175,7 @@ resource "aws_wafv2_web_acl" "default" {
 
                 dynamic "single_query_argument" {
                   for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [1] : [0]
+
                   content {
                     name = single_query_argument.value.name
                   }
@@ -178,8 +183,8 @@ resource "aws_wafv2_web_acl" "default" {
 
                 dynamic "uri_path" {
                   for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
               }
             }
@@ -323,29 +328,42 @@ resource "aws_wafv2_web_acl" "default" {
       name     = rule.value.name
       priority = rule.value.priority
 
-      action {
-        dynamic "allow" {
-          for_each = rule.value.action == "allow" ? [1] : []
-          content {}
-        }
-        dynamic "block" {
-          for_each = rule.value.action == "block" ? [1] : []
-          content {}
-        }
-        dynamic "count" {
-          for_each = rule.value.action == "count" ? [1] : []
-          content {}
+      dynamic "action" {
+        for_each = lookup(rule.value, "action", null) != null ? [1] : []
+
+        content {
+          dynamic "allow" {
+            for_each = lookup(rule.value, "action", null) == "allow" ? [1] : []
+
+            content {}
+          }
+          dynamic "block" {
+            for_each = lookup(rule.value, "action", null) == "block" ? [1] : []
+
+            content {}
+          }
+          dynamic "count" {
+            for_each = lookup(rule.value, "action", null) == "count" ? [1] : []
+
+            content {}
+          }
         }
       }
 
-      override_action {
-        dynamic "none" {
-          for_each = rule.value.override_action == "none" ? [1] : []
-          content {}
-        }
-        dynamic "count" {
-          for_each = rule.value.override_action == "count" ? [1] : []
-          content {}
+      dynamic "override_action" {
+        for_each = lookup(rule.value, "override_action", null) != null ? [1] : []
+
+        content {
+          dynamic "none" {
+            for_each = lookup(rule.value, "override_action", null) == "none" ? [1] : []
+
+            content {}
+          }
+          dynamic "count" {
+            for_each = lookup(rule.value, "override_action", null) == "count" ? [1] : []
+
+            content {}
+          }
         }
       }
 
@@ -358,10 +376,10 @@ resource "aws_wafv2_web_acl" "default" {
             vendor_name = managed_rule_group_statement.value.vendor_name
 
             dynamic "excluded_rule" {
-              for_each = lookup(managed_rule_group_statement.value, "excluded_rule", null) != null ? [] : [managed_rule_group_statement.value.excluded_rule]
+              for_each = lookup(managed_rule_group_statement.value, "excluded_rule", null) != null ? toset(managed_rule_group_statement.value.excluded_rule) : []
 
               content {
-                name = excluded_rule.value.name
+                name = excluded_rule.value
               }
             }
           }
@@ -464,35 +482,36 @@ resource "aws_wafv2_web_acl" "default" {
             arn = regex_pattern_set_reference_statement.value.arn
 
             dynamic "field_to_match" {
-              for_each = lookup(regex_pattern_set_reference_statement.value, "field_to_match", null) != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+              for_each = lookup(rule.value.statement, "field_to_match", null) != null ? [rule.value.statement.field_to_match] : []
 
               content {
                 dynamic "all_query_arguments" {
                   for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "body" {
                   for_each = lookup(field_to_match.value, "body", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "method" {
                   for_each = lookup(field_to_match.value, "method", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "query_string" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "single_header" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : [0]
+
                   content {
                     name = single_header.value.name
                   }
@@ -500,6 +519,7 @@ resource "aws_wafv2_web_acl" "default" {
 
                 dynamic "single_query_argument" {
                   for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [1] : [0]
+
                   content {
                     name = single_query_argument.value.name
                   }
@@ -507,8 +527,8 @@ resource "aws_wafv2_web_acl" "default" {
 
                 dynamic "uri_path" {
                   for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
               }
             }
@@ -544,29 +564,42 @@ resource "aws_wafv2_web_acl" "default" {
       name     = rule.value.name
       priority = rule.value.priority
 
-      action {
-        dynamic "allow" {
-          for_each = rule.value.action == "allow" ? [1] : []
-          content {}
-        }
-        dynamic "block" {
-          for_each = rule.value.action == "block" ? [1] : []
-          content {}
-        }
-        dynamic "count" {
-          for_each = rule.value.action == "count" ? [1] : []
-          content {}
+      dynamic "action" {
+        for_each = lookup(rule.value, "action", null) != null ? [1] : []
+
+        content {
+          dynamic "allow" {
+            for_each = lookup(rule.value, "action", null) == "allow" ? [1] : []
+
+            content {}
+          }
+          dynamic "block" {
+            for_each = lookup(rule.value, "action", null) == "block" ? [1] : []
+
+            content {}
+          }
+          dynamic "count" {
+            for_each = lookup(rule.value, "action", null) == "count" ? [1] : []
+
+            content {}
+          }
         }
       }
 
-      override_action {
-        dynamic "none" {
-          for_each = rule.value.override_action == "none" ? [1] : []
-          content {}
-        }
-        dynamic "count" {
-          for_each = rule.value.override_action == "count" ? [1] : []
-          content {}
+      dynamic "override_action" {
+        for_each = lookup(rule.value, "override_action", null) != null ? [1] : []
+
+        content {
+          dynamic "none" {
+            for_each = lookup(rule.value, "override_action", null) == "none" ? [1] : []
+
+            content {}
+          }
+          dynamic "count" {
+            for_each = lookup(rule.value, "override_action", null) == "count" ? [1] : []
+
+            content {}
+          }
         }
       }
 
@@ -578,10 +611,10 @@ resource "aws_wafv2_web_acl" "default" {
             arn = rule_group_reference_statement.value.arn
 
             dynamic "excluded_rule" {
-              for_each = lookup(rule_group_reference_statement.value, "excluded_rule", null) != null ? [] : [rule_group_reference_statement.value.excluded_rule]
+              for_each = lookup(rule_group_reference_statement.value, "excluded_rule", null) != null ? toset(rule_group_reference_statement.value.excluded_rule) : []
 
               content {
-                name = excluded_rule.value.name
+                name = excluded_rule.value
               }
             }
           }
@@ -630,35 +663,36 @@ resource "aws_wafv2_web_acl" "default" {
             size                = size_constraint_statement.value.size
 
             dynamic "field_to_match" {
-              for_each = lookup(size_constraint_statement.value, "field_to_match", null) != null ? [size_constraint_statement.value.field_to_match] : []
+              for_each = lookup(rule.value.statement, "field_to_match", null) != null ? [rule.value.statement.field_to_match] : []
 
               content {
                 dynamic "all_query_arguments" {
                   for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "body" {
                   for_each = lookup(field_to_match.value, "body", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "method" {
                   for_each = lookup(field_to_match.value, "method", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "query_string" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "single_header" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : [0]
+
                   content {
                     name = single_header.value.name
                   }
@@ -666,6 +700,7 @@ resource "aws_wafv2_web_acl" "default" {
 
                 dynamic "single_query_argument" {
                   for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [1] : [0]
+
                   content {
                     name = single_query_argument.value.name
                   }
@@ -673,8 +708,8 @@ resource "aws_wafv2_web_acl" "default" {
 
                 dynamic "uri_path" {
                   for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
               }
             }
@@ -733,35 +768,36 @@ resource "aws_wafv2_web_acl" "default" {
           content {
 
             dynamic "field_to_match" {
-              for_each = lookup(sqli_match_statement.value, "field_to_match", null) != null ? [sqli_match_statement.value.field_to_match] : []
+              for_each = lookup(rule.value.statement, "field_to_match", null) != null ? [rule.value.statement.field_to_match] : []
 
               content {
                 dynamic "all_query_arguments" {
                   for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "body" {
                   for_each = lookup(field_to_match.value, "body", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "method" {
                   for_each = lookup(field_to_match.value, "method", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "query_string" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "single_header" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : [0]
+
                   content {
                     name = single_header.value.name
                   }
@@ -769,6 +805,7 @@ resource "aws_wafv2_web_acl" "default" {
 
                 dynamic "single_query_argument" {
                   for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [1] : [0]
+
                   content {
                     name = single_query_argument.value.name
                   }
@@ -776,8 +813,8 @@ resource "aws_wafv2_web_acl" "default" {
 
                 dynamic "uri_path" {
                   for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
               }
             }
@@ -833,36 +870,38 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
           content {
+
             dynamic "field_to_match" {
-              for_each = lookup(xss_match_statement.value, "field_to_match", null) != null ? [xss_match_statement.field_to_match] : []
+              for_each = lookup(rule.value.statement, "field_to_match", null) != null ? [rule.value.statement.field_to_match] : []
 
               content {
                 dynamic "all_query_arguments" {
                   for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "body" {
                   for_each = lookup(field_to_match.value, "body", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "method" {
                   for_each = lookup(field_to_match.value, "method", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "query_string" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
 
                 dynamic "single_header" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : [0]
+
                   content {
                     name = single_header.value.name
                   }
@@ -870,6 +909,7 @@ resource "aws_wafv2_web_acl" "default" {
 
                 dynamic "single_query_argument" {
                   for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [1] : [0]
+
                   content {
                     name = single_query_argument.value.name
                   }
@@ -877,8 +917,8 @@ resource "aws_wafv2_web_acl" "default" {
 
                 dynamic "uri_path" {
                   for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : [0]
-                  content {
-                  }
+
+                  content {}
                 }
               }
             }

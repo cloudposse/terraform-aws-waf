@@ -10,14 +10,7 @@ module "waf" {
       name     = "rule-10"
       action   = "count"
       priority = 10
-      # statement = [
-      #   {
-      #     country_codes = ["NL"]
-      #   },
-      #   {
-      #     country_codes = ["GB"]
-      #   }
-      # ]
+
       statement = {
         country_codes = ["NL", "GB"]
       }
@@ -31,11 +24,7 @@ module "waf" {
       name     = "rule-11"
       action   = "allow"
       priority = 11
-      # statement = [
-      #   {
-      #     country_codes = ["NL"]
-      #   },
-      # ]
+
       statement = {
         country_codes = ["US"]
       }
@@ -43,6 +32,28 @@ module "waf" {
         cloudwatch_metrics_enabled = true
         sampled_requests_enabled   = false
         metric_name                = "rule-11-metric"
+      }
+    }
+  ]
+
+  managed_rule_group_statement_rules = [
+    {
+      name            = "rule-20"
+      override_action = "count"
+      priority        = 20
+      statement = {
+        name        = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+
+        excluded_rule = [
+          "SizeRestrictions_QUERYSTRING",
+          "NoUserAgent_HEADER"
+        ]
+      }
+      visibility_config = {
+        cloudwatch_metrics_enabled = false
+        sampled_requests_enabled   = false
+        metric_name                = "rule-20-metric"
       }
     }
   ]
