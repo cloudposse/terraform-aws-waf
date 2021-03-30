@@ -22,7 +22,7 @@ variable "scope" {
 
 variable "visibility_config" {
   type        = map(string)
-  default     = null
+  default     = {}
   description = <<-DOC
     Defines and enables Amazon CloudWatch metrics and web request sample collection.
     
@@ -303,7 +303,7 @@ variable "rule_group_reference_statement_rules" {
   DOC
 }
 
-variable "regex_pattern_set_reference_statement_rules" {
+variable "size_constraint_statement_rules" {
   type        = list(any)
   default     = null
   description = <<-DOC
@@ -413,5 +413,44 @@ variable "xss_match_statement_rules" {
         A friendly name of the CloudWatch metric.
       sampled_requests_enabled:
         Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
+variable "association_resource_arns" {
+  type        = list(string)
+  default     = []
+  description = <<-DOC
+    A list of ARNs  of the resources to associate with the web ACL.
+    This must be an ARN of an Application Load Balancer or an Amazon API Gateway stage.
+  DOC
+}
+
+variable "log_destination_configs" {
+  type        = list(string)
+  default     = []
+  description = "The Amazon Kinesis Data Firehose ARNs."
+}
+
+variable "redacted_fields" {
+  type = object({
+    method_enabled        = bool,
+    uri_path_enabled      = bool,
+    uri_path_enabled      = bool,
+    single_header         = list(string),
+    single_query_argument = list(string)
+  })
+  default     = null
+  description = <<-DOC
+    The parts of the request that you want to keep out of the logs.
+
+    method_enabled:
+      Whether to enable redaction of the HTTP method.
+      The method indicates the type of operation that the request is asking the origin to perform.
+    uri_path_enabled:
+      Whether to enable redaction of the query string.
+      This is the part of a URL that appears after a `?` character, if any.
+    uri_path_enabled:
+      Whether to enable redaction of the URI path.
+      This is the part of a web request that identifies a resource.
   DOC
 }
