@@ -1,5 +1,5 @@
 <!-- markdownlint-disable -->
-# terraform-example-module [![Latest Release](https://img.shields.io/github/release/cloudposse/terraform-example-module.svg)](https://github.com/cloudposse/terraform-example-module/releases/latest) [![Slack Community](https://slack.cloudposse.com/badge.svg)](https://slack.cloudposse.com) [![Discourse Forum](https://img.shields.io/discourse/https/ask.sweetops.com/posts.svg)](https://ask.sweetops.com/)
+# terraform-aws-waf [![Latest Release](https://img.shields.io/github/release/cloudposse/terraform-aws-waf.svg)](https://github.com/cloudposse/terraform-aws-waf/releases/latest) [![Slack Community](https://slack.cloudposse.com/badge.svg)](https://slack.cloudposse.com)
 <!-- markdownlint-restore -->
 
 [![README Header][readme_header_img]][readme_header_link]
@@ -27,8 +27,7 @@
 
 -->
 
-This is `terraform-example-module` project provides all the scaffolding for a typical well-built Cloud Posse module. It's a template repository you can
-use when creating new repositories.
+Terraform module to create and manage AWS WAFv2 rules. 
 
 
 ---
@@ -68,16 +67,16 @@ Security scanning is graciously provided by Bridgecrew. Bridgecrew is the leadin
 
 | Benchmark | Description |
 |--------|---------------|
-| [![Infrastructure Security](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-example-module/general)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-example-module&benchmark=INFRASTRUCTURE+SECURITY) | Infrastructure Security Compliance |
-| [![CIS KUBERNETES](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-example-module/cis_kubernetes)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-example-module&benchmark=CIS+KUBERNETES+V1.5) | Center for Internet Security, KUBERNETES Compliance |
-| [![CIS AWS](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-example-module/cis_aws)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-example-module&benchmark=CIS+AWS+V1.2) | Center for Internet Security, AWS Compliance |
-| [![CIS AZURE](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-example-module/cis_azure)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-example-module&benchmark=CIS+AZURE+V1.1) | Center for Internet Security, AZURE Compliance |
-| [![PCI-DSS](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-example-module/pci)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-example-module&benchmark=PCI-DSS+V3.2) | Payment Card Industry Data Security Standards Compliance |
-| [![NIST-800-53](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-example-module/nist)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-example-module&benchmark=NIST-800-53) | National Institute of Standards and Technology Compliance |
-| [![ISO27001](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-example-module/iso)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-example-module&benchmark=ISO27001) | Information Security Management System, ISO/IEC 27001 Compliance |
-| [![SOC2](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-example-module/soc2)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-example-module&benchmark=SOC2)| Service Organization Control 2 Compliance |
-| [![CIS GCP](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-example-module/cis_gcp)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-example-module&benchmark=CIS+GCP+V1.1) | Center for Internet Security, GCP Compliance |
-| [![HIPAA](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-example-module/hipaa)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-example-module&benchmark=HIPAA) | Health Insurance Portability and Accountability Compliance |
+| [![Infrastructure Security](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-aws-waf/general)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-aws-waf&benchmark=INFRASTRUCTURE+SECURITY) | Infrastructure Security Compliance |
+| [![CIS KUBERNETES](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-aws-waf/cis_kubernetes)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-aws-waf&benchmark=CIS+KUBERNETES+V1.5) | Center for Internet Security, KUBERNETES Compliance |
+| [![CIS AWS](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-aws-waf/cis_aws)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-aws-waf&benchmark=CIS+AWS+V1.2) | Center for Internet Security, AWS Compliance |
+| [![CIS AZURE](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-aws-waf/cis_azure)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-aws-waf&benchmark=CIS+AZURE+V1.1) | Center for Internet Security, AZURE Compliance |
+| [![PCI-DSS](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-aws-waf/pci)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-aws-waf&benchmark=PCI-DSS+V3.2) | Payment Card Industry Data Security Standards Compliance |
+| [![NIST-800-53](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-aws-waf/nist)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-aws-waf&benchmark=NIST-800-53) | National Institute of Standards and Technology Compliance |
+| [![ISO27001](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-aws-waf/iso)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-aws-waf&benchmark=ISO27001) | Information Security Management System, ISO/IEC 27001 Compliance |
+| [![SOC2](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-aws-waf/soc2)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-aws-waf&benchmark=SOC2)| Service Organization Control 2 Compliance |
+| [![CIS GCP](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-aws-waf/cis_gcp)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-aws-waf&benchmark=CIS+GCP+V1.1) | Center for Internet Security, GCP Compliance |
+| [![HIPAA](https://www.bridgecrew.cloud/badges/github/cloudposse/terraform-aws-waf/hipaa)](https://www.bridgecrew.cloud/link/badge?vcs=github&fullRepo=cloudposse%2Fterraform-aws-waf&benchmark=HIPAA) | Health Insurance Portability and Accountability Compliance |
 
 
 
@@ -101,9 +100,59 @@ For automated tests of the complete example using [bats](https://github.com/bats
 (which tests and deploys the example on AWS), see [test](test).
 
 ```hcl
-module "example" {
-  source = "https://github.com/cloudposse/terraform-example-module.git?ref=master"
-  example = "Hello world!"
+module "label" {
+  source = "cloudposse/label/null"
+  # Cloud Posse recommends pinning every module to a specific version
+  # version = "x.x.x"
+  namespace = "eg"
+  stage     = "prod"
+  name      = "waf"
+  delimiter = "-"
+
+  tags = {
+    "BusinessUnit" = "XYZ",
+  }
+}
+
+module "waf" {
+  source = "cloudposse/waf/aws"
+  # Cloud Posse recommends pinning every module to a specific version
+  # version = "x.x.x"
+
+  geo_match_statement_rules = [
+    {
+      name     = "rule-10"
+      action   = "count"
+      priority = 10
+
+      statement = {
+        country_codes = ["NL", "GB"]
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = false
+        metric_name                = "rule-10-metric"
+      }
+    },
+    {
+      name     = "rule-11"
+      action   = "allow"
+      priority = 11
+
+      statement = {
+        country_codes = ["US"]
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = false
+        metric_name                = "rule-11-metric"
+      }
+    }
+  ]
+
+  context = module.label.context
 }
 ```
 
@@ -113,7 +162,7 @@ module "example" {
 ## Examples
 
 Here is an example of using this module:
-- [`examples/complete`](https://github.com/cloudposse/terraform-example-module/) - complete example of using this module
+- [`examples/complete`](examples/complete) - complete example of using this module
 
 
 
@@ -134,52 +183,81 @@ Available targets:
 
 | Name | Version |
 |------|---------|
-| terraform | >= 0.13 |
-| local | >= 1.2 |
-| random | >= 2.2 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 2.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| random | >= 2.2 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 2.0 |
+
+## Modules
+
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_this"></a> [this](#module\_this) | cloudposse/label/null | 0.24.1 |
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_wafv2_web_acl.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl) | resource |
+| [aws_wafv2_web_acl_association.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_association) | resource |
+| [aws_wafv2_web_acl_logging_configuration.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_logging_configuration) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| additional\_tag\_map | Additional tags for appending to tags\_as\_list\_of\_maps. Not added to `tags`. | `map(string)` | `{}` | no |
-| attributes | Additional attributes (e.g. `1`) | `list(string)` | `[]` | no |
-| context | Single object for setting entire context at once.<br>See description of individual variables for details.<br>Leave string and numeric variables as `null` to use default value.<br>Individual variable settings (non-null) override settings in context object,<br>except for attributes, tags, and additional\_tag\_map, which are merged. | `any` | <pre>{<br>  "additional_tag_map": {},<br>  "attributes": [],<br>  "delimiter": null,<br>  "enabled": true,<br>  "environment": null,<br>  "id_length_limit": null,<br>  "label_key_case": null,<br>  "label_order": [],<br>  "label_value_case": null,<br>  "name": null,<br>  "namespace": null,<br>  "regex_replace_chars": null,<br>  "stage": null,<br>  "tags": {}<br>}</pre> | no |
-| delimiter | Delimiter to be used between `namespace`, `environment`, `stage`, `name` and `attributes`.<br>Defaults to `-` (hyphen). Set to `""` to use no delimiter at all. | `string` | `null` | no |
-| enabled | Set to false to prevent the module from creating any resources | `bool` | `null` | no |
-| environment | Environment, e.g. 'uw2', 'us-west-2', OR 'prod', 'staging', 'dev', 'UAT' | `string` | `null` | no |
-| example | Example variable | `string` | `"hello world"` | no |
-| id\_length\_limit | Limit `id` to this many characters (minimum 6).<br>Set to `0` for unlimited length.<br>Set to `null` for default, which is `0`.<br>Does not affect `id_full`. | `number` | `null` | no |
-| label\_key\_case | The letter case of label keys (`tag` names) (i.e. `name`, `namespace`, `environment`, `stage`, `attributes`) to use in `tags`.<br>Possible values: `lower`, `title`, `upper`.<br>Default value: `title`. | `string` | `null` | no |
-| label\_order | The naming order of the id output and Name tag.<br>Defaults to ["namespace", "environment", "stage", "name", "attributes"].<br>You can omit any of the 5 elements, but at least one must be present. | `list(string)` | `null` | no |
-| label\_value\_case | The letter case of output label values (also used in `tags` and `id`).<br>Possible values: `lower`, `title`, `upper` and `none` (no transformation).<br>Default value: `lower`. | `string` | `null` | no |
-| name | Solution name, e.g. 'app' or 'jenkins' | `string` | `null` | no |
-| namespace | Namespace, which could be your organization name or abbreviation, e.g. 'eg' or 'cp' | `string` | `null` | no |
-| regex\_replace\_chars | Regex to replace chars with empty string in `namespace`, `environment`, `stage` and `name`.<br>If not set, `"/[^a-zA-Z0-9-]/"` is used to remove all characters other than hyphens, letters and digits. | `string` | `null` | no |
-| stage | Stage, e.g. 'prod', 'staging', 'dev', OR 'source', 'build', 'test', 'deploy', 'release' | `string` | `null` | no |
-| tags | Additional tags (e.g. `map('BusinessUnit','XYZ')` | `map(string)` | `{}` | no |
+| <a name="input_additional_tag_map"></a> [additional\_tag\_map](#input\_additional\_tag\_map) | Additional tags for appending to tags\_as\_list\_of\_maps. Not added to `tags`. | `map(string)` | `{}` | no |
+| <a name="input_association_resource_arns"></a> [association\_resource\_arns](#input\_association\_resource\_arns) | A list of ARNs  of the resources to associate with the web ACL.<br>This must be an ARN of an Application Load Balancer or an Amazon API Gateway stage. | `list(string)` | `[]` | no |
+| <a name="input_attributes"></a> [attributes](#input\_attributes) | Additional attributes (e.g. `1`) | `list(string)` | `[]` | no |
+| <a name="input_byte_match_statement_rules"></a> [byte\_match\_statement\_rules](#input\_byte\_match\_statement\_rules) | A rule statement that defines a string match search for AWS WAF to apply to web requests.<br><br>action:<br>  The action that AWS WAF should take on a web request when it matches the rule's statement.<br>name:<br>  A friendly name of the rule.<br>priority:<br>  If you define more than one Rule in a WebACL, <br>  AWS WAF evaluates each request against the rules in order based on the value of priority. <br>  AWS WAF processes rules with lower priority first.<br><br>statement:<br>  field\_to\_match:<br>    The part of a web request that you want AWS WAF to inspect.<br>    See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match<br>  text\_transformation:<br>    Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. <br>    See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation<br><br>visibility\_config:<br>  Defines and enables Amazon CloudWatch metrics and web request sample collection.<br>  <br>  cloudwatch\_metrics\_enabled:<br>    Whether the associated resource sends metrics to CloudWatch.<br>  metric\_name:<br>    A friendly name of the CloudWatch metric.<br>  sampled\_requests\_enabled:<br>    Whether AWS WAF should store a sampling of the web requests that match the rules. | `list(any)` | `null` | no |
+| <a name="input_context"></a> [context](#input\_context) | Single object for setting entire context at once.<br>See description of individual variables for details.<br>Leave string and numeric variables as `null` to use default value.<br>Individual variable settings (non-null) override settings in context object,<br>except for attributes, tags, and additional\_tag\_map, which are merged. | `any` | <pre>{<br>  "additional_tag_map": {},<br>  "attributes": [],<br>  "delimiter": null,<br>  "enabled": true,<br>  "environment": null,<br>  "id_length_limit": null,<br>  "label_key_case": null,<br>  "label_order": [],<br>  "label_value_case": null,<br>  "name": null,<br>  "namespace": null,<br>  "regex_replace_chars": null,<br>  "stage": null,<br>  "tags": {}<br>}</pre> | no |
+| <a name="input_default_action"></a> [default\_action](#input\_default\_action) | Specifies that AWS WAF should allow requests by default. Possible values: `allow`, `block`. | `string` | `"block"` | no |
+| <a name="input_delimiter"></a> [delimiter](#input\_delimiter) | Delimiter to be used between `namespace`, `environment`, `stage`, `name` and `attributes`.<br>Defaults to `-` (hyphen). Set to `""` to use no delimiter at all. | `string` | `null` | no |
+| <a name="input_description"></a> [description](#input\_description) | A friendly description of the WebACL. | `string` | `"Managed by Terraform"` | no |
+| <a name="input_enabled"></a> [enabled](#input\_enabled) | Set to false to prevent the module from creating any resources | `bool` | `null` | no |
+| <a name="input_environment"></a> [environment](#input\_environment) | Environment, e.g. 'uw2', 'us-west-2', OR 'prod', 'staging', 'dev', 'UAT' | `string` | `null` | no |
+| <a name="input_geo_match_statement_rules"></a> [geo\_match\_statement\_rules](#input\_geo\_match\_statement\_rules) | A rule statement used to identify web requests based on country of origin.<br><br>action:<br>  The action that AWS WAF should take on a web request when it matches the rule's statement.<br>name:<br>  A friendly name of the rule.<br>priority:<br>  If you define more than one Rule in a WebACL, <br>  AWS WAF evaluates each request against the rules in order based on the value of priority. <br>  AWS WAF processes rules with lower priority first.<br><br>statement: <br>  country\_codes:<br>    A list of two-character country codes.<br>  forwarded\_ip\_config:<br>    fallback\_behavior:<br>      The match status to assign to the web request if the request doesn't have a valid IP address in the specified position.<br>      Possible values: `MATCH`, `NO_MATCH`<br>    header\_name:<br>      The name of the HTTP header to use for the IP address.<br><br>visibility\_config:<br>  Defines and enables Amazon CloudWatch metrics and web request sample collection.<br>  <br>  cloudwatch\_metrics\_enabled:<br>    Whether the associated resource sends metrics to CloudWatch.<br>  metric\_name:<br>    A friendly name of the CloudWatch metric.<br>  sampled\_requests\_enabled:<br>    Whether AWS WAF should store a sampling of the web requests that match the rules. | `list(any)` | `null` | no |
+| <a name="input_id_length_limit"></a> [id\_length\_limit](#input\_id\_length\_limit) | Limit `id` to this many characters (minimum 6).<br>Set to `0` for unlimited length.<br>Set to `null` for default, which is `0`.<br>Does not affect `id_full`. | `number` | `null` | no |
+| <a name="input_ip_set_reference_statement_rules"></a> [ip\_set\_reference\_statement\_rules](#input\_ip\_set\_reference\_statement\_rules) | A rule statement used to detect web requests coming from particular IP addresses or address ranges.<br><br>action:<br>  The action that AWS WAF should take on a web request when it matches the rule's statement.<br>name:<br>  A friendly name of the rule.<br>priority:<br>  If you define more than one Rule in a WebACL, <br>  AWS WAF evaluates each request against the rules in order based on the value of priority. <br>  AWS WAF processes rules with lower priority first.<br><br>statement: <br>  arn:<br>    The ARN of the IP Set that this statement references.<br>  ip\_set\_forwarded\_ip\_config:<br>    fallback\_behavior:<br>      The match status to assign to the web request if the request doesn't have a valid IP address in the specified position.<br>      Possible values: `MATCH`, `NO_MATCH`<br>    header\_name:<br>      The name of the HTTP header to use for the IP address.<br>    position:<br>      The position in the header to search for the IP address. <br>      Possible values include: `FIRST`, `LAST`, or `ANY`.<br><br>visibility\_config:<br>  Defines and enables Amazon CloudWatch metrics and web request sample collection.<br>  <br>  cloudwatch\_metrics\_enabled:<br>    Whether the associated resource sends metrics to CloudWatch.<br>  metric\_name:<br>    A friendly name of the CloudWatch metric.<br>  sampled\_requests\_enabled:<br>    Whether AWS WAF should store a sampling of the web requests that match the rules. | `list(any)` | `null` | no |
+| <a name="input_label_key_case"></a> [label\_key\_case](#input\_label\_key\_case) | The letter case of label keys (`tag` names) (i.e. `name`, `namespace`, `environment`, `stage`, `attributes`) to use in `tags`.<br>Possible values: `lower`, `title`, `upper`.<br>Default value: `title`. | `string` | `null` | no |
+| <a name="input_label_order"></a> [label\_order](#input\_label\_order) | The naming order of the id output and Name tag.<br>Defaults to ["namespace", "environment", "stage", "name", "attributes"].<br>You can omit any of the 5 elements, but at least one must be present. | `list(string)` | `null` | no |
+| <a name="input_label_value_case"></a> [label\_value\_case](#input\_label\_value\_case) | The letter case of output label values (also used in `tags` and `id`).<br>Possible values: `lower`, `title`, `upper` and `none` (no transformation).<br>Default value: `lower`. | `string` | `null` | no |
+| <a name="input_log_destination_configs"></a> [log\_destination\_configs](#input\_log\_destination\_configs) | The Amazon Kinesis Data Firehose ARNs. | `list(string)` | `[]` | no |
+| <a name="input_managed_rule_group_statement_rules"></a> [managed\_rule\_group\_statement\_rules](#input\_managed\_rule\_group\_statement\_rules) | A rule statement used to run the rules that are defined in a managed rule group.<br><br>action:<br>  The action that AWS WAF should take on a web request when it matches the rule's statement.<br>name:<br>  A friendly name of the rule.<br>priority:<br>  If you define more than one Rule in a WebACL, <br>  AWS WAF evaluates each request against the rules in order based on the value of priority. <br>  AWS WAF processes rules with lower priority first.<br><br>override\_action:<br>  The override action to apply to the rules in a rule group.<br>  Possible values: `count`, `none`<br><br>statement: <br>  name:<br>    The name of the managed rule group.<br>  vendor\_name:<br>    The name of the managed rule group vendor.<br>  excluded\_rule:<br>    The list of names of the rules to exclude.<br><br>visibility\_config:<br>  Defines and enables Amazon CloudWatch metrics and web request sample collection.<br>  <br>  cloudwatch\_metrics\_enabled:<br>    Whether the associated resource sends metrics to CloudWatch.<br>  metric\_name:<br>    A friendly name of the CloudWatch metric.<br>  sampled\_requests\_enabled:<br>    Whether AWS WAF should store a sampling of the web requests that match the rules. | `list(any)` | `null` | no |
+| <a name="input_name"></a> [name](#input\_name) | Solution name, e.g. 'app' or 'jenkins' | `string` | `null` | no |
+| <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace, which could be your organization name or abbreviation, e.g. 'eg' or 'cp' | `string` | `null` | no |
+| <a name="input_rate_based_statement_rules"></a> [rate\_based\_statement\_rules](#input\_rate\_based\_statement\_rules) | A rate-based rule tracks the rate of requests for each originating IP address, <br>and triggers the rule action when the rate exceeds a limit that you specify on the number of requests in any 5-minute time span.<br><br>action:<br>  The action that AWS WAF should take on a web request when it matches the rule's statement.<br>name:<br>  A friendly name of the rule.<br>priority:<br>  If you define more than one Rule in a WebACL, <br>  AWS WAF evaluates each request against the rules in order based on the value of priority. <br>  AWS WAF processes rules with lower priority first.<br><br>statement: <br>  aggregate\_key\_type:<br>     Setting that indicates how to aggregate the request counts. <br>     Possible values include: `FORWARDED_IP` or `IP`<br>  limit:<br>    The limit on requests per 5-minute period for a single originating IP address.      <br>  forwarded\_ip\_config:<br>    fallback\_behavior:<br>      The match status to assign to the web request if the request doesn't have a valid IP address in the specified position.<br>      Possible values: `MATCH`, `NO_MATCH`<br>    header\_name:<br>      The name of the HTTP header to use for the IP address.<br><br>visibility\_config:<br>  Defines and enables Amazon CloudWatch metrics and web request sample collection.<br>  <br>  cloudwatch\_metrics\_enabled:<br>    Whether the associated resource sends metrics to CloudWatch.<br>  metric\_name:<br>    A friendly name of the CloudWatch metric.<br>  sampled\_requests\_enabled:<br>    Whether AWS WAF should store a sampling of the web requests that match the rules. | `list(any)` | `null` | no |
+| <a name="input_redacted_fields"></a> [redacted\_fields](#input\_redacted\_fields) | The parts of the request that you want to keep out of the logs.<br><br>method\_enabled:<br>  Whether to enable redaction of the HTTP method.<br>  The method indicates the type of operation that the request is asking the origin to perform.<br>uri\_path\_enabled:<br>  Whether to enable redaction of the query string.<br>  This is the part of a URL that appears after a `?` character, if any.<br>uri\_path\_enabled:<br>  Whether to enable redaction of the URI path.<br>  This is the part of a web request that identifies a resource. | <pre>object({<br>    method_enabled        = bool,<br>    uri_path_enabled      = bool,<br>    uri_path_enabled      = bool,<br>    single_header         = list(string),<br>    single_query_argument = list(string)<br>  })</pre> | `null` | no |
+| <a name="input_regex_pattern_set_reference_statement_rules"></a> [regex\_pattern\_set\_reference\_statement\_rules](#input\_regex\_pattern\_set\_reference\_statement\_rules) | A rule statement used to search web request components for matches with regular expressions.<br><br>action:<br>  The action that AWS WAF should take on a web request when it matches the rule's statement.<br>name:<br>  A friendly name of the rule.<br>priority:<br>  If you define more than one Rule in a WebACL, <br>  AWS WAF evaluates each request against the rules in order based on the value of priority. <br>  AWS WAF processes rules with lower priority first.<br><br>statement: <br>  arn:<br>     The Amazon Resource Name (ARN) of the Regex Pattern Set that this statement references. <br>  field\_to\_match:<br>    The part of a web request that you want AWS WAF to inspect.<br>    See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match<br>  text\_transformation:<br>    Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. <br>    See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation<br><br>visibility\_config:<br>  Defines and enables Amazon CloudWatch metrics and web request sample collection.<br>  <br>  cloudwatch\_metrics\_enabled:<br>    Whether the associated resource sends metrics to CloudWatch.<br>  metric\_name:<br>    A friendly name of the CloudWatch metric.<br>  sampled\_requests\_enabled:<br>    Whether AWS WAF should store a sampling of the web requests that match the rules. | `list(any)` | `null` | no |
+| <a name="input_regex_replace_chars"></a> [regex\_replace\_chars](#input\_regex\_replace\_chars) | Regex to replace chars with empty string in `namespace`, `environment`, `stage` and `name`.<br>If not set, `"/[^a-zA-Z0-9-]/"` is used to remove all characters other than hyphens, letters and digits. | `string` | `null` | no |
+| <a name="input_rule_group_reference_statement_rules"></a> [rule\_group\_reference\_statement\_rules](#input\_rule\_group\_reference\_statement\_rules) | A rule statement used to run the rules that are defined in an WAFv2 Rule Group.<br><br>action:<br>  The action that AWS WAF should take on a web request when it matches the rule's statement.<br>name:<br>  A friendly name of the rule.<br>priority:<br>  If you define more than one Rule in a WebACL, <br>  AWS WAF evaluates each request against the rules in order based on the value of priority. <br>  AWS WAF processes rules with lower priority first.<br><br>override\_action:<br>  The override action to apply to the rules in a rule group.<br>  Possible values: `count`, `none`<br><br>statement: <br>  arn:<br>    The ARN of the `aws_wafv2_rule_group` resource.<br>  excluded\_rule:<br>    The list of names of the rules to exclude.<br><br>visibility\_config:<br>  Defines and enables Amazon CloudWatch metrics and web request sample collection.<br>  <br>  cloudwatch\_metrics\_enabled:<br>    Whether the associated resource sends metrics to CloudWatch.<br>  metric\_name:<br>    A friendly name of the CloudWatch metric.<br>  sampled\_requests\_enabled:<br>    Whether AWS WAF should store a sampling of the web requests that match the rules. | `list(any)` | `null` | no |
+| <a name="input_scope"></a> [scope](#input\_scope) | Specifies whether this is for an AWS CloudFront distribution or for a regional application.<br>Possible values are `CLOUDFRONT` or `REGIONAL`.<br>To work with CloudFront, you must also specify the region us-east-1 (N. Virginia) on the AWS provider. | `string` | `"REGIONAL"` | no |
+| <a name="input_size_constraint_statement_rules"></a> [size\_constraint\_statement\_rules](#input\_size\_constraint\_statement\_rules) | A rule statement that uses a comparison operator to compare a number of bytes against the size of a request component.<br><br>action:<br>  The action that AWS WAF should take on a web request when it matches the rule's statement.<br>name:<br>  A friendly name of the rule.<br>priority:<br>  If you define more than one Rule in a WebACL, <br>  AWS WAF evaluates each request against the rules in order based on the value of priority. <br>  AWS WAF processes rules with lower priority first.<br><br>statement: <br>  comparison\_operator:<br>     The operator to use to compare the request part to the size setting. <br>     Possible values: `EQ`, `NE`, `LE`, `LT`, `GE`, or `GT`.<br>  size:<br>    The size, in bytes, to compare to the request part, after any transformations. <br>    Valid values are integers between `0` and `21474836480`, inclusive.<br>  field\_to\_match:<br>    The part of a web request that you want AWS WAF to inspect.<br>    See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match<br>  text\_transformation:<br>    Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. <br>    See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation<br><br>visibility\_config:<br>  Defines and enables Amazon CloudWatch metrics and web request sample collection.<br>  <br>  cloudwatch\_metrics\_enabled:<br>    Whether the associated resource sends metrics to CloudWatch.<br>  metric\_name:<br>    A friendly name of the CloudWatch metric.<br>  sampled\_requests\_enabled:<br>    Whether AWS WAF should store a sampling of the web requests that match the rules. | `list(any)` | `null` | no |
+| <a name="input_sqli_match_statement_rules"></a> [sqli\_match\_statement\_rules](#input\_sqli\_match\_statement\_rules) | An SQL injection match condition identifies the part of web requests, <br>such as the URI or the query string, that you want AWS WAF to inspect.<br><br>action:<br>  The action that AWS WAF should take on a web request when it matches the rule's statement.<br>name:<br>  A friendly name of the rule.<br>priority:<br>  If you define more than one Rule in a WebACL, <br>  AWS WAF evaluates each request against the rules in order based on the value of priority. <br>  AWS WAF processes rules with lower priority first.<br><br>statement: <br>  field\_to\_match:<br>    The part of a web request that you want AWS WAF to inspect.<br>    See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match<br>  text\_transformation:<br>    Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. <br>    See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation<br><br>visibility\_config:<br>  Defines and enables Amazon CloudWatch metrics and web request sample collection.<br>  <br>  cloudwatch\_metrics\_enabled:<br>    Whether the associated resource sends metrics to CloudWatch.<br>  metric\_name:<br>    A friendly name of the CloudWatch metric.<br>  sampled\_requests\_enabled:<br>    Whether AWS WAF should store a sampling of the web requests that match the rules. | `list(any)` | `null` | no |
+| <a name="input_stage"></a> [stage](#input\_stage) | Stage, e.g. 'prod', 'staging', 'dev', OR 'source', 'build', 'test', 'deploy', 'release' | `string` | `null` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | Additional tags (e.g. `map('BusinessUnit','XYZ')` | `map(string)` | `{}` | no |
+| <a name="input_visibility_config"></a> [visibility\_config](#input\_visibility\_config) | Defines and enables Amazon CloudWatch metrics and web request sample collection.<br><br>cloudwatch\_metrics\_enabled:<br>  Whether the associated resource sends metrics to CloudWatch.<br>metric\_name:<br>  A friendly name of the CloudWatch metric.<br>sampled\_requests\_enabled:<br>  Whether AWS WAF should store a sampling of the web requests that match the rules. | `map(string)` | `{}` | no |
+| <a name="input_xss_match_statement_rules"></a> [xss\_match\_statement\_rules](#input\_xss\_match\_statement\_rules) | An SQL injection match condition identifies the part of web requests, <br>such as the URI or the query string, that you want AWS WAF to inspect.<br><br>action:<br>  The action that AWS WAF should take on a web request when it matches the rule's statement.<br>name:<br>  A friendly name of the rule.<br>priority:<br>  If you define more than one Rule in a WebACL, <br>  AWS WAF evaluates each request against the rules in order based on the value of priority. <br>  AWS WAF processes rules with lower priority first.<br><br>xss\_match\_statement: <br>  field\_to\_match:<br>    The part of a web request that you want AWS WAF to inspect.<br>    See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match<br>  text\_transformation:<br>    Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. <br>    See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation<br><br>visibility\_config:<br>  Defines and enables Amazon CloudWatch metrics and web request sample collection.<br>  <br>  cloudwatch\_metrics\_enabled:<br>    Whether the associated resource sends metrics to CloudWatch.<br>  metric\_name:<br>    A friendly name of the CloudWatch metric.<br>  sampled\_requests\_enabled:<br>    Whether AWS WAF should store a sampling of the web requests that match the rules. | `list(any)` | `null` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| example | Example output |
-| id | ID of the created example |
-| random | Stable random number for this example |
-
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the WAF WebACL. |
+| <a name="output_capacity"></a> [capacity](#output\_capacity) | The web ACL capacity units (WCUs) currently being used by this web ACL. |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the WAF WebACL. |
+| <a name="output_logging_config_id"></a> [logging\_config\_id](#output\_logging\_config\_id) | The ARN of the WAFv2 Web ACL logging configuration. |
 <!-- markdownlint-restore -->
 
 
 
 ## Share the Love
 
-Like this project? Please give it a ★ on [our GitHub](https://github.com/cloudposse/terraform-example-module)! (it helps us **a lot**)
+Like this project? Please give it a ★ on [our GitHub](https://github.com/cloudposse/terraform-aws-waf)! (it helps us **a lot**)
 
 Are you using this project or any of our other projects? Consider [leaving a testimonial][testimonial]. =)
 
@@ -188,7 +266,7 @@ Are you using this project or any of our other projects? Consider [leaving a tes
 
 Check out these related projects.
 
-- [terraform-null-label](https://github.com/cloudposse/terraform-null-label) - Terraform module designed to generate consistent names and tags for resources. Use terraform-null-label to implement a strict naming convention.
+- [terraform-null-label](https://github.com/cloudposse/terraform-null-label) - Terraform Module to define a consistent naming convention by (namespace, stage, name, [attributes])
 
 
 
@@ -197,17 +275,14 @@ Check out these related projects.
 
 For additional context, refer to some of these links.
 
-- [Terraform Standard Module Structure](https://www.terraform.io/docs/modules/index.html#standard-module-structure) - HashiCorp's standard module structure is a file and directory layout we recommend for reusable modules distributed in separate repositories.
-- [Terraform Module Requirements](https://www.terraform.io/docs/registry/modules/publish.html#requirements) - HashiCorp's guidance on all the requirements for publishing a module. Meeting the requirements for publishing a module is extremely easy.
-- [Terraform `random_integer` Resource](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) - The resource random_integer generates random values from a given range, described by the min and max attributes of a given resource.
-- [Terraform Version Pinning](https://www.terraform.io/docs/configuration/terraform.html#specifying-a-required-terraform-version) - The required_version setting can be used to constrain which versions of the Terraform CLI can be used with your configuration
+- [terraform-provider-aws](https://registry.terraform.io/providers/hashicorp/aws/latest) - Terraform AWS provider
 
 
 ## Help
 
 **Got a question?** We got answers.
 
-File a GitHub [issue](https://github.com/cloudposse/terraform-example-module/issues), send us an [email][email] or join our [Slack Community][slack].
+File a GitHub [issue](https://github.com/cloudposse/terraform-aws-waf/issues), send us an [email][email] or join our [Slack Community][slack].
 
 [![README Commercial Support][readme_commercial_support_img]][readme_commercial_support_link]
 
@@ -255,7 +330,7 @@ Sign up for [our newsletter][newsletter] that covers everything on our technolog
 
 ### Bug Reports & Feature Requests
 
-Please use the [issue tracker](https://github.com/cloudposse/terraform-example-module/issues) to report any bugs or file feature requests.
+Please use the [issue tracker](https://github.com/cloudposse/terraform-aws-waf/issues) to report any bugs or file feature requests.
 
 ### Developing
 
@@ -335,43 +410,43 @@ Check out [our other projects][github], [follow us on twitter][twitter], [apply 
 ### Contributors
 
 <!-- markdownlint-disable -->
-|  [![Erik Osterman][osterman_avatar]][osterman_homepage]<br/>[Erik Osterman][osterman_homepage] |
+|  [![Vladimir Syromyatnikov][SweetOps_avatar]][SweetOps_homepage]<br/>[Vladimir Syromyatnikov][SweetOps_homepage] |
 |---|
 <!-- markdownlint-restore -->
 
-  [osterman_homepage]: https://github.com/osterman
-  [osterman_avatar]: https://img.cloudposse.com/150x150/https://github.com/osterman.png
+  [SweetOps_homepage]: https://github.com/SweetOps
+  [SweetOps_avatar]: https://img.cloudposse.com/150x150/https://github.com/SweetOps.png
 
 [![README Footer][readme_footer_img]][readme_footer_link]
 [![Beacon][beacon]][website]
 
   [logo]: https://cloudposse.com/logo-300x69.svg
-  [docs]: https://cpco.io/docs?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=docs
-  [website]: https://cpco.io/homepage?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=website
-  [github]: https://cpco.io/github?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=github
-  [jobs]: https://cpco.io/jobs?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=jobs
-  [hire]: https://cpco.io/hire?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=hire
-  [slack]: https://cpco.io/slack?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=slack
-  [linkedin]: https://cpco.io/linkedin?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=linkedin
-  [twitter]: https://cpco.io/twitter?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=twitter
-  [testimonial]: https://cpco.io/leave-testimonial?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=testimonial
-  [office_hours]: https://cloudposse.com/office-hours?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=office_hours
-  [newsletter]: https://cpco.io/newsletter?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=newsletter
-  [discourse]: https://ask.sweetops.com/?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=discourse
-  [email]: https://cpco.io/email?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=email
-  [commercial_support]: https://cpco.io/commercial-support?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=commercial_support
-  [we_love_open_source]: https://cpco.io/we-love-open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=we_love_open_source
-  [terraform_modules]: https://cpco.io/terraform-modules?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=terraform_modules
+  [docs]: https://cpco.io/docs?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=docs
+  [website]: https://cpco.io/homepage?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=website
+  [github]: https://cpco.io/github?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=github
+  [jobs]: https://cpco.io/jobs?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=jobs
+  [hire]: https://cpco.io/hire?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=hire
+  [slack]: https://cpco.io/slack?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=slack
+  [linkedin]: https://cpco.io/linkedin?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=linkedin
+  [twitter]: https://cpco.io/twitter?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=twitter
+  [testimonial]: https://cpco.io/leave-testimonial?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=testimonial
+  [office_hours]: https://cloudposse.com/office-hours?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=office_hours
+  [newsletter]: https://cpco.io/newsletter?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=newsletter
+  [discourse]: https://ask.sweetops.com/?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=discourse
+  [email]: https://cpco.io/email?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=email
+  [commercial_support]: https://cpco.io/commercial-support?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=commercial_support
+  [we_love_open_source]: https://cpco.io/we-love-open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=we_love_open_source
+  [terraform_modules]: https://cpco.io/terraform-modules?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=terraform_modules
   [readme_header_img]: https://cloudposse.com/readme/header/img
-  [readme_header_link]: https://cloudposse.com/readme/header/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=readme_header_link
+  [readme_header_link]: https://cloudposse.com/readme/header/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=readme_header_link
   [readme_footer_img]: https://cloudposse.com/readme/footer/img
-  [readme_footer_link]: https://cloudposse.com/readme/footer/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=readme_footer_link
+  [readme_footer_link]: https://cloudposse.com/readme/footer/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=readme_footer_link
   [readme_commercial_support_img]: https://cloudposse.com/readme/commercial-support/img
-  [readme_commercial_support_link]: https://cloudposse.com/readme/commercial-support/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-example-module&utm_content=readme_commercial_support_link
-  [share_twitter]: https://twitter.com/intent/tweet/?text=terraform-example-module&url=https://github.com/cloudposse/terraform-example-module
-  [share_linkedin]: https://www.linkedin.com/shareArticle?mini=true&title=terraform-example-module&url=https://github.com/cloudposse/terraform-example-module
-  [share_reddit]: https://reddit.com/submit/?url=https://github.com/cloudposse/terraform-example-module
-  [share_facebook]: https://facebook.com/sharer/sharer.php?u=https://github.com/cloudposse/terraform-example-module
-  [share_googleplus]: https://plus.google.com/share?url=https://github.com/cloudposse/terraform-example-module
-  [share_email]: mailto:?subject=terraform-example-module&body=https://github.com/cloudposse/terraform-example-module
-  [beacon]: https://ga-beacon.cloudposse.com/UA-76589703-4/cloudposse/terraform-example-module?pixel&cs=github&cm=readme&an=terraform-example-module
+  [readme_commercial_support_link]: https://cloudposse.com/readme/commercial-support/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-waf&utm_content=readme_commercial_support_link
+  [share_twitter]: https://twitter.com/intent/tweet/?text=terraform-aws-waf&url=https://github.com/cloudposse/terraform-aws-waf
+  [share_linkedin]: https://www.linkedin.com/shareArticle?mini=true&title=terraform-aws-waf&url=https://github.com/cloudposse/terraform-aws-waf
+  [share_reddit]: https://reddit.com/submit/?url=https://github.com/cloudposse/terraform-aws-waf
+  [share_facebook]: https://facebook.com/sharer/sharer.php?u=https://github.com/cloudposse/terraform-aws-waf
+  [share_googleplus]: https://plus.google.com/share?url=https://github.com/cloudposse/terraform-aws-waf
+  [share_email]: mailto:?subject=terraform-aws-waf&body=https://github.com/cloudposse/terraform-aws-waf
+  [beacon]: https://ga-beacon.cloudposse.com/UA-76589703-4/cloudposse/terraform-aws-waf?pixel&cs=github&cm=readme&an=terraform-aws-waf

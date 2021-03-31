@@ -42,6 +42,6 @@ func TestExamplesComplete(t *testing.T) {
 	capacity := terraform.Output(t, terraformOptions, "capacity")
 
 	assert.NotEmpty(t, id)
-	assert.NotEmpty(t, arn)
+	assert.Contains(t, arn, "arn:aws:wafv2:")
 	assert.NotEmpty(t, capacity)
 }
