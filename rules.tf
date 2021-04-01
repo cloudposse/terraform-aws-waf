@@ -1,78 +1,88 @@
 locals {
   byte_match_statement_rules = module.this.enabled && var.byte_match_statement_rules != null ? {
-    for indx, rule in flatten(var.byte_match_statement_rules) :
+    for rule in flatten(var.byte_match_statement_rules) :
     format("%s-%s",
-      lookup(rule, "name", null) != null ? rule.name : format("%s-%d", module.this.id, indx),
+      lookup(rule, "name", null) != null ? rule.name : format("%s-byte-match-%d", module.this.id, rule.priority),
       rule.action,
     ) => rule
   } : {}
+
   geo_match_statement_rules = module.this.enabled && var.geo_match_statement_rules != null ? {
-    for indx, rule in flatten(var.geo_match_statement_rules) :
+    for rule in flatten(var.geo_match_statement_rules) :
     format("%s-%s",
-      lookup(rule, "name", null) != null ? rule.name : format("%s-%d", module.this.id, indx),
+      lookup(rule, "name", null) != null ? rule.name : format("%s-geo-match-%d", module.this.id, rule.priority),
       rule.action,
     ) => rule
   } : {}
+
   ip_set_reference_statement_rules = module.this.enabled && var.ip_set_reference_statement_rules != null ? {
     for indx, rule in flatten(var.ip_set_reference_statement_rules) :
     format("%s-%s",
-      lookup(rule, "name", null) != null ? rule.name : format("%s-%d", module.this.id, indx),
+      lookup(rule, "name", null) != null ? rule.name : format("%s-ip-set-reference-%d", module.this.id, rule.priority),
       rule.action,
     ) => rule
   } : {}
+
   managed_rule_group_statement_rules = module.this.enabled && var.managed_rule_group_statement_rules != null ? {
-    for indx, rule in flatten(var.managed_rule_group_statement_rules) :
+    for rule in flatten(var.managed_rule_group_statement_rules) :
     format("%s-%s",
-      lookup(rule, "name", null) != null ? rule.name : format("%s-%d", module.this.id, indx),
+      lookup(rule, "name", null) != null ? rule.name : format("%s-managed-rule-group-%d", module.this.id, rule.priority),
       lookup(rule, "action", null) != null ? rule.action : rule.override_action,
     ) => rule
   } : {}
+
   rate_based_statement_rules = module.this.enabled && var.rate_based_statement_rules != null ? {
-    for indx, rule in flatten(var.rate_based_statement_rules) :
+    for rule in flatten(var.rate_based_statement_rules) :
     format("%s-%s",
-      lookup(rule, "name", null) != null ? rule.name : format("%s-%d", module.this.id, indx),
+      lookup(rule, "name", null) != null ? rule.name : format("%s-rate-based-%d", module.this.id, rule.priority),
       rule.action,
     ) => rule
   } : {}
+
   regex_pattern_set_reference_statement_ruless = module.this.enabled && var.regex_pattern_set_reference_statement_rules != null ? {
-    for indx, rule in flatten(var.regex_pattern_set_reference_statement_rules) :
+    for rule in flatten(var.regex_pattern_set_reference_statement_rules) :
     format("%s-%s",
-      lookup(rule, "name", null) != null ? rule.name : format("%s-%d", module.this.id, indx),
+      lookup(rule, "name", null) != null ? rule.name : format("%s-regex-pattern-set-reference-%d", module.this.id, rule.priority),
       rule.action,
     ) => rule
   } : {}
+
   rule_group_reference_statement_rules = module.this.enabled && var.rule_group_reference_statement_rules != null ? {
-    for indx, rule in flatten(var.rule_group_reference_statement_rules) :
+    for rule in flatten(var.rule_group_reference_statement_rules) :
     format("%s-%s",
-      lookup(rule, "name", null) != null ? rule.name : format("%s-%d", module.this.id, indx),
+      lookup(rule, "name", null) != null ? rule.name : format("%s-rule-group-reference-%d", module.this.id, rule.priority),
       lookup(rule, "action", null) != null ? rule.action : rule.override_action,
     ) => rule
   } : {}
+
   regex_pattern_set_reference_statement_rules = module.this.enabled && var.regex_pattern_set_reference_statement_rules != null ? {
-    for indx, rule in flatten(var.regex_pattern_set_reference_statement_rules) :
+    for rule in flatten(var.regex_pattern_set_reference_statement_rules) :
     format("%s-%s",
-      lookup(rule, "name", null) != null ? rule.name : format("%s-%d", module.this.id, indx),
+      lookup(rule, "name", null) != null ? rule.name : format("%s-regex-pattern-set-reference-%d", module.this.id, rule.priority),
       rule.action,
     ) => rule
   } : {}
+
   size_constraint_statement_rules = module.this.enabled && var.size_constraint_statement_rules != null ? {
-    for indx, rule in flatten(var.size_constraint_statement_rules) :
+    for rule in flatten(var.size_constraint_statement_rules) :
     format("%s-%s",
-      lookup(rule, "name", null) != null ? rule.name : format("%s-%d", module.this.id, indx),
+      lookup(rule, "name", null) != null ? rule.name : format("%s-size-constraint-%d", module.this.id, rule.priority),
       rule.action,
     ) => rule
   } : {}
+
   sqli_match_statement_rules = module.this.enabled && var.sqli_match_statement_rules != null ? {
-    for indx, rule in flatten(var.sqli_match_statement_rules) :
+    for rule in flatten(var.sqli_match_statement_rules) :
     format("%s-%s",
-      lookup(rule, "name", null) != null ? rule.name : format("%s-%d", module.this.id, indx),
+      lookup(rule, "name", null) != null ? rule.name : format("%s-sqli-match-%d", module.this.id, rule.priority),
       rule.action,
     ) => rule
   } : {}
+
   xss_match_statement_rules = module.this.enabled && var.xss_match_statement_rules != null ? {
-    for indx, rule in flatten(var.xss_match_statement_rules) :
+    for rule in flatten(var.xss_match_statement_rules) :
     format("%s-%s",
-      lookup(rule, "name", null) != null ? rule.name : format("%s-%d", module.this.id, indx),
+      lookup(rule, "name", null) != null ? rule.name : format("%s-xss-match-%d", module.this.id, rule.priority),
       rule.action,
     ) => rule
   } : {}
@@ -269,7 +279,6 @@ resource "aws_wafv2_web_acl" "default" {
       }
     }
   }
-
 
   dynamic "rule" {
     for_each = local.ip_set_reference_statement_rules

@@ -382,8 +382,7 @@ variable "xss_match_statement_rules" {
   type        = list(any)
   default     = null
   description = <<-DOC
-    An SQL injection match condition identifies the part of web requests, 
-    such as the URI or the query string, that you want AWS WAF to inspect.
+    A rule statement that defines a cross-site scripting (XSS) match search for AWS WAF to apply to web requests.
     
     action:
       The action that AWS WAF should take on a web request when it matches the rule's statement.
@@ -418,7 +417,7 @@ variable "association_resource_arns" {
   type        = list(string)
   default     = []
   description = <<-DOC
-    A list of ARNs  of the resources to associate with the web ACL.
+    A list of ARNs of the resources to associate with the web ACL.
     This must be an ARN of an Application Load Balancer or an Amazon API Gateway stage.
   DOC
 }
@@ -431,11 +430,10 @@ variable "log_destination_configs" {
 
 variable "redacted_fields" {
   type = object({
-    method_enabled        = bool,
-    uri_path_enabled      = bool,
-    uri_path_enabled      = bool,
-    single_header         = list(string),
-    single_query_argument = list(string)
+    method_enabled       = bool,
+    uri_path_enabled     = bool,
+    query_string_enabled = bool,
+    single_header        = list(string)
   })
   default     = null
   description = <<-DOC
@@ -445,10 +443,12 @@ variable "redacted_fields" {
       Whether to enable redaction of the HTTP method.
       The method indicates the type of operation that the request is asking the origin to perform.
     uri_path_enabled:
-      Whether to enable redaction of the query string.
-      This is the part of a URL that appears after a `?` character, if any.
-    uri_path_enabled:
       Whether to enable redaction of the URI path.
       This is the part of a web request that identifies a resource.
+    query_string_enabled:
+      Whether to enable redaction of the query string.
+      This is the part of a URL that appears after a `?` character, if any.
+    single_header:
+      The list of names of the query headers to redact.
   DOC
 }

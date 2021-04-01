@@ -37,16 +37,9 @@ resource "aws_wafv2_web_acl_logging_configuration" "default" {
       }
 
       dynamic "single_header" {
-        for_each = lookup(redacted_fields.value, "single_header", null) != null ? [redacted_fields.value.single_header] : []
+        for_each = lookup(redacted_fields.value, "single_header", null) != null ? toset(redacted_fields.value.single_header) : []
         content {
-          name = lookup(single_header.value, "name", null)
-        }
-      }
-
-      dynamic "single_query_argument" {
-        for_each = lookup(redacted_fields.value, "single_query_argument", null) != null ? [redacted_fields.value.single_query_argument] : []
-        content {
-          name = lookup(single_query_argument.value, "name", null)
+          name = single_header.value
         }
       }
     }
