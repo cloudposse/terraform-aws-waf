@@ -17,7 +17,7 @@ version-resolver:
     - 'bugfix'
     - 'bug'
     - 'hotfix'
-  default: 'minor'
+  default: 'patch'
 
 categories:
 - title: '🚀 Enhancements'
