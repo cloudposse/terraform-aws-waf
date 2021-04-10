@@ -25,10 +25,7 @@ locals {
 
   managed_rule_group_statement_rules = module.this.enabled && var.managed_rule_group_statement_rules != null ? {
     for rule in flatten(var.managed_rule_group_statement_rules) :
-    format("%s-%s",
-      lookup(rule, "name", null) != null ? rule.name : format("%s-managed-rule-group-%d", module.this.id, rule.priority),
-      lookup(rule, "action", null) != null ? rule.action : rule.override_action,
-    ) => rule
+    lookup(rule, "name", null) != null ? rule.name : format("%s-managed-rule-group-%d", module.this.id, rule.priority) => rule
   } : {}
 
   rate_based_statement_rules = module.this.enabled && var.rate_based_statement_rules != null ? {
@@ -49,10 +46,7 @@ locals {
 
   rule_group_reference_statement_rules = module.this.enabled && var.rule_group_reference_statement_rules != null ? {
     for rule in flatten(var.rule_group_reference_statement_rules) :
-    format("%s-%s",
-      lookup(rule, "name", null) != null ? rule.name : format("%s-rule-group-reference-%d", module.this.id, rule.priority),
-      lookup(rule, "action", null) != null ? rule.action : rule.override_action,
-    ) => rule
+    lookup(rule, "name", null) != null ? rule.name : format("%s-rule-group-reference-%d", module.this.id, rule.priority) => rule
   } : {}
 
   regex_pattern_set_reference_statement_rules = module.this.enabled && var.regex_pattern_set_reference_statement_rules != null ? {
@@ -341,49 +335,20 @@ resource "aws_wafv2_web_acl" "default" {
       name     = rule.value.name
       priority = rule.value.priority
 
-      dynamic "action" {
-        for_each = lookup(rule.value, "action", null) != null ? [1] : []
-
-        content {
-          dynamic "allow" {
-            for_each = lookup(rule.value, "action", null) == "allow" ? [1] : []
-
-            content {}
-          }
-          dynamic "block" {
-            for_each = lookup(rule.value, "action", null) == "block" ? [1] : []
-
-            content {}
-          }
-          dynamic "count" {
-            for_each = lookup(rule.value, "action", null) == "count" ? [1] : []
-
-            content {}
-          }
+      override_action {
+        dynamic "count" {
+          for_each = lookup(rule.value, "override_action", null) == "count" ? [1] : []
+          content {}
         }
-      }
-
-      dynamic "override_action" {
-        for_each = lookup(rule.value, "override_action", null) != null ? [1] : []
-
-        content {
-          dynamic "none" {
-            for_each = lookup(rule.value, "override_action", null) == "none" ? [1] : []
-
-            content {}
-          }
-          dynamic "count" {
-            for_each = lookup(rule.value, "override_action", null) == "count" ? [1] : []
-
-            content {}
-          }
+        dynamic "none" {
+          for_each = lookup(rule.value, "override_action", null) != "count" ? [1] : []
+          content {}
         }
       }
 
       statement {
         dynamic "managed_rule_group_statement" {
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
-
           content {
             name        = managed_rule_group_statement.value.name
             vendor_name = managed_rule_group_statement.value.vendor_name
@@ -581,42 +546,14 @@ resource "aws_wafv2_web_acl" "default" {
       name     = rule.value.name
       priority = rule.value.priority
 
-      dynamic "action" {
-        for_each = lookup(rule.value, "action", null) != null ? [1] : []
-
-        content {
-          dynamic "allow" {
-            for_each = lookup(rule.value, "action", null) == "allow" ? [1] : []
-
-            content {}
-          }
-          dynamic "block" {
-            for_each = lookup(rule.value, "action", null) == "block" ? [1] : []
-
-            content {}
-          }
-          dynamic "count" {
-            for_each = lookup(rule.value, "action", null) == "count" ? [1] : []
-
-            content {}
-          }
+      override_action {
+        dynamic "count" {
+          for_each = lookup(rule.value, "override_action", null) == "count" ? [1] : []
+          content {}
         }
-      }
-
-      dynamic "override_action" {
-        for_each = lookup(rule.value, "override_action", null) != null ? [1] : []
-
-        content {
-          dynamic "none" {
-            for_each = lookup(rule.value, "override_action", null) == "none" ? [1] : []
-
-            content {}
-          }
-          dynamic "count" {
-            for_each = lookup(rule.value, "override_action", null) == "count" ? [1] : []
-
-            content {}
-          }
+        dynamic "none" {
+          for_each = lookup(rule.value, "override_action", null) != "count" ? [1] : []
+          content {}
         }
       }
 
