@@ -1,64 +1,47 @@
----
 #
 # This is the canonical configuration for the `README.md`
 # Run `make readme` to rebuild the `README.md`
 #
 
 # Name of this project
-name: terraform-example-module
+name: terraform-aws-waf
 
 # Logo for this project
 #logo: docs/logo.png
 
 # License of this project
-license: "APACHE2"
+license: APACHE2
 
 # Copyrights
 copyrights:
-  - name: "Cloud Posse, LLC"
-    url: "https://cloudposse.com"
-    year: "2020"
+- name: Cloud Posse, LLC
+  url: https://cloudposse.com
+  year: '2021'
 
 # Canonical GitHub repo
-github_repo: cloudposse/terraform-example-module
+github_repo: cloudposse/terraform-aws-waf
 
 # Badges to display
 badges:
-  - name: "Latest Release"
-    image: "https://img.shields.io/github/release/cloudposse/terraform-example-module.svg"
-    url: "https://github.com/cloudposse/terraform-example-module/releases/latest"
-  - name: "Slack Community"
-    image: "https://slack.cloudposse.com/badge.svg"
-    url: "https://slack.cloudposse.com"
-  - name: "Discourse Forum"
-    image: "https://img.shields.io/discourse/https/ask.sweetops.com/posts.svg"
-    url: "https://ask.sweetops.com/"
+- name: Latest Release
+  image: https://img.shields.io/github/release/cloudposse/terraform-aws-waf.svg
+  url: https://github.com/cloudposse/terraform-aws-waf/releases/latest
+- name: Slack Community
+  image: https://slack.cloudposse.com/badge.svg
+  url: https://slack.cloudposse.com
 
 # List any related terraform modules that this module may be used with or that this module depends on.
 related:
-  - name: "terraform-null-label"
-    description: "Terraform module designed to generate consistent names and tags for resources. Use terraform-null-label to implement a strict naming convention."
-    url: "https://github.com/cloudposse/terraform-null-label"
-
-# List any resources helpful for someone to get started. For example, link to the hashicorp documentation or AWS documentation.
+- name: terraform-null-label
+  description: Terraform Module to define a consistent naming convention by (namespace,
+    stage, name, [attributes])
+  url: https://github.com/cloudposse/terraform-null-label
 references:
-  - name: "Terraform Standard Module Structure"
-    description: "HashiCorp's standard module structure is a file and directory layout we recommend for reusable modules distributed in separate repositories."
-    url: "https://www.terraform.io/docs/modules/index.html#standard-module-structure"
-  - name: "Terraform Module Requirements"
-    description: "HashiCorp's guidance on all the requirements for publishing a module. Meeting the requirements for publishing a module is extremely easy."
-    url: "https://www.terraform.io/docs/registry/modules/publish.html#requirements"
-  - name: "Terraform `random_integer` Resource"
-    description: "The resource random_integer generates random values from a given range, described by the min and max attributes of a given resource."
-    url: "https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer"
-  - name: "Terraform Version Pinning"
-    description: "The required_version setting can be used to constrain which versions of the Terraform CLI can be used with your configuration"
-    url: "https://www.terraform.io/docs/configuration/terraform.html#specifying-a-required-terraform-version"
-
-# Short description of this project
+- name: terraform-provider-aws
+  description: Terraform AWS provider
+  url: https://registry.terraform.io/providers/hashicorp/aws/latest
 description: |-
-  This is `terraform-example-module` project provides all the scaffolding for a typical well-built Cloud Posse module. It's a template repository you can
-  use when creating new repositories.
+  Terraform module to create and manage AWS WAFv2 rules. 
 
 # Introduction to the project
 #introduction: |-
@@ -67,21 +50,71 @@ description: |-
 # How to use this module. Should be an easy example to copy and paste.
 usage: |-
   For a complete example, see [examples/complete](examples/complete).
-  
+
   For automated tests of the complete example using [bats](https://github.com/bats-core/bats-core) and [Terratest](https://github.com/gruntwork-io/terratest)
   (which tests and deploys the example on AWS), see [test](test).
 
   ```hcl
-  module "example" {
-    source = "https://github.com/cloudposse/terraform-example-module.git?ref=master"
-    example = "Hello world!"
+  module "label" {
+    source = "cloudposse/label/null"
+    # Cloud Posse recommends pinning every module to a specific version
+    # version = "x.x.x"
+    namespace = "eg"
+    stage     = "prod"
+    name      = "waf"
+    delimiter = "-"
+
+    tags = {
+      "BusinessUnit" = "XYZ",
+    }
+  }
+
+  module "waf" {
+    source = "cloudposse/waf/aws"
+    # Cloud Posse recommends pinning every module to a specific version
+    # version = "x.x.x"
+
+    geo_match_statement_rules = [
+      {
+        name     = "rule-10"
+        action   = "count"
+        priority = 10
+
+        statement = {
+          country_codes = ["NL", "GB"]
+        }
+
+        visibility_config = {
+          cloudwatch_metrics_enabled = true
+          sampled_requests_enabled   = false
+          metric_name                = "rule-10-metric"
+        }
+      },
+      {
+        name     = "rule-11"
+        action   = "allow"
+        priority = 11
+
+        statement = {
+          country_codes = ["US"]
+        }
+
+        visibility_config = {
+          cloudwatch_metrics_enabled = true
+          sampled_requests_enabled   = false
+          metric_name                = "rule-11-metric"
+        }
+      }
+    ]
+
+    context = module.label.context
   }
   ```
 
 # Example usage
 examples: |-
   Here is an example of using this module:
-  - [`examples/complete`](https://github.com/cloudposse/terraform-example-module/) - complete example of using this module
+  - [`examples/complete`](examples/complete) - complete example of using this module
 
 # How to get started quickly
 #quickstart: |-
@@ -89,10 +122,10 @@ examples: |-
 
 # Other files to include in this README from the project folder
 include:
-  - "docs/targets.md"
-  - "docs/terraform.md"
+- docs/targets.md
+- docs/terraform.md
 
 # Contributors to this project
 contributors:
-  - name: "Erik Osterman"
-    github: "osterman"
+- name: Vladimir Syromyatnikov
+  github: SweetOps
