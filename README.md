@@ -1,3 +1,4 @@
+
 <!-- markdownlint-disable -->
 # terraform-aws-waf [![Latest Release](https://img.shields.io/github/release/cloudposse/terraform-aws-waf.svg)](https://github.com/cloudposse/terraform-aws-waf/releases/latest) [![Slack Community](https://slack.cloudposse.com/badge.svg)](https://slack.cloudposse.com)
 <!-- markdownlint-restore -->
@@ -29,7 +30,6 @@
 
 Terraform module to create and manage AWS WAFv2 rules. 
 
-
 ---
 
 This project is part of our comprehensive ["SweetOps"](https://cpco.io/sweetops) approach towards DevOps.
@@ -54,7 +54,6 @@ It's 100% Open Source and licensed under the [APACHE2](LICENSE).
 
 
 We literally have [*hundreds of terraform modules*][terraform_modules] that are Open Source and well-maintained. Check them out!
-
 
 
 
@@ -231,7 +230,7 @@ Available targets:
 | <a name="input_name"></a> [name](#input\_name) | Solution name, e.g. 'app' or 'jenkins' | `string` | `null` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace, which could be your organization name or abbreviation, e.g. 'eg' or 'cp' | `string` | `null` | no |
 | <a name="input_rate_based_statement_rules"></a> [rate\_based\_statement\_rules](#input\_rate\_based\_statement\_rules) | A rate-based rule tracks the rate of requests for each originating IP address,<br>and triggers the rule action when the rate exceeds a limit that you specify on the number of requests in any 5-minute time span.<br><br>action:<br>  The action that AWS WAF should take on a web request when it matches the rule's statement.<br>name:<br>  A friendly name of the rule.<br>priority:<br>  If you define more than one Rule in a WebACL,<br>  AWS WAF evaluates each request against the rules in order based on the value of priority.<br>  AWS WAF processes rules with lower priority first.<br><br>statement:<br>  aggregate\_key\_type:<br>     Setting that indicates how to aggregate the request counts.<br>     Possible values include: `FORWARDED_IP` or `IP`<br>  limit:<br>    The limit on requests per 5-minute period for a single originating IP address.<br>  forwarded\_ip\_config:<br>    fallback\_behavior:<br>      The match status to assign to the web request if the request doesn't have a valid IP address in the specified position.<br>      Possible values: `MATCH`, `NO_MATCH`<br>    header\_name:<br>      The name of the HTTP header to use for the IP address.<br><br>visibility\_config:<br>  Defines and enables Amazon CloudWatch metrics and web request sample collection.<br><br>  cloudwatch\_metrics\_enabled:<br>    Whether the associated resource sends metrics to CloudWatch.<br>  metric\_name:<br>    A friendly name of the CloudWatch metric.<br>  sampled\_requests\_enabled:<br>    Whether AWS WAF should store a sampling of the web requests that match the rules. | `list(any)` | `null` | no |
-| <a name="input_redacted_fields"></a> [redacted\_fields](#input\_redacted\_fields) | The parts of the request that you want to keep out of the logs.<br><br>method\_enabled:<br>  Whether to enable redaction of the HTTP method.<br>  The method indicates the type of operation that the request is asking the origin to perform.<br>uri\_path\_enabled:<br>  Whether to enable redaction of the URI path.<br>  This is the part of a web request that identifies a resource.<br>query\_string\_enabled:<br>  Whether to enable redaction of the query string.<br>  This is the part of a URL that appears after a `?` character, if any.<br>single\_header:<br>  The list of names of the query headers to redact. | <pre>object({<br>    method_enabled       = bool,<br>    uri_path_enabled     = bool,<br>    query_string_enabled = bool,<br>    single_header        = list(string)<br>  })</pre> | `null` | no |
+| <a name="input_redacted_fields"></a> [redacted\_fields](#input\_redacted\_fields) | The parts of the request that you want to keep out of the logs.<br><br>method\_enabled:<br>  Whether to enable redaction of the HTTP method.<br>  The method indicates the type of operation that the request is asking the origin to perform.<br>uri\_path\_enabled:<br>  Whether to enable redaction of the URI path.<br>  This is the part of a web request that identifies a resource.<br>query\_string\_enabled:<br>  Whether to enable redaction of the query string.<br>  This is the part of a URL that appears after a `?` character, if any.<br>single\_header:<br>  The list of names of the query headers to redact. | `map(any)` | `{}` | no |
 | <a name="input_regex_pattern_set_reference_statement_rules"></a> [regex\_pattern\_set\_reference\_statement\_rules](#input\_regex\_pattern\_set\_reference\_statement\_rules) | A rule statement used to search web request components for matches with regular expressions.<br><br>action:<br>  The action that AWS WAF should take on a web request when it matches the rule's statement.<br>name:<br>  A friendly name of the rule.<br>priority:<br>  If you define more than one Rule in a WebACL,<br>  AWS WAF evaluates each request against the rules in order based on the value of priority.<br>  AWS WAF processes rules with lower priority first.<br><br>statement:<br>  arn:<br>     The Amazon Resource Name (ARN) of the Regex Pattern Set that this statement references.<br>  field\_to\_match:<br>    The part of a web request that you want AWS WAF to inspect.<br>    See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match<br>  text\_transformation:<br>    Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.<br>    See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation<br><br>visibility\_config:<br>  Defines and enables Amazon CloudWatch metrics and web request sample collection.<br><br>  cloudwatch\_metrics\_enabled:<br>    Whether the associated resource sends metrics to CloudWatch.<br>  metric\_name:<br>    A friendly name of the CloudWatch metric.<br>  sampled\_requests\_enabled:<br>    Whether AWS WAF should store a sampling of the web requests that match the rules. | `list(any)` | `null` | no |
 | <a name="input_regex_replace_chars"></a> [regex\_replace\_chars](#input\_regex\_replace\_chars) | Regex to replace chars with empty string in `namespace`, `environment`, `stage` and `name`.<br>If not set, `"/[^a-zA-Z0-9-]/"` is used to remove all characters other than hyphens, letters and digits. | `string` | `null` | no |
 | <a name="input_rule_group_reference_statement_rules"></a> [rule\_group\_reference\_statement\_rules](#input\_rule\_group\_reference\_statement\_rules) | A rule statement used to run the rules that are defined in an WAFv2 Rule Group.<br><br>name:<br>  A friendly name of the rule.<br>priority:<br>  If you define more than one Rule in a WebACL,<br>  AWS WAF evaluates each request against the rules in order based on the value of priority.<br>  AWS WAF processes rules with lower priority first.<br><br>override\_action:<br>  The override action to apply to the rules in a rule group.<br>  Possible values: `count`, `none`<br><br>statement:<br>  arn:<br>    The ARN of the `aws_wafv2_rule_group` resource.<br>  excluded\_rule:<br>    The list of names of the rules to exclude.<br><br>visibility\_config:<br>  Defines and enables Amazon CloudWatch metrics and web request sample collection.<br><br>  cloudwatch\_metrics\_enabled:<br>    Whether the associated resource sends metrics to CloudWatch.<br>  metric\_name:<br>    A friendly name of the CloudWatch metric.<br>  sampled\_requests\_enabled:<br>    Whether AWS WAF should store a sampling of the web requests that match the rules. | `list(any)` | `null` | no |
@@ -262,13 +261,12 @@ Like this project? Please give it a ★ on [our GitHub](https://github.com/cloud
 Are you using this project or any of our other projects? Consider [leaving a testimonial][testimonial]. =)
 
 
+
 ## Related Projects
 
 Check out these related projects.
 
 - [terraform-null-label](https://github.com/cloudposse/terraform-null-label) - Terraform Module to define a consistent naming convention by (namespace, stage, name, [attributes])
-
-
 
 
 ## References
