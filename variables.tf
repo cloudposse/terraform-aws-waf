@@ -433,13 +433,8 @@ variable "log_destination_configs" {
 }
 
 variable "redacted_fields" {
-  type = object({
-    method_enabled       = bool,
-    uri_path_enabled     = bool,
-    query_string_enabled = bool,
-    single_header        = list(string)
-  })
-  default     = null
+  type        = map(any)
+  default     = {}
   description = <<-DOC
     The parts of the request that you want to keep out of the logs.
 
