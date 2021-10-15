@@ -173,7 +173,7 @@ resource "aws_wafv2_web_acl" "default" {
                   for_each = lookup(field_to_match.value, "single_header", null)
 
                   content {
-                    name = single_header.value.name
+                    name = single_header.value
                   }
                 }
 
@@ -181,7 +181,7 @@ resource "aws_wafv2_web_acl" "default" {
                   for_each = lookup(field_to_match.value, "single_query_argument", null)
 
                   content {
-                    name = single_query_argument.value.name
+                    name = single_query_argument.value
                   }
                 }
 
