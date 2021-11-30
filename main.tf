@@ -12,13 +12,14 @@ resource "aws_kinesis_firehose_delivery_stream" "default" {
   extended_s3_configuration {
     role_arn   = var.role_arn
     bucket_arn = var.bucket_arn
+    prefix     = "${module.this.id}/"
   }
 }
 
 resource "aws_wafv2_web_acl_logging_configuration" "default" {
   count = module.this.enabled && length(var.log_destination_configs) > 0 ? 1 : 0
 
-  log_destination_configs = var.log_destination_configs
+  log_destination_configs = aws_kinesis_firehose_delivery_stream.default.arn
   resource_arn            = join("", aws_wafv2_web_acl.default.*.arn)
 
   dynamic "redacted_fields" {
