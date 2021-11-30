@@ -451,3 +451,14 @@ variable "redacted_fields" {
       The list of names of the query headers to redact.
   DOC
 }
+
+variable "policy_config" {
+  description = "(Optional) - A list of objects that contain configuration for each policy required"
+  type = list(object({
+    name        = string
+    description = string
+    path        = string
+    policy      = string
+  }))
+  default = []
+}
