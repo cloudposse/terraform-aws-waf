@@ -11,7 +11,7 @@ resource "aws_kinesis_firehose_delivery_stream" "default" {
 
   extended_s3_configuration {
     role_arn   = var.role_arn
-    bucket_arn = var.bucket_id
+    bucket_arn = var.bucket_arn
   }
 }
 

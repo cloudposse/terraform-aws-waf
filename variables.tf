@@ -457,7 +457,7 @@ variable "role_arn" {
   type        = string
 }
 
-variable "bucket_id" {
+variable "bucket_arn" {
   description = "(Required) - The ARN of the S3 bucket."
   type        = string
 }
