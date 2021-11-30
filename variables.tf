@@ -452,13 +452,12 @@ variable "redacted_fields" {
   DOC
 }
 
-variable "policy_config" {
-  description = "(Optional) - A list of objects that contain configuration for each policy required"
-  type = list(object({
-    name        = string
-    description = string
-    path        = string
-    policy      = string
-  }))
-  default = []
+variable "role_arn" {
+  description = "(Required) - The ARN of the role that provides access to the source Kinesis stream."
+  type        = string
+}
+
+variable "bucket_id" {
+  description = "(Required) - The ARN of the S3 bucket."
+  type        = string
 }

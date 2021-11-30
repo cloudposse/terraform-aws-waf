@@ -5,24 +5,12 @@ resource "aws_wafv2_web_acl_association" "default" {
   web_acl_arn  = join("", aws_wafv2_web_acl.default.*.arn)
 }
 
-module "kinesis_iam_role" {
-  source                = "git@github.com:humn-ai/tf-mod-aws-iam-role?ref=tags/0.0.3"
-  enabled               = module.this.enabled
-  attributes            = ["role"]
-  name                  = module.this.name
-  label_order           = module.this.label_order
-  trusted_role_actions  = ["sts:AssumeRole"]
-  trusted_role_services = ["firehose.amazonaws.com"]
-  max_session_duration  = 7200
-  policy_config         = var.policy_config
-}
-
 resource "aws_kinesis_firehose_delivery_stream" "default" {
   name        = module.kinesis.id
   destination = "extended_s3"
 
   extended_s3_configuration {
-    role_arn   = module.kinesis_iam_role.role_arn
+    role_arn   = var.role_arn
     bucket_arn = var.bucket_arn
   }
 }
