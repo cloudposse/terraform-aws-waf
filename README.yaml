@@ -4,7 +4,7 @@
 #
 
 # Name of this project
-name: terraform-aws-waf
+name: tf-mod-aws-waf
 
 # Logo for this project
 #logo: docs/logo.png
@@ -14,34 +14,35 @@ license: APACHE2
 
 # Copyrights
 copyrights:
-- name: Cloud Posse, LLC
-  url: https://cloudposse.com
-  year: '2021'
+  - name: Cloud Posse, LLC
+    url: https://cloudposse.com
+    year: "2021"
 
 # Canonical GitHub repo
 github_repo: cloudposse/terraform-aws-waf
 
 # Badges to display
 badges:
-- name: Latest Release
-  image: https://img.shields.io/github/release/cloudposse/terraform-aws-waf.svg
-  url: https://github.com/cloudposse/terraform-aws-waf/releases/latest
-- name: Slack Community
-  image: https://slack.cloudposse.com/badge.svg
-  url: https://slack.cloudposse.com
+  - name: Latest Release
+    image: https://img.shields.io/github/release/cloudposse/terraform-aws-waf.svg
+    url: https://github.com/cloudposse/terraform-aws-waf/releases/latest
+  - name: Slack Community
+    image: https://slack.cloudposse.com/badge.svg
+    url: https://slack.cloudposse.com
 
 # List any related terraform modules that this module may be used with or that this module depends on.
 related:
-- name: terraform-null-label
-  description: Terraform Module to define a consistent naming convention by (namespace,
-    stage, name, [attributes])
-  url: https://github.com/cloudposse/terraform-null-label
+  - name: terraform-null-label
+    description:
+      Terraform Module to define a consistent naming convention by (namespace,
+      stage, name, [attributes])
+    url: https://github.com/cloudposse/terraform-null-label
 references:
-- name: terraform-provider-aws
-  description: Terraform AWS provider
-  url: https://registry.terraform.io/providers/hashicorp/aws/latest
+  - name: terraform-provider-aws
+    description: Terraform AWS provider
+    url: https://registry.terraform.io/providers/hashicorp/aws/latest
 description: |-
-  Terraform module to create and manage AWS WAFv2 rules. 
+  Terraform module to create and manage AWS WAFv2 rules.
 
 # Introduction to the project
 #introduction: |-
@@ -122,10 +123,12 @@ examples: |-
 
 # Other files to include in this README from the project folder
 include:
-- docs/targets.md
-- docs/terraform.md
+  - docs/targets.md
+  - docs/terraform.md
 
 # Contributors to this project
 contributors:
-- name: Vladimir Syromyatnikov
-  github: SweetOps
+  - name: Vladimir Syromyatnikov
+    github: SweetOps
+  - name: Callum Robertson
+    github: Callumccr
