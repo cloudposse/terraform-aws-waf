@@ -6,7 +6,7 @@ resource "aws_wafv2_web_acl_association" "default" {
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "default" {
-  name        = module.kinesis.id
+  name        = "aws-waf-logs-${module.kinesis.name}-${module.kinesis.attributes}" //https://github.com/pulumi/pulumi-aws/issues/1214#issuecomment-891868939
   destination = "extended_s3"
 
   extended_s3_configuration {
