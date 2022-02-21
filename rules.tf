@@ -108,6 +108,12 @@ resource "aws_wafv2_web_acl" "default" {
     sampled_requests_enabled   = lookup(var.visibility_config, "sampled_requests_enabled", true)
   }
 
+  custom_response_body {
+    content      = lookup(var.custom_response_body, "content", null)
+    content_type = lookup(var.custom_response_body, "content_type", null)
+    key          = lookup(var.custom_response_body, "key", null)
+  }
+
   dynamic "rule" {
     for_each = local.byte_match_statement_rules
 

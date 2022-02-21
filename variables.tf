@@ -451,3 +451,22 @@ variable "redacted_fields" {
       The list of names of the query headers to redact.
   DOC
 }
+
+variable "custom_response_body" {
+  type    = map(any)
+  default = {}
+
+  description = <<-DOC
+    The parts of the custom resoponse body that you create maintenance window.
+
+    content:
+      The responce body can be plain text, HTML or JSON.
+      Response Body cannot exceed 4KB in size.
+    content_type:
+      Content Type of Response Body.
+      You can specify Content Type for plain text, HTML ,JSON.
+    key:
+      Response Body object name.
+      Specify name for Response Body.
+  DOC
+}
