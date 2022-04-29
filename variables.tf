@@ -177,6 +177,9 @@ variable "managed_rule_group_statement_rules" {
         The name of the managed rule group.
       vendor_name:
         The name of the managed rule group vendor.
+      version:
+        The version of the managed rule group.
+        You can set `Version_1.0` or `Version_1.1` etc. If you want to use the default version, do not set anything.
       excluded_rule:
         The list of names of the rules to exclude.
 
