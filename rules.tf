@@ -352,7 +352,7 @@ resource "aws_wafv2_web_acl" "default" {
           content {
             name        = managed_rule_group_statement.value.name
             vendor_name = managed_rule_group_statement.value.vendor_name
-            version     = managed_rule_group_statement.value.version
+            version     = lookup(managed_rule_group_statement.value, "version", null)
 
             dynamic "excluded_rule" {
               for_each = lookup(managed_rule_group_statement.value, "excluded_rule", null) != null ? toset(managed_rule_group_statement.value.excluded_rule) : []
