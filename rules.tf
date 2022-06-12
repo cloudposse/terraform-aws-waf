@@ -497,7 +497,7 @@ resource "aws_wafv2_web_acl" "default" {
                 }
 
                 dynamic "single_header" {
-                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [1] : []
+                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
 
                   content {
                     name = single_header.value.name
@@ -505,7 +505,7 @@ resource "aws_wafv2_web_acl" "default" {
                 }
 
                 dynamic "single_query_argument" {
-                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [1] : []
+                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
 
                   content {
                     name = single_query_argument.value.name
