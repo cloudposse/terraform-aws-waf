@@ -111,9 +111,9 @@ resource "aws_wafv2_web_acl" "default" {
   dynamic "custom_response_body" {
     for_each = var.custom_response_body
     content {
-      content      = lookup(var.custom_response_body, "content", null)
-      content_type = lookup(var.custom_response_body, "content_type", null)
-      key          = lookup(var.custom_response_body, "key", null)
+      content      = custom_response_body.key["content"]
+      content_type = custom_response_body.key["content_type"]
+      key          = custom_response_body.key["key"]
     }
   }
 
