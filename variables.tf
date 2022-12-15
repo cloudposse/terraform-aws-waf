@@ -457,16 +457,15 @@ variable "custom_response_body" {
   default = {}
 
   description = <<-DOC
-    The parts of the custom resoponse body that you create maintenance window.
+    Defines custom response bodies that can be referenced by custom_response actions
 
     content:
-      The responce body can be plain text, HTML or JSON.
-      Response Body cannot exceed 4KB in size.
+      Payload of the custom response.
+      The response body can be plain text, HTML or JSON and cannot exceed 4KB in size.
     content_type:
       Content Type of Response Body.
-      You can specify Content Type for plain text, HTML ,JSON.
+      Valid values are `TEXT_PLAIN`, `TEXT_HTML`, or `APPLICATION_JSON`.
     key:
-      Response Body object name.
-      Specify name for Response Body.
+      Unique key identifying the custom response body.
   DOC
 }
