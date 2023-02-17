@@ -1,13 +1,20 @@
 package test
 
 import (
+	"flag"
 	"math/rand"
 	"strconv"
 	"testing"
 	"time"
 
+	petname "github.com/dustinkirkland/golang-petname"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
+)
+
+var (
+	words     = flag.Int("words", 2, "The number of words in the pet name")
+	separator = flag.String("separator", "-", "The separator between words in the pet name")
 )
 
 // Test the Terraform module in examples/complete using Terratest.
@@ -17,7 +24,7 @@ func TestExamplesComplete(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	randID := strconv.Itoa(rand.Intn(100000))
 	attributes := []string{randID}
-
+	var waf_name = petname.Generate(*words, *separator)
 	terraformOptions := &terraform.Options{
 		// The path to where our Terraform code is located
 		TerraformDir: "../../examples/complete",
@@ -28,6 +35,7 @@ func TestExamplesComplete(t *testing.T) {
 		// and AWS resources do not interfere with each other
 		Vars: map[string]interface{}{
 			"attributes": attributes,
+			"waf_name":   waf_name,
 		},
 	}
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created

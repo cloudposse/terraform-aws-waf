@@ -4,7 +4,7 @@ provider "aws" {
 
 module "waf" {
   source = "../.."
-  name = var.waf_name
+  name   = var.waf_name
   geo_match_statement_rules = [
     {
       name     = "rule-10"

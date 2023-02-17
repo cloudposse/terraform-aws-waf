@@ -1,5 +1,6 @@
 variable "region" {
-  type = string
+  type        = string
+  description = "Please specify the region"
 }
 
 variable "waf_name" {
