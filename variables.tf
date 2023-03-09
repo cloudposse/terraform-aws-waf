@@ -451,3 +451,12 @@ variable "redacted_fields" {
       The list of names of the query headers to redact.
   DOC
 }
+
+variable "logging_filter" {
+  type        = any
+  default     = {}
+  description = <<-DOC
+    A configuration block that specifies which web requests are kept in the logs and which are dropped.
+    You can filter on the rule action and on the web request labels that were applied by matching rules during web ACL evaluation.
+  DOC
+}
