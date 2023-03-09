@@ -44,4 +44,18 @@ resource "aws_wafv2_web_acl_logging_configuration" "default" {
       }
     }
   }
+
+
+  logging_filter {
+    default_behavior = var.logging_filter.default_behavior
+    filter {
+      behavior    = var.logging_filter["filter"]["behavior"]
+      requirement = var.logging_filter["filter"]["requirement"]
+      condition {
+        action_condition {
+          action = var.logging_filter["filter"]["condition"]["action_condition"]["action"]
+        }
+      }
+    }
+  }
 }
