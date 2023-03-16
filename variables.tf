@@ -3,8 +3,8 @@ variable "default_action" {
   default     = "block"
   description = "Specifies that AWS WAF should allow requests by default. Possible values: `allow`, `block`."
   validation {
-    condition     = contains(["allow", "block", "captcha"], var.default_action)
-    error_message = "Allowed values: `allow`, `block`, `captcha`."
+    condition     = contains(["allow", "block"], var.default_action)
+    error_message = "Allowed values: `allow`, `block`."
   }
 }
 
