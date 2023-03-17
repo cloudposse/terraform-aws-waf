@@ -179,6 +179,8 @@ variable "managed_rule_group_statement_rules" {
         The name of the managed rule group vendor.
       excluded_rule:
         The list of names of the rules to exclude.
+      allowed_rule:
+        The list of names of the rules to allow.
 
     visibility_config:
       Defines and enables Amazon CloudWatch metrics and web request sample collection.
