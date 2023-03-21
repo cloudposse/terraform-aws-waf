@@ -241,6 +241,10 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = rule.value.action == "count" ? [1] : []
           content {}
         }
+        dynamic "captcha" {
+          for_each = rule.value.action == "captcha" ? [1] : []
+          content {}
+        }
       }
 
       statement {
@@ -292,6 +296,10 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []
+          content {}
+        }
+        dynamic "captcha" {
+          for_each = rule.value.action == "captcha" ? [1] : []
           content {}
         }
       }
@@ -394,6 +402,10 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []
+          content {}
+        }
+        dynamic "captcha" {
+          for_each = rule.value.action == "captcha" ? [1] : []
           content {}
         }
       }
@@ -607,6 +619,10 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = rule.value.action == "count" ? [1] : []
           content {}
         }
+        dynamic "captcha" {
+          for_each = rule.value.action == "captcha" ? [1] : []
+          content {}
+        }
       }
       statement {
         dynamic "size_constraint_statement" {
@@ -716,6 +732,10 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = rule.value.action == "count" ? [1] : []
           content {}
         }
+        dynamic "captcha" {
+          for_each = rule.value.action == "captcha" ? [1] : []
+          content {}
+        }
       }
 
       statement {
@@ -822,6 +842,10 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []
+          content {}
+        }
+        dynamic "captcha" {
+          for_each = rule.value.action == "captcha" ? [1] : []
           content {}
         }
       }
