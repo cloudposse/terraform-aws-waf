@@ -100,11 +100,6 @@ resource "aws_wafv2_web_acl" "default" {
       for_each = var.default_action == "block" ? [1] : []
       content {}
     }
-
-    dynamic "captcha" {
-      for_each = var.default_action == "captcha" ? [1] : []
-      content {}
-    }
   }
 
   visibility_config {
