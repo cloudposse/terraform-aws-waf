@@ -51,7 +51,7 @@ module "waf" {
         excluded_rule = {
           "SizeRestrictions_QUERYSTRING" = {},
           "NoUserAgent_HEADER" = {
-            "block" = {}
+            action = "block"
           }
         }
       }
