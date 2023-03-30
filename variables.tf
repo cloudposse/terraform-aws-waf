@@ -179,8 +179,6 @@ variable "managed_rule_group_statement_rules" {
         The name of the managed rule group vendor.
       excluded_rule:
         The list of names of the rules to exclude.
-      allowed_rule:
-        The list of names of the rules to allow.
 
     visibility_config:
       Defines and enables Amazon CloudWatch metrics and web request sample collection.
@@ -452,4 +450,23 @@ variable "redacted_fields" {
     single_header:
       The list of names of the query headers to redact.
   DOC
+}
+
+variable "custom_response_bodies" {
+  type = map(object({
+    content      = string
+    content_type = string
+  }))
+  description = <<-DOC
+    A map of the custom response bodies to include with the WAF ACL.
+    See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#custom-response
+
+    key:
+      The name of the custom response.
+    content:  
+      The custom response body.
+    content_type:
+      The content type of the custom response.
+  DOC
+  default     = {}
 }

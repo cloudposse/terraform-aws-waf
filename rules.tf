@@ -80,6 +80,8 @@ locals {
       rule.action,
     ) => rule
   } : {}
+
+  custom_response_bodies = module.this.enabled && var.custom_response_bodies != null ? var.custom_response_bodies : {}
 }
 
 resource "aws_wafv2_web_acl" "default" {
@@ -354,7 +356,7 @@ resource "aws_wafv2_web_acl" "default" {
             vendor_name = managed_rule_group_statement.value.vendor_name
 
             dynamic "rule_action_override" {
-              for_each = lookup(managed_rule_group_statement.value, "allowed_rule", null) != null ? toset(managed_rule_group_statement.value.allowed_rule) : []
+              for_each = lookup(managed_rule_group_statement.value, "excluded_rule", null) != null ? toset(managed_rule_group_statement.value.excluded_rule) : []
 
               content {
                 name = rule_action_override.value
@@ -362,14 +364,6 @@ resource "aws_wafv2_web_acl" "default" {
                   allow {
                   }
                 }
-              }
-            }
-
-            dynamic "excluded_rule" {
-              for_each = lookup(managed_rule_group_statement.value, "excluded_rule", null) != null ? toset(managed_rule_group_statement.value.excluded_rule) : []
-
-              content {
-                name = excluded_rule.value
               }
             }
           }
@@ -641,7 +635,9 @@ resource "aws_wafv2_web_acl" "default" {
                 dynamic "body" {
                   for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
 
-                  content {}
+                  content {
+                    oversize_handling = try(field_to_match.value.body.oversize_handling, null)
+                  }
                 }
 
                 dynamic "method" {
@@ -920,6 +916,16 @@ resource "aws_wafv2_web_acl" "default" {
           sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
         }
       }
+    }
+  }
+
+  # Attach a list of custom response bodies to the web ACL
+  dynamic "custom_response_body" {
+    for_each = local.custom_response_bodies
+    content {
+      key          = custom_response_body.key
+      content      = custom_response_body.value.content
+      content_type = custom_response_body.value.content_type
     }
   }
 }
