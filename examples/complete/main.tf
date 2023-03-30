@@ -48,10 +48,12 @@ module "waf" {
         name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
 
-        excluded_rule = [
-          "SizeRestrictions_QUERYSTRING",
-          "NoUserAgent_HEADER"
-        ]
+        excluded_rule = {
+          "SizeRestrictions_QUERYSTRING" = {},
+          "NoUserAgent_HEADER" = {
+            "block" = {}
+          }
+        }
       }
 
       visibility_config = {
@@ -206,6 +208,13 @@ module "waf" {
       }
     }
   ]
+
+  custom_response_bodies = {
+    "foobar" = {
+      content      = "this is custom response"
+      content_type = "TEXT_PLAIN"
+    }
+  }
 
   context = module.this.context
 }

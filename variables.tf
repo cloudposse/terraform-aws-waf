@@ -178,7 +178,7 @@ variable "managed_rule_group_statement_rules" {
       vendor_name:
         The name of the managed rule group vendor.
       excluded_rule:
-        The list of names of the rules to exclude.
+        The map rules to exclude with the action to take.
 
     visibility_config:
       Defines and enables Amazon CloudWatch metrics and web request sample collection.
@@ -291,7 +291,7 @@ variable "rule_group_reference_statement_rules" {
       arn:
         The ARN of the `aws_wafv2_rule_group` resource.
       excluded_rule:
-        The list of names of the rules to exclude.
+        The map rules to exclude with the action to take.
 
     visibility_config:
       Defines and enables Amazon CloudWatch metrics and web request sample collection.
