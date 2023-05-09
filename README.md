@@ -182,14 +182,14 @@ Available targets:
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 2.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.2.4 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.28.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 2.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.28.0 |
 
 ## Modules
 
@@ -351,7 +351,7 @@ In general, PRs are welcome. We follow the typical "fork-and-pull" Git workflow.
 
 ## Copyrights
 
-Copyright © 2021-2022 [Cloud Posse, LLC](https://cloudposse.com)
+Copyright © 2021-2023 [Cloud Posse, LLC](https://cloudposse.com)
 
 
 
