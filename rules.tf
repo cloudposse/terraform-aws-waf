@@ -243,20 +243,22 @@ resource "aws_wafv2_web_acl" "default" {
       # `geo_allowlist_statement_rules` is a special case where we use `not_statement` to wrap our `statement` block to support
       # an "allowlist". Otherwise, using `geo_match_statement_rules` requires specifying ALL country codes that you
       # would like to blocklist.
-      not_statement {
-        statement {
-          dynamic "geo_match_statement" {
-            for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
+      statement {
+        not_statement {
+          statement {
+            dynamic "geo_match_statement" {
+              for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
-            content {
-              country_codes = geo_match_statement.value.country_codes
+              content {
+                country_codes = geo_match_statement.value.country_codes
 
-              dynamic "forwarded_ip_config" {
-                for_each = lookup(geo_match_statement.value, "forwarded_ip_config", null) != null ? [geo_match_statement.value.forwarded_ip_config] : []
+                dynamic "forwarded_ip_config" {
+                  for_each = lookup(geo_match_statement.value, "forwarded_ip_config", null) != null ? [geo_match_statement.value.forwarded_ip_config] : []
 
-                content {
-                  fallback_behavior = forwarded_ip_config.value.fallback_behavior
-                  header_name       = forwarded_ip_config.value.header_name
+                  content {
+                    fallback_behavior = forwarded_ip_config.value.fallback_behavior
+                    header_name       = forwarded_ip_config.value.header_name
+                  }
                 }
               }
             }
