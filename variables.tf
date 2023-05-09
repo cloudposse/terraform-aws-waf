@@ -78,6 +78,41 @@ variable "byte_match_statement_rules" {
   DOC
 }
 
+variable "geo_allowlist_statement_rules" {
+  type        = list(any)
+  default     = null
+  description = <<-DOC
+    A rule statement used to identify a list of allowed countries which should not be blocked by the WAF.
+
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    statement:
+      country_codes:
+        A list of two-character country codes.
+      forwarded_ip_config:
+        fallback_behavior:
+          The match status to assign to the web request if the request doesn't have a valid IP address in the specified position.
+          Possible values: `MATCH`, `NO_MATCH`
+        header_name:
+          The name of the HTTP header to use for the IP address.
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
 variable "geo_match_statement_rules" {
   type        = list(any)
   default     = null
