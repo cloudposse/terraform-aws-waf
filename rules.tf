@@ -7,6 +7,14 @@ locals {
     ) => rule
   } : {}
 
+  geo_allowlist_statement_rules = module.this.enabled && var.geo_allowlist_statement_rules != null ? {
+    for rule in flatten(var.geo_allowlist_statement_rules) :
+    format("%s-%s",
+      lookup(rule, "name", null) != null ? rule.name : format("%s-geo-allowlist-%d", module.this.id, rule.priority),
+      "block",
+    ) => rule
+  } : {}
+
   geo_match_statement_rules = module.this.enabled && var.geo_match_statement_rules != null ? {
     for rule in flatten(var.geo_match_statement_rules) :
     format("%s-%s",
