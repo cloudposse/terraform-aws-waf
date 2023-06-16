@@ -23,6 +23,13 @@ locals {
     ) => rule
   } : {}
 
+  ip_set_allow_block_rules = module.this.enabled && var.ip_set_allow_block_rules != null ? {
+    for indx, rule in flatten(var.ip_set_allow_block_rules) :
+    format("%s",
+      lookup(rule, "name", null) != null ? rule.name : format("%s-ip-set-allow-block-%d", module.this.id, rule.action),
+    ) => rule
+  } : {}
+
   managed_rule_group_statement_rules = module.this.enabled && var.managed_rule_group_statement_rules != null ? {
     for rule in flatten(var.managed_rule_group_statement_rules) :
     lookup(rule, "name", null) != null ? rule.name : format("%s-managed-rule-group-%d", module.this.id, rule.priority) => rule
@@ -332,6 +339,46 @@ resource "aws_wafv2_web_acl" "default" {
         }
       }
 
+      dynamic "visibility_config" {
+        for_each = lookup(rule.value, "visibility_config", null) != null ? [rule.value.visibility_config] : []
+
+        content {
+          cloudwatch_metrics_enabled = lookup(visibility_config.value, "cloudwatch_metrics_enabled", true)
+          metric_name                = visibility_config.value.metric_name
+          sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
+        }
+      }
+    }
+  }
+
+  dynamic "rule" {
+    for_each = local.ip_set_allow_block_rules
+
+    content {
+      name     = rule.value.name
+      priority = rule.value.priority
+
+      action {
+        dynamic "allow" {
+          for_each = rule.value.action == "allow" ? [1] : []
+          content {}
+        }
+        dynamic "block" {
+          for_each = rule.value.action == "block" ? [1] : []
+          content {}
+        }
+        dynamic "count" {
+          for_each = rule.value.action == "count" ? [1] : []
+          content {}
+        }
+      }
+
+      statement {
+        ip_set_reference_statement {
+            arn = aws_wafv2_ip_set.ip_set[rule.value.name].arn
+        }
+      }
+      
       dynamic "visibility_config" {
         for_each = lookup(rule.value, "visibility_config", null) != null ? [rule.value.visibility_config] : []
 
