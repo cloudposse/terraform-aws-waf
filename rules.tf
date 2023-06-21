@@ -36,14 +36,6 @@ locals {
     ) => rule
   } : {}
 
-  regex_pattern_set_reference_statement_ruless = module.this.enabled && var.regex_pattern_set_reference_statement_rules != null ? {
-    for rule in flatten(var.regex_pattern_set_reference_statement_rules) :
-    format("%s-%s",
-      lookup(rule, "name", null) != null ? rule.name : format("%s-regex-pattern-set-reference-%d", module.this.id, rule.priority),
-      rule.action,
-    ) => rule
-  } : {}
-
   rule_group_reference_statement_rules = module.this.enabled && var.rule_group_reference_statement_rules != null ? {
     for rule in flatten(var.rule_group_reference_statement_rules) :
     lookup(rule, "name", null) != null ? rule.name : format("%s-rule-group-reference-%d", module.this.id, rule.priority) => rule
