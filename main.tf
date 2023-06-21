@@ -6,9 +6,9 @@ resource "aws_wafv2_web_acl_association" "default" {
 }
 
 resource "aws_wafv2_web_acl_logging_configuration" "default" {
-  count = module.this.enabled && length(var.log_destination_configs) > 0 ? 1 : 0
+  count = module.this.enabled && (length(var.log_destination_configs) > 0 || var.create_logging_bucket) ? 1 : 0
 
-  log_destination_configs = var.log_destination_configs
+  log_destination_configs = concat(var.log_destination_configs, [(var.create_logging_bucket ? "${module.waf_bucket[count.index].s3_bucket_arn}" : "")])
   resource_arn            = join("", aws_wafv2_web_acl.default.*.arn)
 
   dynamic "redacted_fields" {
