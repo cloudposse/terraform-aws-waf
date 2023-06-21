@@ -23,6 +23,13 @@ locals {
     ) => rule
   } : {}
 
+  ip_set_allow_block_rules = module.this.enabled && var.ip_set_allow_block_rules != null ? {
+    for indx, rule in flatten(var.ip_set_allow_block_rules) :
+    format("%s",
+      lookup(rule, "name", null) != null ? rule.name : format("%s-ip-set-allow-block-%d", module.this.id, rule.action),
+    ) => rule
+  } : {}
+
   managed_rule_group_statement_rules = module.this.enabled && var.managed_rule_group_statement_rules != null ? {
     for rule in flatten(var.managed_rule_group_statement_rules) :
     lookup(rule, "name", null) != null ? rule.name : format("%s-managed-rule-group-%d", module.this.id, rule.priority) => rule
@@ -53,6 +60,14 @@ locals {
     for rule in flatten(var.regex_pattern_set_reference_statement_rules) :
     format("%s-%s",
       lookup(rule, "name", null) != null ? rule.name : format("%s-regex-pattern-set-reference-%d", module.this.id, rule.priority),
+      rule.action,
+    ) => rule
+  } : {}
+
+  regex_match_statement_rules = module.this.enabled && var.regex_match_statement_rules != null ? {
+    for rule in flatten(var.regex_match_statement_rules) :
+    format("%s-%s",
+      lookup(rule, "name", null) != null ? rule.name : format("%s-regex-match-%d", module.this.id, rule.priority),
       rule.action,
     ) => rule
   } : {}
@@ -337,6 +352,46 @@ resource "aws_wafv2_web_acl" "default" {
   }
 
   dynamic "rule" {
+    for_each = local.ip_set_allow_block_rules
+
+    content {
+      name     = rule.value.name
+      priority = rule.value.priority
+
+      action {
+        dynamic "allow" {
+          for_each = rule.value.action == "allow" ? [1] : []
+          content {}
+        }
+        dynamic "block" {
+          for_each = rule.value.action == "block" ? [1] : []
+          content {}
+        }
+        dynamic "count" {
+          for_each = rule.value.action == "count" ? [1] : []
+          content {}
+        }
+      }
+
+      statement {
+        ip_set_reference_statement {
+            arn = aws_wafv2_ip_set.ip_set[rule.value.name].arn
+        }
+      }
+      
+      dynamic "visibility_config" {
+        for_each = lookup(rule.value, "visibility_config", null) != null ? [rule.value.visibility_config] : []
+
+        content {
+          cloudwatch_metrics_enabled = lookup(visibility_config.value, "cloudwatch_metrics_enabled", true)
+          metric_name                = visibility_config.value.metric_name
+          sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
+        }
+      }
+    }
+  }
+
+  dynamic "rule" {
     for_each = local.managed_rule_group_statement_rules
 
     content {
@@ -361,6 +416,80 @@ resource "aws_wafv2_web_acl" "default" {
             name        = managed_rule_group_statement.value.name
             vendor_name = managed_rule_group_statement.value.vendor_name
 
+            dynamic "managed_rule_group_configs" {
+              for_each = lookup(managed_rule_group_statement.value, "managed_rule_group_configs", null) != null ? [managed_rule_group_statement.value.managed_rule_group_configs] : []
+              content {
+                dynamic "aws_managed_rules_bot_control_rule_set" {
+                  for_each = lookup(managed_rule_group_configs.value, "aws_managed_rules_bot_control_rule_set", null) != null ? [managed_rule_group_configs.value.aws_managed_rules_bot_control_rule_set] : []
+                  content {
+                    inspection_level = aws_managed_rules_bot_control_rule_set.value.inspection_level
+                  }
+                }
+                dynamic "aws_managed_rules_atp_rule_set" {
+                  for_each = lookup(managed_rule_group_configs.value, "aws_managed_rules_atp_rule_set", null) != null ? [managed_rule_group_configs.value.aws_managed_rules_atp_rule_set] : []
+                  content {
+                    login_path = aws_managed_rules_atp_rule_set.value.login_path
+                    dynamic "request_inspection" {
+                      for_each = lookup(aws_managed_rules_atp_rule_set.value, "request_inspection", null) != null ? [aws_managed_rules_atp_rule_set.value.request_inspection] : []
+                      content {
+                        payload_type = request_inspection.value.payload_type
+                        dynamic "password_field" {
+                          for_each = lookup(request_inspection.value, "password_field", null) != null ? [request_inspection.value.password_field] : []
+                          content {
+                            identifier = password_field.value.identifier
+                          }
+                        }
+                        dynamic "username_field" {
+                          for_each = lookup(request_inspection.value, "username_field", null) != null ? [request_inspection.value.username_field] : []
+                          content {
+                            identifier = username_field.value.identifier
+                          }
+                        }
+                      }
+                    }
+                    dynamic "response_inspection" {
+                      for_each = lookup(managed_rule_group_configs.value, "response_inspection", null) != null ? [managed_rule_group_configs.value.response_inspection] : []
+                      content {
+                        dynamic "status_code" {
+                          for_each = lookup(response_inspection.value, "status_code", null) != null ? [response_inspection.value.status_code] : []
+                          content {
+                            failure_codes = toset(status_code.value.failure_codes)
+                            success_codes = toset(status_code.value.success_codes)
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            dynamic "scope_down_statement" {
+              for_each = lookup(managed_rule_group_statement.value, "scope_down_statement", null) != null ? [managed_rule_group_statement.value.scope_down_statement] : []
+              content {
+                dynamic "regex_match_statement" {
+                  for_each = lookup(scope_down_statement.value, "regex_match_statement", null) != null ? [scope_down_statement.value.regex_match_statement] : []
+                  content {
+                    regex_string = regex_match_statement.value.regex_string
+                    dynamic "field_to_match" {
+                      for_each = lookup(regex_match_statement.value, "field_to_match", null) != null ? [regex_match_statement.value.field_to_match] : []
+                      content {
+                        dynamic "uri_path" {
+                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+                          content {}
+                        }
+                      }
+                    }
+                    dynamic "text_transformation" {
+                      for_each = lookup(regex_match_statement.value, "text_transformation", null) != null ? [regex_match_statement.value.text_transformation] : []
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+              }
+            }
             dynamic "excluded_rule" {
               for_each = lookup(managed_rule_group_statement.value, "excluded_rule", null) != null ? toset(managed_rule_group_statement.value.excluded_rule) : []
 
@@ -539,6 +668,72 @@ resource "aws_wafv2_web_acl" "default" {
         }
       }
 
+      dynamic "visibility_config" {
+        for_each = lookup(rule.value, "visibility_config", null) != null ? [rule.value.visibility_config] : []
+
+        content {
+          cloudwatch_metrics_enabled = lookup(visibility_config.value, "cloudwatch_metrics_enabled", true)
+          metric_name                = visibility_config.value.metric_name
+          sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
+        }
+      }
+    }
+  }
+
+  dynamic "rule" {
+    for_each = local.regex_match_statement_rules
+    content {
+      name     = rule.value.name
+      priority = rule.value.priority
+
+      action {
+        dynamic "captcha" {
+          for_each = rule.value.action == "captcha" ? [1] : []
+          content {}
+        }
+      }
+      dynamic "captcha_config" {
+        for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
+        content {
+          dynamic "immunity_time_property" {
+            for_each = lookup(captcha_config.value, "immunity_time_property", null) != null ? [captcha_config.value.immunity_time_property] : []
+            content {
+              immunity_time = immunity_time_property.value.immunity_time
+            }
+          }
+        }
+      }
+      statement {
+        or_statement {
+          dynamic "statement" {
+            for_each = lookup(rule.value, "or_statement", null) != null ? toset(rule.value.or_statement) : []
+            content {
+              dynamic "regex_match_statement" {
+                for_each = lookup(statement.value, "regex_match_statement", null) != null ? [statement.value.regex_match_statement] : []
+                content {
+                  regex_string = regex_match_statement.value.regex_string
+                  dynamic "field_to_match" {
+                    for_each= lookup(regex_match_statement.value, "field_to_match", null) != null ? [regex_match_statement.value.field_to_match] : []
+                    content {
+                      dynamic "uri_path" {
+                        for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+                        content {}
+                      }
+                    }
+                  }
+                  dynamic "text_transformation" {
+                    for_each = lookup(regex_match_statement.value, "text_transformation", null) != null ? [regex_match_statement.value.text_transformation] : []
+                    content {
+                      priority = text_transformation.value.priority
+                      type     = text_transformation.value.type
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
       dynamic "visibility_config" {
         for_each = lookup(rule.value, "visibility_config", null) != null ? [rule.value.visibility_config] : []
 

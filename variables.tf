@@ -155,8 +155,105 @@ variable "ip_set_reference_statement_rules" {
   DOC
 }
 
+variable "ip_set_allow_block_rules" {
+  type        = list(object(
+    {
+      name               = string
+      description        = optional(string)
+      priority           = number
+      action             = string
+      ip_address_version = string
+      addresses          = list(string)
+      visibility_config  = object({
+        cloudwatch_metrics_enabled = bool
+        metric_name                = string
+        sampled_requests_enabled   = bool
+      })
+    }
+  ))
+  default     = null
+  description = <<-DOC
+    A rule statement used to define allow and block rules for a list of CIDRs. This also creates the associated ip_set resources.
+
+    action:
+      The action that AWS WAF should take on a web request when it matches the rule's statement.
+    name:
+      A friendly name of the rule.
+    description:
+      A brief descriotion of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+    ip_address_version:
+      The IP protocol version associated with the CIDR to allow or block. example: `IPV4` or `IPV6`
+    addresses:
+      A list of CIDR addresses to allow or block. example: ["0.0.0.0/0"]
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
 variable "managed_rule_group_statement_rules" {
-  type        = list(any)
+  type = list(object(
+    {
+      name            = string
+      override_action = optional(string, null)
+      priority        = number
+      statement       = object({
+        name                       = string
+        vendor_name                = string
+        managed_rule_group_configs = optional(object({
+          aws_managed_rules_bot_control_rule_set = optional(object({
+            inspection_level = optional(string, "COMMON")
+          }))
+          aws_managed_rules_atp_rule_set = optional(object({
+            login_path         = optional(string)
+            request_inspection = optional(object({
+              payload_type   = optional(string)
+              password_field = optional(object({
+                identifier = optional(string, "password")
+              }))
+              username_field = optional(object({
+                identifier = optional(string, "email")
+              }))
+            }))
+            response_inspection = optional(object({
+              status_code = optional(object({
+                failure_codes = optional(list(number))
+                success_codes = optional(list(number))
+              }))
+            }))
+          }))
+        }))
+        scope_down_statement = optional(object({
+          regex_match_statement = optional(object({
+            regex_string       = optional(string)
+            field_to_match     = optional(object({
+              uri_path         = optional(object({}))
+            }))
+            text_transformation = optional(object({
+              priority = optional(number)
+              type     = optional(string)
+            }))
+          }))
+        }))
+      })
+      visibility_config = object({
+        cloudwatch_metrics_enabled = bool
+        metric_name                = string
+        sampled_requests_enabled   = bool
+      })
+    }
+  ))
   default     = null
   description = <<-DOC
     A rule statement used to run the rules that are defined in a managed rule group.
@@ -179,6 +276,9 @@ variable "managed_rule_group_statement_rules" {
         The name of the managed rule group vendor.
       excluded_rule:
         The list of names of the rules to exclude.
+      
+      managed_rule_group_configs:
+        Managed rule group configurations
 
     visibility_config:
       Defines and enables Amazon CloudWatch metrics and web request sample collection.
@@ -257,6 +357,74 @@ variable "regex_pattern_set_reference_statement_rules" {
       text_transformation:
         Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
         See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
+variable "regex_match_statement_rules" {
+  type        = list(object(
+    {
+      name            = string
+      priority        = number
+      action          = string
+      captcha_config  = optional(object({
+        immunity_time_property = optional(object({
+          immunity_time = optional(number)
+        }))
+      }))
+      or_statement    = optional(list(object({
+        regex_match_statement = object({
+          regex_string       = optional(string)
+          field_to_match     = optional(object({
+            uri_path         = optional(object({}))
+          }))
+          text_transformation = optional(object({
+            priority = optional(number)
+            type     = optional(string)
+          }))
+        })
+      })))
+      visibility_config = object({
+        cloudwatch_metrics_enabled = bool
+        metric_name                = string
+        sampled_requests_enabled   = bool
+      })
+    }
+  ))
+  default     = null
+  description = <<-DOC
+    A rule statement used to search web request components for matches with regular expressions.
+
+    action:
+      The action that AWS WAF should take on a web request when it matches the rule's statement.
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    or_statement: 
+      A list of regex_match_statements
+      
+      regex_match_statement:
+        regex_string:
+         A regex string to match
+        field_to_match:
+          The part of a web request that you want AWS WAF to inspect.
+          See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match
+        text_transformation:
+          Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
+          See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
 
     visibility_config:
       Defines and enables Amazon CloudWatch metrics and web request sample collection.
