@@ -601,8 +601,13 @@ variable "log_destination_configs" {
 }
 
 variable "redacted_fields" {
-  type        = map(any)
-  default     = {}
+  type        = list(object({
+    method_enabled       = optional(bool, false)
+    uri_path_enabled     = optional(bool, false)
+    query_string_enabled = optional(bool, false)
+    single_header        = optional(list(string), [])
+  }))
+  default     = [{}]
   description = <<-DOC
     The parts of the request that you want to keep out of the logs.
 
@@ -618,4 +623,16 @@ variable "redacted_fields" {
     single_header:
       The list of names of the query headers to redact.
   DOC
+}
+
+variable "create_logging_bucket" {
+  type        = bool
+  default     = false
+  description = "Toggle WAF logging"
+}
+
+variable "logging_bucket_lifecycle_rule" {
+  type        = string
+  default     = null
+  description = "A JSON encoded string s3 lifecycle policy. This requires `create_logging_bucket = true`."
 }
