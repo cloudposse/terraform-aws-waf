@@ -2,7 +2,7 @@ module "waf_bucket" {
   count  = var.create_logging_bucket ? 1 : 0
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-s3-bucket.git?ref=v3.4.0"
 
-  bucket = "aws-waf-logs-${module.this.environment}"
+  bucket = "aws-waf-logs-${module.this.namespace}-${module.this.environment}"
 
   block_public_acls       = true
   block_public_policy     = true
