@@ -1,0 +1,45 @@
+name: kics
+on:
+  push: 
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  kics-job:
+    name: kics-action
+    runs-on: ubuntu-latest
+    permissions:
+      # required for all workflows
+      security-events: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Create output directory
+        # creating output directory
+        run: mkdir -p myoutput
+      - name: Run KICS Scan
+        uses: checkmarx/kics-github-action@v1.7.0
+        with: 
+          timeout: 60
+          output_path: myoutput/
+          output_formats: sarif
+          ignore_on_exit: results
+          enable_comments: true
+          enable_annotations: true
+          enable_jobs_summary: true
+          comments_with_queries: true
+          path: "./"
+          token: ${{ secrets.VERACODE_PAT }}
+      - name: display kics results
+        run: |
+          cat myoutput/results.sarif
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: myoutput/results.sarif
+          category: kics
