@@ -691,6 +691,10 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = rule.value.action == "captcha" ? [1] : []
           content {}
         }
+        dynamic "count" {
+          for_each = rule.value.action == "count" ? [1] : []
+          content {}
+        }
       }
       dynamic "captcha_config" {
         for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
