@@ -156,7 +156,7 @@ variable "ip_set_reference_statement_rules" {
 }
 
 variable "ip_set_allow_block_rules" {
-  type        = list(object(
+  type = list(object(
     {
       name               = string
       description        = optional(string)
@@ -164,7 +164,7 @@ variable "ip_set_allow_block_rules" {
       action             = string
       ip_address_version = string
       addresses          = list(string)
-      visibility_config  = object({
+      visibility_config = object({
         cloudwatch_metrics_enabled = bool
         metric_name                = string
         sampled_requests_enabled   = bool
@@ -208,17 +208,17 @@ variable "managed_rule_group_statement_rules" {
       name            = string
       override_action = optional(string, null)
       priority        = number
-      statement       = object({
-        name                       = string
-        vendor_name                = string
+      statement = object({
+        name        = string
+        vendor_name = string
         managed_rule_group_configs = optional(object({
           aws_managed_rules_bot_control_rule_set = optional(object({
             inspection_level = optional(string, "COMMON")
           }))
           aws_managed_rules_atp_rule_set = optional(object({
-            login_path         = optional(string)
+            login_path = optional(string)
             request_inspection = optional(object({
-              payload_type   = optional(string)
+              payload_type = optional(string)
               password_field = optional(object({
                 identifier = optional(string, "password")
               }))
@@ -236,9 +236,9 @@ variable "managed_rule_group_statement_rules" {
         }))
         scope_down_statement = optional(object({
           regex_match_statement = optional(object({
-            regex_string       = optional(string)
-            field_to_match     = optional(object({
-              uri_path         = optional(object({}))
+            regex_string = optional(string)
+            field_to_match = optional(object({
+              uri_path = optional(object({}))
             }))
             text_transformation = optional(object({
               priority = optional(number)
@@ -371,21 +371,21 @@ variable "regex_pattern_set_reference_statement_rules" {
 }
 
 variable "regex_match_statement_rules" {
-  type        = list(object(
+  type = list(object(
     {
-      name            = string
-      priority        = number
-      action          = string
-      captcha_config  = optional(object({
+      name     = string
+      priority = number
+      action   = string
+      captcha_config = optional(object({
         immunity_time_property = optional(object({
           immunity_time = optional(number)
         }))
       }))
-      or_statement    = optional(list(object({
+      or_statement = optional(list(object({
         regex_match_statement = object({
-          regex_string       = optional(string)
-          field_to_match     = optional(object({
-            uri_path         = optional(object({}))
+          regex_string = optional(string)
+          field_to_match = optional(object({
+            uri_path = optional(object({}))
           }))
           text_transformation = optional(object({
             priority = optional(number)
@@ -601,7 +601,7 @@ variable "log_destination_configs" {
 }
 
 variable "redacted_fields" {
-  type        = list(object({
+  type = list(object({
     method_enabled       = optional(bool, false)
     uri_path_enabled     = optional(bool, false)
     query_string_enabled = optional(bool, false)
