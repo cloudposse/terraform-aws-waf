@@ -490,13 +490,6 @@ resource "aws_wafv2_web_acl" "default" {
                 }
               }
             }
-            dynamic "excluded_rule" {
-              for_each = lookup(managed_rule_group_statement.value, "excluded_rule", null) != null ? toset(managed_rule_group_statement.value.excluded_rule) : []
-
-              content {
-                name = excluded_rule.value
-              }
-            }
           }
         }
       }
