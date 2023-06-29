@@ -375,10 +375,10 @@ resource "aws_wafv2_web_acl" "default" {
 
       statement {
         ip_set_reference_statement {
-            arn = aws_wafv2_ip_set.ip_set[rule.value.name].arn
+          arn = aws_wafv2_ip_set.ip_set[rule.value.name].arn
         }
       }
-      
+
       dynamic "visibility_config" {
         for_each = lookup(rule.value, "visibility_config", null) != null ? [rule.value.visibility_config] : []
 
@@ -691,6 +691,10 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = rule.value.action == "captcha" ? [1] : []
           content {}
         }
+        dynamic "count" {
+          for_each = rule.value.action == "count" ? [1] : []
+          content {}
+        }
       }
       dynamic "captcha_config" {
         for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
@@ -713,7 +717,7 @@ resource "aws_wafv2_web_acl" "default" {
                 content {
                   regex_string = regex_match_statement.value.regex_string
                   dynamic "field_to_match" {
-                    for_each= lookup(regex_match_statement.value, "field_to_match", null) != null ? [regex_match_statement.value.field_to_match] : []
+                    for_each = lookup(regex_match_statement.value, "field_to_match", null) != null ? [regex_match_statement.value.field_to_match] : []
                     content {
                       dynamic "uri_path" {
                         for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
