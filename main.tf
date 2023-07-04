@@ -1,15 +1,19 @@
+locals {
+  enabled = module.this.enabled
+}
+
 resource "aws_wafv2_web_acl_association" "default" {
-  count = module.this.enabled && length(var.association_resource_arns) > 0 ? length(var.association_resource_arns) : 0
+  count = local.enabled && length(var.association_resource_arns) > 0 ? length(var.association_resource_arns) : 0
 
   resource_arn = var.association_resource_arns[count.index]
-  web_acl_arn  = join("", aws_wafv2_web_acl.default.*.arn)
+  web_acl_arn  = one(aws_wafv2_web_acl.default[*].arn)
 }
 
 resource "aws_wafv2_web_acl_logging_configuration" "default" {
-  count = module.this.enabled && length(var.log_destination_configs) > 0 ? 1 : 0
+  count = local.enabled && length(var.log_destination_configs) > 0 ? 1 : 0
 
   log_destination_configs = var.log_destination_configs
-  resource_arn            = join("", aws_wafv2_web_acl.default.*.arn)
+  resource_arn            = one(aws_wafv2_web_acl.default[*].arn)
 
   dynamic "redacted_fields" {
     for_each = var.redacted_fields
