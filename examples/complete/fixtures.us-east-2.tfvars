@@ -7,4 +7,3 @@ environment = "ue2"
 stage = "test"
 
 name = "waf"
-
