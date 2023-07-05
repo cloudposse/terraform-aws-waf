@@ -177,6 +177,9 @@ variable "managed_rule_group_statement_rules" {
         The name of the managed rule group.
       vendor_name:
         The name of the managed rule group vendor.
+      version:
+        The version of the managed rule group.
+        You can set `Version_1.0` or `Version_1.1` etc. If you want to use the default version, do not set anything.
       excluded_rule:
         The list of names of the rules to exclude.
 
@@ -449,5 +452,22 @@ variable "redacted_fields" {
       This is the part of a URL that appears after a `?` character, if any.
     single_header:
       The list of names of the query headers to redact.
+  DOC
+}
+
+variable "custom_response_body" {
+  type    = map(any)
+  default = {}
+
+  description = <<-DOC
+    Defines custom response bodies that can be referenced by custom_response actions
+    content:
+      Payload of the custom response.
+      The response body can be plain text, HTML or JSON and cannot exceed 4KB in size.
+    content_type:
+      Content Type of Response Body.
+      Valid values are `TEXT_PLAIN`, `TEXT_HTML`, or `APPLICATION_JSON`.
+    key:
+      Unique key identifying the custom response body.
   DOC
 }
