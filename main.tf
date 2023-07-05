@@ -49,14 +49,37 @@ resource "aws_wafv2_web_acl_logging_configuration" "default" {
     }
   }
 
-  logging_filter {
-    default_behavior = var.logging_filter.default_behavior
-    filter {
-      behavior    = var.logging_filter["filter"]["behavior"]
-      requirement = var.logging_filter["filter"]["requirement"]
-      condition {
-        action_condition {
-          action = var.logging_filter["filter"]["condition"]["action_condition"]["action"]
+  dynamic "logging_filter" {
+    for_each = var.logging_filter != null ? [true] : []
+
+    content {
+      default_behavior = var.logging_filter.default_behavior
+
+      dynamic "filter" {
+        for_each = var.logging_filter.filter
+
+        content {
+          behavior    = filter.value.behavior
+          requirement = filter.value.requirement
+
+          dynamic "condition" {
+            for_each = filter.value.condition
+
+            content {
+              dynamic "action_condition" {
+                for_each = condition.value.action_condition != null ? [true] : []
+                content {
+                  action = condition.value.action_condition.action
+                }
+              }
+              dynamic "label_name_condition" {
+                for_each = condition.value.label_name_condition != null ? [true] : []
+                content {
+                  label_name = condition.value.label_name_condition.label_name
+                }
+              }
+            }
+          }
         }
       }
     }
