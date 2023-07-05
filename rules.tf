@@ -7,6 +7,14 @@ locals {
     ) => rule
   } : {}
 
+  geo_allowlist_statement_rules = module.this.enabled && var.geo_allowlist_statement_rules != null ? {
+    for rule in flatten(var.geo_allowlist_statement_rules) :
+    format("%s-%s",
+      lookup(rule, "name", null) != null ? rule.name : format("%s-geo-allowlist-%d", module.this.id, rule.priority),
+      "block",
+    ) => rule
+  } : {}
+
   geo_match_statement_rules = local.enabled && var.geo_match_statement_rules != null ? {
     for rule in flatten(var.geo_match_statement_rules) :
     format("%s-%s",
@@ -195,6 +203,55 @@ resource "aws_wafv2_web_acl" "default" {
               content {
                 priority = text_transformation.value.priority
                 type     = text_transformation.value.type
+              }
+            }
+          }
+        }
+      }
+
+      dynamic "visibility_config" {
+        for_each = lookup(rule.value, "visibility_config", null) != null ? [rule.value.visibility_config] : []
+
+        content {
+          cloudwatch_metrics_enabled = lookup(visibility_config.value, "cloudwatch_metrics_enabled", true)
+          metric_name                = visibility_config.value.metric_name
+          sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
+        }
+      }
+    }
+  }
+
+  dynamic "rule" {
+    for_each = local.geo_allowlist_statement_rules
+
+    content {
+      name     = rule.value.name
+      priority = rule.value.priority
+
+      action {
+        block {}
+      }
+
+      # `geo_allowlist_statement_rules` is a special case where we use `not_statement` to wrap our `statement` block to support
+      # an "allowlist". Otherwise, using `geo_match_statement_rules` requires specifying ALL country codes that you
+      # would like to blocklist.
+      statement {
+        not_statement {
+          statement {
+            dynamic "geo_match_statement" {
+              for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
+
+              content {
+                country_codes = geo_match_statement.value.country_codes
+
+                dynamic "forwarded_ip_config" {
+                  for_each = lookup(geo_match_statement.value, "forwarded_ip_config", null) != null ? [geo_match_statement.value.forwarded_ip_config] : []
+
+                  content {
+                    fallback_behavior = forwarded_ip_config.value.fallback_behavior
+                    header_name       = forwarded_ip_config.value.header_name
+                  }
+                }
               }
             }
           }

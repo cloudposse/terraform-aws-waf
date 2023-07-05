@@ -207,5 +207,22 @@ module "waf" {
     }
   ]
 
+  geo_allowlist_statement_rules = [
+    {
+      name     = "rule-80"
+      priority = 80
+
+      statement = {
+        country_codes = ["US"]
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = false
+        metric_name                = "rule-80-metric"
+      }
+    }
+  ]
+
   context = module.this.context
 }
