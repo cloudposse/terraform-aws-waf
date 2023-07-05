@@ -12,8 +12,8 @@ resource "aws_wafv2_web_acl_association" "default" {
 resource "aws_wafv2_web_acl_logging_configuration" "default" {
   count = local.enabled && length(var.log_destination_configs) > 0 ? 1 : 0
 
-  log_destination_configs = var.log_destination_configs
   resource_arn            = one(aws_wafv2_web_acl.default[*].arn)
+  log_destination_configs = var.log_destination_configs
 
   dynamic "redacted_fields" {
     for_each = var.redacted_fields
@@ -44,6 +44,19 @@ resource "aws_wafv2_web_acl_logging_configuration" "default" {
         for_each = lookup(redacted_fields.value, "single_header", null) != null ? toset(redacted_fields.value.single_header) : []
         content {
           name = single_header.value
+        }
+      }
+    }
+  }
+
+  logging_filter {
+    default_behavior = var.logging_filter.default_behavior
+    filter {
+      behavior    = var.logging_filter["filter"]["behavior"]
+      requirement = var.logging_filter["filter"]["requirement"]
+      condition {
+        action_condition {
+          action = var.logging_filter["filter"]["condition"]["action_condition"]["action"]
         }
       }
     }

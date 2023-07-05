@@ -2,6 +2,7 @@ variable "default_action" {
   type        = string
   default     = "block"
   description = "Specifies that AWS WAF should allow requests by default. Possible values: `allow`, `block`."
+  nullable    = false
   validation {
     condition     = contains(["allow", "block"], var.default_action)
     error_message = "Allowed values: `allow`, `block`."
@@ -22,6 +23,7 @@ variable "scope" {
     Possible values are `CLOUDFRONT` or `REGIONAL`.
     To work with CloudFront, you must also specify the region us-east-1 (N. Virginia) on the AWS provider.
   DOC
+  nullable    = false
   validation {
     condition     = contains(["CLOUDFRONT", "REGIONAL"], var.scope)
     error_message = "Allowed values: `CLOUDFRONT`, `REGIONAL`."
@@ -41,6 +43,7 @@ variable "visibility_config" {
     sampled_requests_enabled:
       Whether AWS WAF should store a sampling of the web requests that match the rules.
   DOC
+  nullable    = false
 }
 
 variable "byte_match_statement_rules" {
@@ -427,12 +430,14 @@ variable "association_resource_arns" {
     A list of ARNs of the resources to associate with the web ACL.
     This must be an ARN of an Application Load Balancer or an Amazon API Gateway stage.
   DOC
+  nullable    = false
 }
 
 variable "log_destination_configs" {
   type        = list(string)
   default     = []
   description = "The Amazon Kinesis Data Firehose ARNs."
+  nullable    = false
 }
 
 variable "redacted_fields" {
@@ -453,6 +458,7 @@ variable "redacted_fields" {
     single_header:
       The list of names of the query headers to redact.
   DOC
+  nullable    = false
 }
 
 variable "custom_response_body" {
@@ -470,4 +476,15 @@ variable "custom_response_body" {
     key:
       Unique key identifying the custom response body.
   DOC
+  nullable    = false
+}
+
+variable "logging_filter" {
+  type        = any
+  default     = {}
+  description = <<-DOC
+    A configuration block that specifies which web requests are kept in the logs and which are dropped.
+    You can filter on the rule action and on the web request labels that were applied by matching rules during web ACL evaluation.
+  DOC
+  nullable    = false
 }
