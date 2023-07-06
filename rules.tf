@@ -853,6 +853,8 @@ resource "aws_wafv2_web_acl" "default" {
 
                   content {
                     # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                    # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                    # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
                     # Valid values include the following: CONTINUE, MATCH, NO_MATCH
                     oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
                   }
