@@ -851,7 +851,11 @@ resource "aws_wafv2_web_acl" "default" {
                 dynamic "body" {
                   for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
 
-                  content {}
+                  content {
+                    # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                    # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                    oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                  }
                 }
 
                 dynamic "method" {
