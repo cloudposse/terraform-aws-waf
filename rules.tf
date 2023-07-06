@@ -414,10 +414,38 @@ resource "aws_wafv2_web_acl" "default" {
       statement {
         dynamic "managed_rule_group_statement" {
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
+
           content {
             name        = managed_rule_group_statement.value.name
             vendor_name = managed_rule_group_statement.value.vendor_name
             version     = lookup(managed_rule_group_statement.value, "version", null)
+
+            dynamic "rule_action_override" {
+              for_each = lookup(managed_rule_group_statement.value, "rule_action_override", null) != null ? managed_rule_group_statement.value.rule_action_override : {}
+
+              content {
+                name = rule_action_override.key
+
+                action_to_use {
+                  dynamic "allow" {
+                    for_each = rule_action_override.value.action == "allow" ? [1] : []
+                    content {}
+                  }
+                  dynamic "block" {
+                    for_each = rule_action_override.value.action == "block" ? [1] : []
+                    content {}
+                  }
+                  dynamic "count" {
+                    for_each = rule_action_override.value.action == "count" ? [1] : []
+                    content {}
+                  }
+                  dynamic "captcha" {
+                    for_each = rule_action_override.value.action == "captcha" ? [1] : []
+                    content {}
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -734,6 +762,33 @@ resource "aws_wafv2_web_acl" "default" {
 
           content {
             arn = rule_group_reference_statement.value.arn
+
+            dynamic "rule_action_override" {
+              for_each = lookup(rule_group_reference_statement.value, "rule_action_override", null) != null ? rule_group_reference_statement.value.rule_action_override : {}
+
+              content {
+                name = rule_action_override.key
+
+                action_to_use {
+                  dynamic "allow" {
+                    for_each = rule_action_override.value.action == "allow" ? [1] : []
+                    content {}
+                  }
+                  dynamic "block" {
+                    for_each = rule_action_override.value.action == "block" ? [1] : []
+                    content {}
+                  }
+                  dynamic "count" {
+                    for_each = rule_action_override.value.action == "count" ? [1] : []
+                    content {}
+                  }
+                  dynamic "captcha" {
+                    for_each = rule_action_override.value.action == "captcha" ? [1] : []
+                    content {}
+                  }
+                }
+              }
+            }
           }
         }
       }

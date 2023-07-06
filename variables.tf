@@ -218,8 +218,9 @@ variable "managed_rule_group_statement_rules" {
       version:
         The version of the managed rule group.
         You can set `Version_1.0` or `Version_1.1` etc. If you want to use the default version, do not set anything.
-      excluded_rule:
-        The list of names of the rules to exclude.
+      rule_action_override:
+        Action settings to use in the place of the rule actions that are configured inside the rule group.
+        You specify one override for each rule whose action you want to change.
 
     visibility_config:
       Defines and enables Amazon CloudWatch metrics and web request sample collection.
@@ -368,8 +369,9 @@ variable "rule_group_reference_statement_rules" {
     statement:
       arn:
         The ARN of the `aws_wafv2_rule_group` resource.
-      excluded_rule:
-        The list of names of the rules to exclude.
+      rule_action_override:
+        Action settings to use in the place of the rule actions that are configured inside the rule group.
+        You specify one override for each rule whose action you want to change.
 
     visibility_config:
       Defines and enables Amazon CloudWatch metrics and web request sample collection.
