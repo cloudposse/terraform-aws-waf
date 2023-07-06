@@ -311,6 +311,43 @@ variable "regex_pattern_set_reference_statement_rules" {
   DOC
 }
 
+variable "regex_match_statement_rules" {
+  type        = list(any)
+  default     = null
+  description = <<-DOC
+    A rule statement used to search web request components for a match against a single regular expression.
+
+    action:
+      The action that AWS WAF should take on a web request when it matches the rule's statement.
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    statement:
+      regex_string:
+         String representing the regular expression. Minimum of 1 and maximum of 512 characters.
+      field_to_match:
+        The part of a web request that you want AWS WAF to inspect.
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl.html#field_to_match
+      text_transformation:
+        Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. At least one required.
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
 variable "rule_group_reference_statement_rules" {
   type        = list(any)
   default     = null
