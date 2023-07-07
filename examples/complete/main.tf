@@ -14,11 +14,6 @@ module "waf" {
       statement = {
         name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
-
-        excluded_rule = [
-          "SizeRestrictions_QUERYSTRING",
-          "NoUserAgent_HEADER"
-        ]
       }
 
       visibility_config = {
