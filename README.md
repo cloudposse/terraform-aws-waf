@@ -99,6 +99,7 @@ module "label" {
   source = "cloudposse/label/null"
   # Cloud Posse recommends pinning every module to a specific version
   # version = "x.x.x"
+
   namespace = "eg"
   stage     = "prod"
   name      = "waf"
@@ -270,13 +271,22 @@ Are you using this project or any of our other projects? Consider [leaving a tes
 Check out these related projects.
 
 - [terraform-null-label](https://github.com/cloudposse/terraform-null-label) - Terraform Module to define a consistent naming convention by (namespace, stage, name, [attributes])
+- [terraform-aws-network-firewall](https://github.com/cloudposse/terraform-aws-network-firewall) - Terraform module to provision AWS Network Firewall resources
+- [terraform-aws-route53-resolver-dns-firewall](https://github.com/cloudposse/terraform-aws-route53-resolver-dns-firewall) - Terraform module to provision Route 53 Resolver DNS Firewall, domain lists, firewall rules, rule groups, and logging configurations
+- [terraform-aws-config](https://github.com/cloudposse/terraform-aws-config) - Terraform module to provision [AWS Config](https://aws.amazon.com/config/) and optionally set up an SNS topic to receive notifications of its findings
+- [terraform-aws-config-storage](https://github.com/cloudposse/terraform-aws-config-storage) - Terraform module that creates an S3 bucket suitable for storing AWS Config data
+- [terraform-aws-guardduty](https://github.com/cloudposse/terraform-aws-guardduty) - Terraform module that enables and configures AWS GuardDuty
+- [terraform-aws-security-hub](https://github.com/cloudposse/terraform-aws-security-hub) - Terraform module that enables and configures AWS Security Hub
 
 
 ## References
 
 For additional context, refer to some of these links.
 
+- [AWS WAF](https://aws.amazon.com/waf) - Protect your web applications from common exploits
 - [terraform-provider-aws](https://registry.terraform.io/providers/hashicorp/aws/latest) - Terraform AWS provider
+- [aws_wafv2_web_acl](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl.html) - Creates a WAFv2 Web ACL resource
+- [aws_wafv2_web_acl_logging_configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_logging_configuration.html) - Creates a WAFv2 Web ACL Logging Configuration
 
 
 ## Help

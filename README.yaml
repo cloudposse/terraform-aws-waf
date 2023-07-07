@@ -14,32 +14,60 @@ license: APACHE2
 
 # Copyrights
 copyrights:
-- name: Cloud Posse, LLC
-  url: https://cloudposse.com
-  year: '2021'
+  - name: Cloud Posse, LLC
+    url: https://cloudposse.com
+    year: '2021'
 
 # Canonical GitHub repo
 github_repo: cloudposse/terraform-aws-waf
 
 # Badges to display
 badges:
-- name: Latest Release
-  image: https://img.shields.io/github/release/cloudposse/terraform-aws-waf.svg
-  url: https://github.com/cloudposse/terraform-aws-waf/releases/latest
-- name: Slack Community
-  image: https://slack.cloudposse.com/badge.svg
-  url: https://slack.cloudposse.com
+  - name: Latest Release
+    image: https://img.shields.io/github/release/cloudposse/terraform-aws-waf.svg
+    url: https://github.com/cloudposse/terraform-aws-waf/releases/latest
+  - name: Slack Community
+    image: https://slack.cloudposse.com/badge.svg
+    url: https://slack.cloudposse.com
 
 # List any related terraform modules that this module may be used with or that this module depends on.
 related:
-- name: terraform-null-label
-  description: Terraform Module to define a consistent naming convention by (namespace,
-    stage, name, [attributes])
-  url: https://github.com/cloudposse/terraform-null-label
+  - name: terraform-null-label
+    description: Terraform Module to define a consistent naming convention by (namespace, stage, name, [attributes])
+    url: https://github.com/cloudposse/terraform-null-label
+  - name: terraform-aws-network-firewall
+    description: Terraform module to provision AWS Network Firewall resources
+    url: https://github.com/cloudposse/terraform-aws-network-firewall
+  - name: terraform-aws-route53-resolver-dns-firewall
+    description: Terraform module to provision Route 53 Resolver DNS Firewall, domain lists, firewall rules, rule groups, and logging configurations
+    url: https://github.com/cloudposse/terraform-aws-route53-resolver-dns-firewall
+  - name: terraform-aws-config
+    description: Terraform module to provision [AWS Config](https://aws.amazon.com/config/) and optionally set up an SNS topic to receive notifications of its findings
+    url: https://github.com/cloudposse/terraform-aws-config
+  - name: terraform-aws-config-storage
+    description: Terraform module that creates an S3 bucket suitable for storing AWS Config data
+    url: https://github.com/cloudposse/terraform-aws-config-storage
+  - name: terraform-aws-guardduty
+    description: Terraform module that enables and configures AWS GuardDuty
+    url: https://github.com/cloudposse/terraform-aws-guardduty
+  - name: terraform-aws-security-hub
+    description: Terraform module that enables and configures AWS Security Hub
+    url: https://github.com/cloudposse/terraform-aws-security-hub
+
 references:
-- name: terraform-provider-aws
-  description: Terraform AWS provider
-  url: https://registry.terraform.io/providers/hashicorp/aws/latest
+  - name: AWS WAF
+    description: Protect your web applications from common exploits
+    url: https://aws.amazon.com/waf
+  - name: terraform-provider-aws
+    description: Terraform AWS provider
+    url: https://registry.terraform.io/providers/hashicorp/aws/latest
+  - name: aws_wafv2_web_acl
+    description: Creates a WAFv2 Web ACL resource
+    url: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl.html
+  - name: aws_wafv2_web_acl_logging_configuration
+    description: Creates a WAFv2 Web ACL Logging Configuration
+    url: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_logging_configuration.html
+
 description: |-
   Terraform module to create and manage AWS WAFv2 rules. 
 
@@ -59,6 +87,7 @@ usage: |-
     source = "cloudposse/label/null"
     # Cloud Posse recommends pinning every module to a specific version
     # version = "x.x.x"
+  
     namespace = "eg"
     stage     = "prod"
     name      = "waf"
@@ -122,12 +151,12 @@ examples: |-
 
 # Other files to include in this README from the project folder
 include:
-- docs/targets.md
-- docs/terraform.md
+  - docs/targets.md
+  - docs/terraform.md
 
 # Contributors to this project
 contributors:
-- name: Vladimir Syromyatnikov
-  github: SweetOps
-- name: "Andriy Knysh"
-  github: "aknysh"
+  - name: Vladimir Syromyatnikov
+    github: SweetOps
+  - name: "Andriy Knysh"
+    github: "aknysh"
