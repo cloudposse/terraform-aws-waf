@@ -507,6 +507,24 @@ variable "association_resource_arns" {
   nullable    = false
 }
 
+variable "custom_response_body" {
+  type    = map(any)
+  default = {}
+
+  description = <<-DOC
+    Defines custom response bodies that can be referenced by custom_response actions
+    content:
+      Payload of the custom response.
+      The response body can be plain text, HTML or JSON and cannot exceed 4KB in size.
+    content_type:
+      Content Type of Response Body.
+      Valid values are `TEXT_PLAIN`, `TEXT_HTML`, or `APPLICATION_JSON`.
+    key:
+      Unique key identifying the custom response body.
+  DOC
+  nullable    = false
+}
+
 variable "log_destination_configs" {
   type        = list(string)
   default     = []
@@ -530,24 +548,6 @@ variable "redacted_fields" {
       This is the part of a URL that appears after a `?` character, if any.
     single_header:
       The list of names of the query headers to redact.
-  DOC
-  nullable    = false
-}
-
-variable "custom_response_body" {
-  type    = map(any)
-  default = {}
-
-  description = <<-DOC
-    Defines custom response bodies that can be referenced by custom_response actions
-    content:
-      Payload of the custom response.
-      The response body can be plain text, HTML or JSON and cannot exceed 4KB in size.
-    content_type:
-      Content Type of Response Body.
-      Valid values are `TEXT_PLAIN`, `TEXT_HTML`, or `APPLICATION_JSON`.
-    key:
-      Unique key identifying the custom response body.
   DOC
   nullable    = false
 }
