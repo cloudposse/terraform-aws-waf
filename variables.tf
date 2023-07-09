@@ -510,7 +510,7 @@ variable "association_resource_arns" {
 variable "log_destination_configs" {
   type        = list(string)
   default     = []
-  description = "The Amazon Kinesis Data Firehose, Cloudwatch Log log group, or S3 bucket Amazon Resource Names (ARNs) that you want to associate with the web ACL"
+  description = "The Amazon Kinesis Data Firehose, CloudWatch Log log group, or S3 bucket Amazon Resource Names (ARNs) that you want to associate with the web ACL"
 }
 
 variable "redacted_fields" {
