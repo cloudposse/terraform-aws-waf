@@ -512,20 +512,22 @@ variable "association_resource_arns" {
 }
 
 variable "custom_response_body" {
-  type    = map(any)
-  default = {}
+  type = map(object({
+    content      = string
+    content_type = string
+  }))
 
   description = <<-DOC
-    Defines custom response bodies that can be referenced by custom_response actions
+    Defines custom response bodies that can be referenced by custom_response actions.
+    The map keys are used as the `key` attribute which is a unique key identifying the custom response body.
     content:
       Payload of the custom response.
       The response body can be plain text, HTML or JSON and cannot exceed 4KB in size.
     content_type:
       Content Type of Response Body.
       Valid values are `TEXT_PLAIN`, `TEXT_HTML`, or `APPLICATION_JSON`.
-    key:
-      Unique key identifying the custom response body.
   DOC
+  default     = {}
   nullable    = false
 }
 

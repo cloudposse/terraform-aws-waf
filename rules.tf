@@ -116,6 +116,15 @@ resource "aws_wafv2_web_acl" "default" {
     sampled_requests_enabled   = lookup(var.visibility_config, "sampled_requests_enabled", true)
   }
 
+  dynamic "custom_response_body" {
+    for_each = var.custom_response_body
+    content {
+      key          = custom_response_body.key
+      content      = custom_response_body.value.content
+      content_type = custom_response_body.value.content
+    }
+  }
+
   dynamic "rule" {
     for_each = local.byte_match_statement_rules
 
@@ -1144,15 +1153,6 @@ resource "aws_wafv2_web_acl" "default" {
           sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
         }
       }
-    }
-  }
-
-  dynamic "custom_response_body" {
-    for_each = var.custom_response_body
-    content {
-      content      = custom_response_body.key["content"]
-      content_type = custom_response_body.key["content_type"]
-      key          = custom_response_body.key["key"]
     }
   }
 }
