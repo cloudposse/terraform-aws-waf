@@ -31,8 +31,11 @@ variable "scope" {
 }
 
 variable "visibility_config" {
-  type        = map(string)
-  default     = {}
+  type = object({
+    cloudwatch_metrics_enabled = bool
+    metric_name                = string
+    sampled_requests_enabled   = bool
+  })
   description = <<-DOC
     Defines and enables Amazon CloudWatch metrics and web request sample collection.
 
@@ -497,20 +500,6 @@ variable "xss_match_statement_rules" {
   DOC
 }
 
-variable "association_resource_arns" {
-  type        = list(string)
-  default     = []
-  description = <<-DOC
-    A list of ARNs of the resources to associate with the web ACL.
-    This must be an ARN of an Application Load Balancer, Amazon API Gateway stage, or AWS AppSync.
-
-    Do not use this variable to associate a Cloudfront Distribution.
-    Instead, you should use the `web_acl_id` property on the `cloudfront_distribution` resource.
-    For more details, refer to https://docs.aws.amazon.com/waf/latest/APIReference/API_AssociateWebACL.html
-  DOC
-  nullable    = false
-}
-
 variable "custom_response_body" {
   type = map(object({
     content      = string
@@ -587,4 +576,19 @@ variable "logging_filter" {
     A configuration block that specifies which web requests are kept in the logs and which are dropped.
     You can filter on the rule action and on the web request labels that were applied by matching rules during web ACL evaluation.
   DOC
+}
+
+# Association resource ARNs
+variable "association_resource_arns" {
+  type        = list(string)
+  default     = []
+  description = <<-DOC
+    A list of ARNs of the resources to associate with the web ACL.
+    This must be an ARN of an Application Load Balancer, Amazon API Gateway stage, or AWS AppSync.
+
+    Do not use this variable to associate a Cloudfront Distribution.
+    Instead, you should use the `web_acl_id` property on the `cloudfront_distribution` resource.
+    For more details, refer to https://docs.aws.amazon.com/waf/latest/APIReference/API_AssociateWebACL.html
+  DOC
+  nullable    = false
 }

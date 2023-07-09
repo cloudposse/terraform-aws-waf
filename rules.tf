@@ -100,20 +100,20 @@ resource "aws_wafv2_web_acl" "default" {
 
   default_action {
     dynamic "allow" {
-      for_each = var.default_action == "allow" ? [1] : []
+      for_each = var.default_action == "allow" ? [true] : []
       content {}
     }
 
     dynamic "block" {
-      for_each = var.default_action == "block" ? [1] : []
+      for_each = var.default_action == "block" ? [true] : []
       content {}
     }
   }
 
   visibility_config {
-    cloudwatch_metrics_enabled = lookup(var.visibility_config, "cloudwatch_metrics_enabled", true)
-    metric_name                = lookup(var.visibility_config, "metric_name", module.this.id)
-    sampled_requests_enabled   = lookup(var.visibility_config, "sampled_requests_enabled", true)
+    cloudwatch_metrics_enabled = var.visibility_config.cloudwatch_metrics_enabled
+    metric_name                = var.visibility_config.metric_name
+    sampled_requests_enabled   = var.visibility_config.sampled_requests_enabled
   }
 
   dynamic "custom_response_body" {
