@@ -525,6 +525,8 @@ variable "custom_response_body" {
   nullable    = false
 }
 
+# Logging configuration
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_logging_configuration.html
 variable "log_destination_configs" {
   type        = list(string)
   default     = []
@@ -532,18 +534,24 @@ variable "log_destination_configs" {
 }
 
 variable "redacted_fields" {
-  type        = map(any)
+  type = map(object({
+    method        = optional(bool, false)
+    uri_path      = optional(bool, false)
+    query_string  = optional(bool, false)
+    single_header = optional(list(string), null)
+  }))
   default     = {}
   description = <<-DOC
     The parts of the request that you want to keep out of the logs.
+    You can only specify one of the following: `method`, `query_string`, `single_header`, or `uri_path`
 
-    method_enabled:
+    method:
       Whether to enable redaction of the HTTP method.
       The method indicates the type of operation that the request is asking the origin to perform.
-    uri_path_enabled:
+    uri_path:
       Whether to enable redaction of the URI path.
       This is the part of a web request that identifies a resource.
-    query_string_enabled:
+    query_string:
       Whether to enable redaction of the query string.
       This is the part of a URL that appears after a `?` character, if any.
     single_header:

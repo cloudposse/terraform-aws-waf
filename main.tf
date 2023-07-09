@@ -30,24 +30,18 @@ resource "aws_wafv2_web_acl_logging_configuration" "default" {
 
     content {
       dynamic "method" {
-        for_each = redacted_fields.value.method_enabled ? [1] : []
-
-        content {
-        }
+        for_each = redacted_fields.value.method ? [1] : []
+        content {}
       }
 
       dynamic "query_string" {
-        for_each = redacted_fields.value.query_string_enabled ? [1] : []
-
-        content {
-        }
+        for_each = redacted_fields.value.query_string ? [1] : []
+        content {}
       }
 
       dynamic "uri_path" {
-        for_each = redacted_fields.value.uri_path_enabled ? [1] : []
-
-        content {
-        }
+        for_each = redacted_fields.value.uri_path ? [1] : []
+        content {}
       }
 
       dynamic "single_header" {
