@@ -502,7 +502,11 @@ variable "association_resource_arns" {
   default     = []
   description = <<-DOC
     A list of ARNs of the resources to associate with the web ACL.
-    This must be an ARN of an Application Load Balancer or an Amazon API Gateway stage.
+    This must be an ARN of an Application Load Balancer, Amazon API Gateway stage, or AWS AppSync.
+
+    Do not use this variable to associate a Cloudfront Distribution.
+    Instead, you should use the `web_acl_id` property on the `cloudfront_distribution` resource.
+    For more details, refer to https://docs.aws.amazon.com/waf/latest/APIReference/API_AssociateWebACL.html
   DOC
   nullable    = false
 }
