@@ -5,6 +5,12 @@ provider "aws" {
 module "waf" {
   source = "../.."
 
+  visibility_config = {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "ALL"
+    sampled_requests_enabled   = false
+  }
+
   managed_rule_group_statement_rules = [
     {
       name            = "rule-20"
