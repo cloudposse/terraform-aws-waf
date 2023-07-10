@@ -1,3 +1,9 @@
+variable "description" {
+  type        = string
+  default     = "Managed by Terraform"
+  description = "A friendly description of the WebACL."
+}
+
 variable "default_action" {
   type        = string
   default     = "block"
@@ -9,10 +15,24 @@ variable "default_action" {
   }
 }
 
-variable "description" {
-  type        = string
-  default     = "Managed by Terraform"
-  description = "A friendly description of the WebACL."
+variable "custom_response_body" {
+  type = map(object({
+    content      = string
+    content_type = string
+  }))
+
+  description = <<-DOC
+    Defines custom response bodies that can be referenced by custom_response actions.
+    The map keys are used as the `key` attribute which is a unique key identifying the custom response body.
+    content:
+      Payload of the custom response.
+      The response body can be plain text, HTML or JSON and cannot exceed 4KB in size.
+    content_type:
+      Content Type of Response Body.
+      Valid values are `TEXT_PLAIN`, `TEXT_HTML`, or `APPLICATION_JSON`.
+  DOC
+  default     = {}
+  nullable    = false
 }
 
 variable "scope" {
@@ -585,24 +605,4 @@ variable "xss_match_statement_rules" {
       sampled_requests_enabled:
         Whether AWS WAF should store a sampling of the web requests that match the rules.
   DOC
-}
-
-variable "custom_response_body" {
-  type = map(object({
-    content      = string
-    content_type = string
-  }))
-
-  description = <<-DOC
-    Defines custom response bodies that can be referenced by custom_response actions.
-    The map keys are used as the `key` attribute which is a unique key identifying the custom response body.
-    content:
-      Payload of the custom response.
-      The response body can be plain text, HTML or JSON and cannot exceed 4KB in size.
-    content_type:
-      Content Type of Response Body.
-      Valid values are `TEXT_PLAIN`, `TEXT_HTML`, or `APPLICATION_JSON`.
-  DOC
-  default     = {}
-  nullable    = false
 }
