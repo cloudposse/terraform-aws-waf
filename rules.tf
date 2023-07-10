@@ -93,10 +93,11 @@ locals {
 resource "aws_wafv2_web_acl" "default" {
   count = local.enabled ? 1 : 0
 
-  name        = module.this.id
-  description = var.description
-  scope       = var.scope
-  tags        = module.this.tags
+  name          = module.this.id
+  description   = var.description
+  scope         = var.scope
+  token_domains = var.token_domains
+  tags          = module.this.tags
 
   default_action {
     dynamic "allow" {
