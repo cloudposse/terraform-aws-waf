@@ -186,7 +186,7 @@ module "waf" {
       }
 
       visibility_config = {
-        cloudwatch_metrics_enabled = true
+        cloudwatch_metrics_enabled = false
         sampled_requests_enabled   = false
         metric_name                = "rule-10-metric"
       }
@@ -201,7 +201,7 @@ module "waf" {
       }
 
       visibility_config = {
-        cloudwatch_metrics_enabled = true
+        cloudwatch_metrics_enabled = false
         sampled_requests_enabled   = false
         metric_name                = "rule-11-metric"
       }
@@ -218,9 +218,38 @@ module "waf" {
       }
 
       visibility_config = {
-        cloudwatch_metrics_enabled = true
+        cloudwatch_metrics_enabled = false
         sampled_requests_enabled   = false
         metric_name                = "rule-80-metric"
+      }
+    }
+  ]
+
+  regex_match_statement_rules = [
+    {
+      name     = "rule-90"
+      priority = 90
+      action   = "block"
+
+      statement = {
+        regex_string = "^/admin"
+
+        text_transformation = [
+          {
+            priority = 90
+            type     = "COMPRESS_WHITE_SPACE"
+          }
+        ]
+
+        field_to_match = {
+          uri_path = {}
+        }
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = false
+        sampled_requests_enabled   = false
+        metric_name                = "rule-90-metric"
       }
     }
   ]
