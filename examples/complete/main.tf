@@ -7,7 +7,7 @@ module "waf" {
 
   visibility_config = {
     cloudwatch_metrics_enabled = false
-    metric_name                = "ALL"
+    metric_name                = "rules-example-metric"
     sampled_requests_enabled   = false
   }
 
