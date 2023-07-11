@@ -236,6 +236,16 @@ resource "aws_wafv2_web_acl" "default" {
           sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
         }
       }
+
+      dynamic "captcha_config" {
+        for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
     }
   }
 
@@ -283,6 +293,16 @@ resource "aws_wafv2_web_acl" "default" {
           cloudwatch_metrics_enabled = lookup(visibility_config.value, "cloudwatch_metrics_enabled", true)
           metric_name                = visibility_config.value.metric_name
           sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
+        }
+      }
+
+      dynamic "captcha_config" {
+        for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
         }
       }
     }
@@ -342,6 +362,16 @@ resource "aws_wafv2_web_acl" "default" {
           sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
         }
       }
+
+      dynamic "captcha_config" {
+        for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
     }
   }
 
@@ -398,6 +428,16 @@ resource "aws_wafv2_web_acl" "default" {
           cloudwatch_metrics_enabled = lookup(visibility_config.value, "cloudwatch_metrics_enabled", true)
           metric_name                = visibility_config.value.metric_name
           sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
+        }
+      }
+
+      dynamic "captcha_config" {
+        for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
         }
       }
     }
@@ -469,6 +509,16 @@ resource "aws_wafv2_web_acl" "default" {
           sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
         }
       }
+
+      dynamic "captcha_config" {
+        for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
     }
   }
 
@@ -525,6 +575,16 @@ resource "aws_wafv2_web_acl" "default" {
           cloudwatch_metrics_enabled = lookup(visibility_config.value, "cloudwatch_metrics_enabled", true)
           metric_name                = visibility_config.value.metric_name
           sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
+        }
+      }
+
+      dynamic "captcha_config" {
+        for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
         }
       }
     }
@@ -636,6 +696,16 @@ resource "aws_wafv2_web_acl" "default" {
           sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
         }
       }
+
+      dynamic "captcha_config" {
+        for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
     }
   }
 
@@ -745,6 +815,16 @@ resource "aws_wafv2_web_acl" "default" {
           sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
         }
       }
+
+      dynamic "captcha_config" {
+        for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
     }
   }
 
@@ -812,6 +892,16 @@ resource "aws_wafv2_web_acl" "default" {
           sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
         }
       }
+
+      dynamic "captcha_config" {
+        for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
     }
   }
 
@@ -840,6 +930,7 @@ resource "aws_wafv2_web_acl" "default" {
           content {}
         }
       }
+
       statement {
         dynamic "size_constraint_statement" {
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
@@ -929,6 +1020,16 @@ resource "aws_wafv2_web_acl" "default" {
           cloudwatch_metrics_enabled = lookup(visibility_config.value, "cloudwatch_metrics_enabled", true)
           metric_name                = visibility_config.value.metric_name
           sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
+        }
+      }
+
+      dynamic "captcha_config" {
+        for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
         }
       }
     }
@@ -1043,6 +1144,16 @@ resource "aws_wafv2_web_acl" "default" {
           sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
         }
       }
+
+      dynamic "captcha_config" {
+        for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
     }
   }
 
@@ -1071,6 +1182,7 @@ resource "aws_wafv2_web_acl" "default" {
           content {}
         }
       }
+
       statement {
         dynamic "xss_match_statement" {
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
@@ -1152,6 +1264,16 @@ resource "aws_wafv2_web_acl" "default" {
           cloudwatch_metrics_enabled = lookup(visibility_config.value, "cloudwatch_metrics_enabled", true)
           metric_name                = visibility_config.value.metric_name
           sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
+        }
+      }
+
+      dynamic "captcha_config" {
+        for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
         }
       }
     }

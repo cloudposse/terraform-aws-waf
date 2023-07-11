@@ -171,6 +171,15 @@ variable "byte_match_statement_rules" {
       AWS WAF evaluates each request against the rules in order based on the value of priority.
       AWS WAF processes rules with lower priority first.
 
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
     statement:
       field_to_match:
         The part of a web request that you want AWS WAF to inspect.
@@ -203,6 +212,15 @@ variable "geo_allowlist_statement_rules" {
       If you define more than one Rule in a WebACL,
       AWS WAF evaluates each request against the rules in order based on the value of priority.
       AWS WAF processes rules with lower priority first.
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
     statement:
       country_codes:
@@ -241,6 +259,15 @@ variable "geo_match_statement_rules" {
       AWS WAF evaluates each request against the rules in order based on the value of priority.
       AWS WAF processes rules with lower priority first.
 
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
     statement:
       country_codes:
         A list of two-character country codes.
@@ -277,6 +304,15 @@ variable "ip_set_reference_statement_rules" {
       If you define more than one Rule in a WebACL,
       AWS WAF evaluates each request against the rules in order based on the value of priority.
       AWS WAF processes rules with lower priority first.
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
     statement:
       arn:
@@ -320,6 +356,15 @@ variable "managed_rule_group_statement_rules" {
       The override action to apply to the rules in a rule group.
       Possible values: `count`, `none`
 
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
     statement:
       name:
         The name of the managed rule group.
@@ -359,6 +404,15 @@ variable "rate_based_statement_rules" {
       If you define more than one Rule in a WebACL,
       AWS WAF evaluates each request against the rules in order based on the value of priority.
       AWS WAF processes rules with lower priority first.
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
     statement:
       aggregate_key_type:
@@ -400,6 +454,15 @@ variable "regex_pattern_set_reference_statement_rules" {
       AWS WAF evaluates each request against the rules in order based on the value of priority.
       AWS WAF processes rules with lower priority first.
 
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
     statement:
       arn:
          The Amazon Resource Name (ARN) of the Regex Pattern Set that this statement references.
@@ -436,6 +499,15 @@ variable "regex_match_statement_rules" {
       If you define more than one Rule in a WebACL,
       AWS WAF evaluates each request against the rules in order based on the value of priority.
       AWS WAF processes rules with lower priority first.
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
     statement:
       regex_string:
@@ -476,6 +548,15 @@ variable "rule_group_reference_statement_rules" {
       The override action to apply to the rules in a rule group.
       Possible values: `count`, `none`
 
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
     statement:
       arn:
         The ARN of the `aws_wafv2_rule_group` resource.
@@ -509,6 +590,15 @@ variable "size_constraint_statement_rules" {
       If you define more than one Rule in a WebACL,
       AWS WAF evaluates each request against the rules in order based on the value of priority.
       AWS WAF processes rules with lower priority first.
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
     statement:
       comparison_operator:
@@ -552,6 +642,15 @@ variable "sqli_match_statement_rules" {
       AWS WAF evaluates each request against the rules in order based on the value of priority.
       AWS WAF processes rules with lower priority first.
 
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
     statement:
       field_to_match:
         The part of a web request that you want AWS WAF to inspect.
@@ -587,7 +686,16 @@ variable "xss_match_statement_rules" {
       AWS WAF evaluates each request against the rules in order based on the value of priority.
       AWS WAF processes rules with lower priority first.
 
-    xss_match_statement:
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    statement:
       field_to_match:
         The part of a web request that you want AWS WAF to inspect.
         See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match
