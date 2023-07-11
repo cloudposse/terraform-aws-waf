@@ -246,6 +246,13 @@ resource "aws_wafv2_web_acl" "default" {
           }
         }
       }
+
+      dynamic "rule_label" {
+        for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
+        content {
+          name = rule_label.value
+        }
+      }
     }
   }
 
@@ -372,6 +379,13 @@ resource "aws_wafv2_web_acl" "default" {
           }
         }
       }
+
+      dynamic "rule_label" {
+        for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
+        content {
+          name = rule_label.value
+        }
+      }
     }
   }
 
@@ -438,6 +452,13 @@ resource "aws_wafv2_web_acl" "default" {
           immunity_time_property {
             immunity_time = captcha_config.value.immunity_time_property.immunity_time
           }
+        }
+      }
+
+      dynamic "rule_label" {
+        for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
+        content {
+          name = rule_label.value
         }
       }
     }
@@ -519,6 +540,13 @@ resource "aws_wafv2_web_acl" "default" {
           }
         }
       }
+
+      dynamic "rule_label" {
+        for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
+        content {
+          name = rule_label.value
+        }
+      }
     }
   }
 
@@ -585,6 +613,13 @@ resource "aws_wafv2_web_acl" "default" {
           immunity_time_property {
             immunity_time = captcha_config.value.immunity_time_property.immunity_time
           }
+        }
+      }
+
+      dynamic "rule_label" {
+        for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
+        content {
+          name = rule_label.value
         }
       }
     }
@@ -706,6 +741,13 @@ resource "aws_wafv2_web_acl" "default" {
           }
         }
       }
+
+      dynamic "rule_label" {
+        for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
+        content {
+          name = rule_label.value
+        }
+      }
     }
   }
 
@@ -825,6 +867,13 @@ resource "aws_wafv2_web_acl" "default" {
           }
         }
       }
+
+      dynamic "rule_label" {
+        for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
+        content {
+          name = rule_label.value
+        }
+      }
     }
   }
 
@@ -900,6 +949,13 @@ resource "aws_wafv2_web_acl" "default" {
           immunity_time_property {
             immunity_time = captcha_config.value.immunity_time_property.immunity_time
           }
+        }
+      }
+
+      dynamic "rule_label" {
+        for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
+        content {
+          name = rule_label.value
         }
       }
     }
@@ -1032,6 +1088,13 @@ resource "aws_wafv2_web_acl" "default" {
           }
         }
       }
+
+      dynamic "rule_label" {
+        for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
+        content {
+          name = rule_label.value
+        }
+      }
     }
   }
 
@@ -1154,6 +1217,13 @@ resource "aws_wafv2_web_acl" "default" {
           }
         }
       }
+
+      dynamic "rule_label" {
+        for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
+        content {
+          name = rule_label.value
+        }
+      }
     }
   }
 
@@ -1274,6 +1344,13 @@ resource "aws_wafv2_web_acl" "default" {
           immunity_time_property {
             immunity_time = captcha_config.value.immunity_time_property.immunity_time
           }
+        }
+      }
+
+      dynamic "rule_label" {
+        for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
+        content {
+          name = rule_label.value
         }
       }
     }
