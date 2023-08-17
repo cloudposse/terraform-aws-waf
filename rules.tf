@@ -416,14 +416,17 @@ resource "aws_wafv2_web_acl" "default" {
       }
 
       statement {
-        dynamic "ip_set_reference_statement" {
-          for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
+        dynamic "ip_set" {
+          for_each = {
+            for name, ip_set in aws_wafv2_ip_set.default :
+            name => ip_set if name == local.ip_rule_to_ip_set[rule.key]
+          }
 
           content {
-            arn = aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]]
+            arn = ip_set.value.arn
 
             dynamic "ip_set_forwarded_ip_config" {
-              for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+              for_each = try(rule.value.statement.ip_set_forwarded_ip_config, null) != null ? [rule.value.statement.ip_set_forwarded_ip_config] : []
 
               content {
                 fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
