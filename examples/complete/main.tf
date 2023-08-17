@@ -266,6 +266,12 @@ module "waf" {
           addresses          = ["17.0.0.0/8"]
         }
       }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = false
+        sampled_requests_enabled   = false
+        metric_name                = "rule-100-metric"
+      }
     }
   ]
 
