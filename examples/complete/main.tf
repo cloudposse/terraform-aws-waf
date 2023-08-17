@@ -254,5 +254,26 @@ module "waf" {
     }
   ]
 
+  ip_set_reference_statement_rules = [
+    {
+      name     = "rule-100"
+      priority = 100
+      action   = "block"
+
+      statement = {
+        ip_set = {
+          ip_address_version = "IPV4"
+          addresses          = ["17.0.0.0/8"]
+        }
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = false
+        sampled_requests_enabled   = false
+        metric_name                = "rule-100-metric"
+      }
+    }
+  ]
+
   context = module.this.context
 }

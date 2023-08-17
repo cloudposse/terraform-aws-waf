@@ -67,6 +67,9 @@ references:
   - name: aws_wafv2_web_acl_logging_configuration
     description: Creates a WAFv2 Web ACL Logging Configuration
     url: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_logging_configuration.html
+  - name: aws_wafv2_ip_set
+    description: Creates a WAFv2 Web ACL resource
+    url: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_ip_set
 
 description: |-
   Terraform module to create and manage AWS WAFv2 rules. 
