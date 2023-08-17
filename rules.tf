@@ -1355,4 +1355,8 @@ resource "aws_wafv2_web_acl" "default" {
       }
     }
   }
+
+  depends_on = [
+    aws_wafv2_ip_set.default
+  ]
 }
