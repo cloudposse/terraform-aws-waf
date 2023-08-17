@@ -329,6 +329,16 @@ variable "ip_set_reference_statement_rules" {
     statement:
       arn:
         The ARN of the IP Set that this statement references.
+      ip_set:
+        Defines a new IP Set
+
+        description:
+          A friendly description of the IP Set
+        addresses:
+          Contains an array of strings that specifies zero or more IP addresses or blocks of IP addresses.
+          All addresses must be specified using Classless Inter-Domain Routing (CIDR) notation.
+        ip_address_version:
+          Specify `IPV4` or `IPV6`
       ip_set_forwarded_ip_config:
         fallback_behavior:
           The match status to assign to the web request if the request doesn't have a valid IP address in the specified position.
