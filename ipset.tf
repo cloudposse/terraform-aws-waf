@@ -2,7 +2,7 @@ locals {
   ip_sets = local.enabled && var.ip_set_reference_statement_rules != null ? {
     for indx, rule in flatten(var.ip_set_reference_statement_rules) :
     lookup(rule, "name", null) != null ? format("%s-ip-set", rule.name) : format("ip-set-%d", rule.priority)
-    => rule.statement.ipset if try(rule.statement.ipset, null) != null && try(rule.statement.arn, null) == null
+    => rule.statement.ipset
   } : {}
 
   ip_rule_to_ip_set = local.enabled && local.ip_set_reference_statement_rules != null ? {
