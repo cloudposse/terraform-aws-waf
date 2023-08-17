@@ -420,7 +420,7 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
           content {
-            arn = try(local.ip_reference_statement_rule_to_ip_set_arn[rule.key], null) != null ? local.ip_reference_statement_rule_to_ip_set_arn[rule.key] : ip_set_reference_statement.value.arn
+            arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]] : ip_set_reference_statement.value.arn
 
             dynamic "ip_set_forwarded_ip_config" {
               for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
