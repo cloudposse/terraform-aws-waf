@@ -401,6 +401,9 @@ variable "managed_rule_group_statement_rules" {
       rule_action_override:
         Action settings to use in the place of the rule actions that are configured inside the rule group.
         You specify one override for each rule whose action you want to change.
+      managed_rule_group_configs:
+        Additional information that's used by a managed rule group. Only one rule attribute is allowed in each config.
+        Refer to https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html for more details.
 
     visibility_config:
       Defines and enables Amazon CloudWatch metrics and web request sample collection.
