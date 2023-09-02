@@ -507,8 +507,8 @@ resource "aws_wafv2_web_acl" "default" {
                         for_each = lookup(allow.value, "custom_request_handling", null) != null ? allow.value.custom_request_handling : {}
                         content {
                           insert_header {
-                            name  = custom_request_handling.value.name
-                            value = custom_request_handling.value.value
+                            name  = custom_request_handling.value.insert_header.name
+                            value = custom_request_handling.value.insert_header.value
                           }
                         }
                       }
@@ -518,7 +518,12 @@ resource "aws_wafv2_web_acl" "default" {
                   dynamic "block" {
                     for_each = rule_action_override.value.action == "block" ? [1] : []
                     content {
-
+                      dynamic "custom_response" {
+                        for_each = lookup(block.value, "custom_response", null) != null ? [1] : []
+                        content {
+                          response_code = block.value.custom_response.response_code
+                        }
+                      }
                     }
                   }
                   # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#count-block
