@@ -497,24 +497,60 @@ resource "aws_wafv2_web_acl" "default" {
               content {
                 name = rule_action_override.key
 
+                # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#action-block
                 action_to_use {
+                  # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#allow-block
                   dynamic "allow" {
                     for_each = rule_action_override.value.action == "allow" ? [1] : []
-                    content {}
+                    content {
+                      dynamic "custom_request_handling" {
+                        for_each = lookup(allow.value, "custom_request_handling", null) != null ? allow.value.custom_request_handling : {}
+                        content {
+                          insert_header {
+                            name  = custom_request_handling.value.name
+                            value = custom_request_handling.value.value
+                          }
+                        }
+                      }
+                    }
                   }
+                  # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#block-block
                   dynamic "block" {
                     for_each = rule_action_override.value.action == "block" ? [1] : []
-                    content {}
+                    content {
+
+                    }
                   }
+                  # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#count-block
                   dynamic "count" {
                     for_each = rule_action_override.value.action == "count" ? [1] : []
-                    content {}
+                    content {
+
+                    }
                   }
+                  # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#captcha-block
                   dynamic "captcha" {
                     for_each = rule_action_override.value.action == "captcha" ? [1] : []
-                    content {}
+                    content {
+
+                    }
+                  }
+                  # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#challenge-block
+                  dynamic "challenge" {
+                    for_each = rule_action_override.value.action == "challenge" ? [1] : []
+                    content {
+
+                    }
                   }
                 }
+              }
+            }
+
+            dynamic "managed_rule_group_configs" {
+              for_each = lookup(managed_rule_group_statement.value, "managed_rule_group_configs", null) != null ? managed_rule_group_statement.value.managed_rule_group_configs : {}
+
+              content {
+                name = rule_action_override.key
               }
             }
           }
