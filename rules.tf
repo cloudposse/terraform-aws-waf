@@ -504,7 +504,7 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "allow" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(allow.value, "custom_request_handling", null) != null ? allow.value.custom_request_handling : {}
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
                         content {
                           insert_header {
                             name  = custom_request_handling.value.insert_header_name
@@ -519,12 +519,12 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "block" ? [1] : []
                     content {
                       dynamic "custom_response" {
-                        for_each = lookup(block.value, "custom_response", null) != null ? [1] : []
+                        for_each = lookup(rule_action_override.value, "custom_response", null) != null ? [1] : []
                         content {
-                          response_code            = block.value.custom_response.response_code
-                          custom_response_body_key = lookup(block.value.custom_response, "custom_response_body_key", null)
+                          response_code            = rule_action_override.value.custom_response.response_code
+                          custom_response_body_key = lookup(rule_action_override.value.custom_response, "custom_response_body_key", null)
                           dynamic "response_header" {
-                            for_each = lookup(block.value.custom_response, "response_header", null) != null ? block.value.custom_response.response_header : {}
+                            for_each = lookup(rule_action_override.value.custom_response, "response_header", null) != null ? rule_action_override.value.custom_response.response_header : []
                             content {
                               name  = response_header.value.name
                               value = response_header.value.value
@@ -539,7 +539,7 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "count" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(count.value, "custom_request_handling", null) != null ? count.value.custom_request_handling : {}
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
                         content {
                           insert_header {
                             name  = custom_request_handling.value.insert_header_name
@@ -554,7 +554,7 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "captcha" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(captcha.value, "custom_request_handling", null) != null ? captcha.value.custom_request_handling : {}
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
                         content {
                           insert_header {
                             name  = custom_request_handling.value.insert_header_name
@@ -569,7 +569,7 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "challenge" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(challenge.value, "custom_request_handling", null) != null ? challenge.value.custom_request_handling : {}
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
                         content {
                           insert_header {
                             name  = custom_request_handling.value.insert_header_name
@@ -1050,7 +1050,7 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "allow" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(allow.value, "custom_request_handling", null) != null ? allow.value.custom_request_handling : {}
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
                         content {
                           insert_header {
                             name  = custom_request_handling.value.insert_header_name
@@ -1065,12 +1065,12 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "block" ? [1] : []
                     content {
                       dynamic "custom_response" {
-                        for_each = lookup(block.value, "custom_response", null) != null ? [1] : []
+                        for_each = lookup(rule_action_override.value, "custom_response", null) != null ? [1] : []
                         content {
-                          response_code            = block.value.custom_response.response_code
-                          custom_response_body_key = lookup(block.value.custom_response, "custom_response_body_key", null)
+                          response_code            = rule_action_override.value.custom_response.response_code
+                          custom_response_body_key = lookup(rule_action_override.value.custom_response, "custom_response_body_key", null)
                           dynamic "response_header" {
-                            for_each = lookup(block.value.custom_response, "response_header", null) != null ? block.value.custom_response.response_header : {}
+                            for_each = lookup(rule_action_override.value.custom_response, "response_header", null) != null ? rule_action_override.value.custom_response.response_header : []
                             content {
                               name  = response_header.value.name
                               value = response_header.value.value
@@ -1085,7 +1085,7 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "count" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(count.value, "custom_request_handling", null) != null ? count.value.custom_request_handling : {}
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
                         content {
                           insert_header {
                             name  = custom_request_handling.value.insert_header_name
@@ -1100,7 +1100,7 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "captcha" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(captcha.value, "custom_request_handling", null) != null ? captcha.value.custom_request_handling : {}
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
                         content {
                           insert_header {
                             name  = custom_request_handling.value.insert_header_name
@@ -1115,7 +1115,7 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "challenge" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(challenge.value, "custom_request_handling", null) != null ? challenge.value.custom_request_handling : {}
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
                         content {
                           insert_header {
                             name  = custom_request_handling.value.insert_header_name
