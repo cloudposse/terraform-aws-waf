@@ -12,12 +12,40 @@ module "waf" {
   }
 
   # https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html
-  # https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html
   managed_rule_group_statement_rules = [
     {
-      name            = "rule-20"
-      override_action = "count"
-      priority        = 20
+      name     = "AWS-AWSManagedRulesAdminProtectionRuleSet"
+      priority = 1
+
+      statement = {
+        name        = "AWSManagedRulesAdminProtectionRuleSet"
+        vendor_name = "AWS"
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = true
+        metric_name                = "AWS-AWSManagedRulesAdminProtectionRuleSet"
+      }
+    },
+    {
+      name     = "AWS-AWSManagedRulesAmazonIpReputationList"
+      priority = 2
+
+      statement = {
+        name        = "AWSManagedRulesAmazonIpReputationList"
+        vendor_name = "AWS"
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = true
+        metric_name                = "AWS-AWSManagedRulesAmazonIpReputationList"
+      }
+    },
+    {
+      name     = "AWS-AWSManagedRulesCommonRuleSet"
+      priority = 3
 
       statement = {
         name        = "AWSManagedRulesCommonRuleSet"
@@ -25,9 +53,98 @@ module "waf" {
       }
 
       visibility_config = {
-        cloudwatch_metrics_enabled = false
-        sampled_requests_enabled   = false
-        metric_name                = "rule-20-metric"
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = true
+        metric_name                = "AWS-AWSManagedRulesCommonRuleSet"
+      }
+    },
+    {
+      name     = "AWS-AWSManagedRulesKnownBadInputsRuleSet"
+      priority = 4
+
+      statement = {
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+        vendor_name = "AWS"
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = true
+        metric_name                = "AWS-AWSManagedRulesKnownBadInputsRuleSet"
+      }
+    },
+    # https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html
+    {
+      name     = "AWS-AWSManagedRulesBotControlRuleSet"
+      priority = 5
+
+      statement = {
+        name        = "AWSManagedRulesBotControlRuleSet"
+        vendor_name = "AWS"
+
+        rule_action_override = {
+          CategoryHttpLibrary = {
+            action = "block"
+            custom_response = {
+              response_code = "404"
+              response_header = {
+                name  = "example-1"
+                value = "example-1"
+              }
+            }
+          }
+          SignalNonBrowserUserAgent = {
+            action = "count"
+            custom_request_handling = [
+              {
+                insert_header_name  = "example-2"
+                insert_header_value = "example-2"
+              },
+              {
+                insert_header_name  = "example-3"
+                insert_header_value = "example-3"
+              }
+            ]
+          }
+        }
+
+        managed_rule_group_configs = [
+          {
+            aws_managed_rules_bot_control_rule_set = {
+              inspection_level = "COMMON"
+            }
+
+            aws_managed_rules_atp_rule_set = {
+              enable_regex_in_path = false
+              login_path           = "/api/1/signin"
+
+              request_inspection = {
+                payload_type = "JSON"
+
+                password_field = {
+                  identifier = "/password"
+                }
+
+                username_field = {
+                  identifier = "/email"
+                }
+              }
+
+              response_inspection = {
+                status_code = {
+                  failure_codes = ["403"]
+                  success_codes = ["200"]
+                }
+              }
+            }
+          }
+        ]
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = true
+        metric_name                = "AWS-AWSManagedRulesBotControlRuleSet"
       }
     }
   ]
