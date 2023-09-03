@@ -11,6 +11,8 @@ module "waf" {
     sampled_requests_enabled   = false
   }
 
+  # https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html
+  # https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html
   managed_rule_group_statement_rules = [
     {
       name            = "rule-20"
@@ -177,9 +179,9 @@ module "waf" {
 
   geo_match_statement_rules = [
     {
-      name     = "rule-10"
+      name     = "rule-80"
       action   = "count"
-      priority = 10
+      priority = 80
 
       statement = {
         country_codes = ["NL", "GB"]
@@ -188,7 +190,7 @@ module "waf" {
       visibility_config = {
         cloudwatch_metrics_enabled = false
         sampled_requests_enabled   = false
-        metric_name                = "rule-10-metric"
+        metric_name                = "rule-80-metric"
       }
     },
     {
@@ -210,8 +212,8 @@ module "waf" {
 
   geo_allowlist_statement_rules = [
     {
-      name     = "rule-80"
-      priority = 80
+      name     = "rule-90"
+      priority = 90
 
       statement = {
         country_codes = ["US"]
@@ -220,15 +222,15 @@ module "waf" {
       visibility_config = {
         cloudwatch_metrics_enabled = false
         sampled_requests_enabled   = false
-        metric_name                = "rule-80-metric"
+        metric_name                = "rule-90-metric"
       }
     }
   ]
 
   regex_match_statement_rules = [
     {
-      name     = "rule-90"
-      priority = 90
+      name     = "rule-100"
+      priority = 100
       action   = "block"
 
       statement = {
@@ -249,15 +251,15 @@ module "waf" {
       visibility_config = {
         cloudwatch_metrics_enabled = false
         sampled_requests_enabled   = false
-        metric_name                = "rule-90-metric"
+        metric_name                = "rule-100-metric"
       }
     }
   ]
 
   ip_set_reference_statement_rules = [
     {
-      name     = "rule-100"
-      priority = 100
+      name     = "rule-110"
+      priority = 110
       action   = "block"
 
       statement = {
@@ -270,7 +272,7 @@ module "waf" {
       visibility_config = {
         cloudwatch_metrics_enabled = false
         sampled_requests_enabled   = false
-        metric_name                = "rule-100-metric"
+        metric_name                = "rule-110-metric"
       }
     }
   ]
