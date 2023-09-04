@@ -9,7 +9,6 @@ import (
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	testStructure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
 // Test the Terraform module in examples/complete using Terratest.
@@ -37,11 +36,6 @@ func TestExamplesComplete(t *testing.T) {
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
 	defer cleanup(t, terraformOptions, tempTestFolder)
-
-	// If Go runtime crushes, run `terraform destroy` to clean up any resources that were created
-	defer runtime.HandleCrash(func(i interface{}) {
-		cleanup(t, terraformOptions, tempTestFolder)
-	})
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
 	terraform.InitAndApply(t, terraformOptions)
