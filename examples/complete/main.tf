@@ -109,7 +109,27 @@ module "waf" {
             aws_managed_rules_bot_control_rule_set = {
               inspection_level = "COMMON"
             }
+          }
+        ]
+      }
 
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = true
+        metric_name                = "AWS-AWSManagedRulesBotControlRuleSet"
+      }
+    },
+    # https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-atp.html
+    {
+      name     = "AWS-AWSManagedRulesATPRuleSet"
+      priority = 6
+
+      statement = {
+        name        = "AWSManagedRulesATPRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs = [
+          {
             aws_managed_rules_atp_rule_set = {
               enable_regex_in_path = false
               login_path           = "/api/1/signin"
@@ -140,7 +160,7 @@ module "waf" {
       visibility_config = {
         cloudwatch_metrics_enabled = true
         sampled_requests_enabled   = true
-        metric_name                = "AWS-AWSManagedRulesBotControlRuleSet"
+        metric_name                = "AWS-AWSManagedRulesATPRuleSet"
       }
     }
   ]
