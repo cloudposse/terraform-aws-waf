@@ -118,22 +118,6 @@ module "waf" {
         sampled_requests_enabled   = true
         metric_name                = "AWS-AWSManagedRulesBotControlRuleSet"
       }
-    },
-    # https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-atp.html
-    {
-      name     = "AWS-AWSManagedRulesATPRuleSet"
-      priority = 6
-
-      statement = {
-        name        = "AWSManagedRulesATPRuleSet"
-        vendor_name = "AWS"
-      }
-
-      visibility_config = {
-        cloudwatch_metrics_enabled = true
-        sampled_requests_enabled   = true
-        metric_name                = "AWS-AWSManagedRulesATPRuleSet"
-      }
     }
   ]
 
