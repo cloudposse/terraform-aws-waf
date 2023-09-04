@@ -82,6 +82,887 @@ variable "token_domains" {
   default     = null
 }
 
+# Rules
+variable "byte_match_statement_rules" {
+  type = list(object({
+    name     = string
+    priority = number
+    action   = string
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
+    statement  = any
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+    A rule statement that defines a string match search for AWS WAF to apply to web requests.
+
+    action:
+      The action that AWS WAF should take on a web request when it matches the rule's statement.
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    rule_label:
+       A List of labels to apply to web requests that match the rule match statement
+
+    statement:
+      positional_constraint:
+        Area within the portion of a web request that you want AWS WAF to search for search_string. Valid values include the following: EXACTLY, STARTS_WITH, ENDS_WITH, CONTAINS, CONTAINS_WORD.
+      search_string
+        String value that you want AWS WAF to search for. AWS WAF searches only in the part of web requests that you designate for inspection in field_to_match.
+      field_to_match:
+        The part of a web request that you want AWS WAF to inspect.
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match
+      text_transformation:
+        Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
+variable "geo_allowlist_statement_rules" {
+  type = list(object({
+    name     = string
+    priority = number
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
+    statement  = any
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+    A rule statement used to identify a list of allowed countries which should not be blocked by the WAF.
+
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    rule_label:
+       A List of labels to apply to web requests that match the rule match statement
+
+    statement:
+      country_codes:
+        A list of two-character country codes.
+      forwarded_ip_config:
+        fallback_behavior:
+          The match status to assign to the web request if the request doesn't have a valid IP address in the specified position.
+          Possible values: `MATCH`, `NO_MATCH`
+        header_name:
+          The name of the HTTP header to use for the IP address.
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
+variable "geo_match_statement_rules" {
+  type = list(object({
+    name     = string
+    priority = number
+    action   = string
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
+    statement  = any
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+    A rule statement used to identify web requests based on country of origin.
+
+    action:
+      The action that AWS WAF should take on a web request when it matches the rule's statement.
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    rule_label:
+       A List of labels to apply to web requests that match the rule match statement
+
+    statement:
+      country_codes:
+        A list of two-character country codes.
+      forwarded_ip_config:
+        fallback_behavior:
+          The match status to assign to the web request if the request doesn't have a valid IP address in the specified position.
+          Possible values: `MATCH`, `NO_MATCH`
+        header_name:
+          The name of the HTTP header to use for the IP address.
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
+variable "ip_set_reference_statement_rules" {
+  type = list(object({
+    name     = string
+    priority = number
+    action   = string
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
+    statement  = any
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+    A rule statement used to detect web requests coming from particular IP addresses or address ranges.
+
+    action:
+      The action that AWS WAF should take on a web request when it matches the rule's statement.
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    rule_label:
+       A List of labels to apply to web requests that match the rule match statement
+
+    statement:
+      arn:
+        The ARN of the IP Set that this statement references.
+      ip_set:
+        Defines a new IP Set
+
+        description:
+          A friendly description of the IP Set
+        addresses:
+          Contains an array of strings that specifies zero or more IP addresses or blocks of IP addresses.
+          All addresses must be specified using Classless Inter-Domain Routing (CIDR) notation.
+        ip_address_version:
+          Specify `IPV4` or `IPV6`
+      ip_set_forwarded_ip_config:
+        fallback_behavior:
+          The match status to assign to the web request if the request doesn't have a valid IP address in the specified position.
+          Possible values: `MATCH`, `NO_MATCH`
+        header_name:
+          The name of the HTTP header to use for the IP address.
+        position:
+          The position in the header to search for the IP address.
+          Possible values include: `FIRST`, `LAST`, or `ANY`.
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
+variable "managed_rule_group_statement_rules" {
+  type = list(object({
+    name            = string
+    priority        = number
+    override_action = optional(string)
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
+    statement = object({
+      name        = string
+      vendor_name = string
+      version     = optional(string)
+      rule_action_override = optional(map(object({
+        action = string
+        custom_request_handling = optional(object({
+          insert_header = object({
+            name  = string
+            value = string
+          })
+        }), null)
+        custom_response = optional(object({
+          response_code = string
+          response_header = optional(object({
+            name  = string
+            value = string
+          }), null)
+        }), null)
+      })), null)
+      managed_rule_group_configs = optional(list(object({
+        aws_managed_rules_bot_control_rule_set = optional(object({
+          inspection_level = string
+        }), null)
+        aws_managed_rules_atp_rule_set = optional(object({
+          enable_regex_in_path = optional(bool)
+          login_path           = string
+          request_inspection = optional(object({
+            payload_type = string
+            password_field = object({
+              identifier = string
+            })
+            username_field = object({
+              identifier = string
+            })
+          }), null)
+          response_inspection = optional(object({
+            body_contains = optional(object({
+              success_strings = list(string)
+              failure_strings = list(string)
+            }), null)
+            header = optional(object({
+              name           = string
+              success_values = list(string)
+              failure_values = list(string)
+            }), null)
+            json = optional(object({
+
+              identifier      = string
+              success_strings = list(string)
+              failure_strings = list(string)
+            }), null)
+            status_code = optional(object({
+              success_codes = list(string)
+              failure_codes = list(string)
+            }), null)
+          }), null)
+        }), null)
+      })), null)
+    })
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+    A rule statement used to run the rules that are defined in a managed rule group.
+
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    override_action:
+      The override action to apply to the rules in a rule group.
+      Possible values: `count`, `none`
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    rule_label:
+       A List of labels to apply to web requests that match the rule match statement
+
+    statement:
+      name:
+        The name of the managed rule group.
+      vendor_name:
+        The name of the managed rule group vendor.
+      version:
+        The version of the managed rule group.
+        You can set `Version_1.0` or `Version_1.1` etc. If you want to use the default version, do not set anything.
+      rule_action_override:
+        Action settings to use in the place of the rule actions that are configured inside the rule group.
+        You specify one override for each rule whose action you want to change.
+      managed_rule_group_configs:
+        Additional information that's used by a managed rule group. Only one rule attribute is allowed in each config.
+        Refer to https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html for more details.
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
+variable "rate_based_statement_rules" {
+  type = list(object({
+    name     = string
+    priority = number
+    action   = string
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
+    statement  = any
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+    A rate-based rule tracks the rate of requests for each originating IP address,
+    and triggers the rule action when the rate exceeds a limit that you specify on the number of requests in any 5-minute time span.
+
+    action:
+      The action that AWS WAF should take on a web request when it matches the rule's statement.
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    rule_label:
+       A List of labels to apply to web requests that match the rule match statement
+
+    statement:
+      aggregate_key_type:
+         Setting that indicates how to aggregate the request counts.
+         Possible values include: `FORWARDED_IP` or `IP`
+      limit:
+        The limit on requests per 5-minute period for a single originating IP address.
+      forwarded_ip_config:
+        fallback_behavior:
+          The match status to assign to the web request if the request doesn't have a valid IP address in the specified position.
+          Possible values: `MATCH`, `NO_MATCH`
+        header_name:
+          The name of the HTTP header to use for the IP address.
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
+variable "regex_pattern_set_reference_statement_rules" {
+  type = list(object({
+    name     = string
+    priority = number
+    action   = string
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
+    statement  = any
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+    A rule statement used to search web request components for matches with regular expressions.
+
+    action:
+      The action that AWS WAF should take on a web request when it matches the rule's statement.
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    rule_label:
+       A List of labels to apply to web requests that match the rule match statement
+
+    statement:
+      arn:
+         The Amazon Resource Name (ARN) of the Regex Pattern Set that this statement references.
+      field_to_match:
+        The part of a web request that you want AWS WAF to inspect.
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match
+      text_transformation:
+        Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
+variable "regex_match_statement_rules" {
+  type = list(object({
+    name     = string
+    priority = number
+    action   = string
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
+    statement  = any
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+    A rule statement used to search web request components for a match against a single regular expression.
+
+    action:
+      The action that AWS WAF should take on a web request when it matches the rule's statement.
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    rule_label:
+       A List of labels to apply to web requests that match the rule match statement
+
+    statement:
+      regex_string:
+         String representing the regular expression. Minimum of 1 and maximum of 512 characters.
+      field_to_match:
+        The part of a web request that you want AWS WAF to inspect.
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl.html#field_to_match
+      text_transformation:
+        Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. At least one required.
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
+variable "rule_group_reference_statement_rules" {
+  type = list(object({
+    name            = string
+    priority        = number
+    override_action = optional(string)
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
+    statement = object({
+      arn = string
+      rule_action_override = optional(map(object({
+        action = string
+        custom_request_handling = optional(object({
+          insert_header = object({
+            name  = string
+            value = string
+          })
+        }), null)
+        custom_response = optional(object({
+          response_code = string
+          response_header = optional(object({
+            name  = string
+            value = string
+          }), null)
+        }), null)
+      })), null)
+    })
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+    A rule statement used to run the rules that are defined in an WAFv2 Rule Group.
+
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    override_action:
+      The override action to apply to the rules in a rule group.
+      Possible values: `count`, `none`
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    rule_label:
+       A List of labels to apply to web requests that match the rule match statement
+
+    statement:
+      arn:
+        The ARN of the `aws_wafv2_rule_group` resource.
+      rule_action_override:
+        Action settings to use in the place of the rule actions that are configured inside the rule group.
+        You specify one override for each rule whose action you want to change.
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
+variable "size_constraint_statement_rules" {
+  type = list(object({
+    name     = string
+    priority = number
+    action   = string
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
+    statement  = any
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+    A rule statement that uses a comparison operator to compare a number of bytes against the size of a request component.
+
+    action:
+      The action that AWS WAF should take on a web request when it matches the rule's statement.
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    rule_label:
+       A List of labels to apply to web requests that match the rule match statement
+
+    statement:
+      comparison_operator:
+         The operator to use to compare the request part to the size setting.
+         Possible values: `EQ`, `NE`, `LE`, `LT`, `GE`, or `GT`.
+      size:
+        The size, in bytes, to compare to the request part, after any transformations.
+        Valid values are integers between `0` and `21474836480`, inclusive.
+      field_to_match:
+        The part of a web request that you want AWS WAF to inspect.
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match
+      text_transformation:
+        Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
+variable "sqli_match_statement_rules" {
+  type = list(object({
+    name     = string
+    priority = number
+    action   = string
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
+    statement  = any
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+    An SQL injection match condition identifies the part of web requests,
+    such as the URI or the query string, that you want AWS WAF to inspect.
+
+    action:
+      The action that AWS WAF should take on a web request when it matches the rule's statement.
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    rule_label:
+       A List of labels to apply to web requests that match the rule match statement
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    statement:
+      field_to_match:
+        The part of a web request that you want AWS WAF to inspect.
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match
+      text_transformation:
+        Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
+variable "xss_match_statement_rules" {
+  type = list(object({
+    name     = string
+    priority = number
+    action   = string
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
+    statement  = any
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+    A rule statement that defines a cross-site scripting (XSS) match search for AWS WAF to apply to web requests.
+
+    action:
+      The action that AWS WAF should take on a web request when it matches the rule's statement.
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    rule_label:
+       A List of labels to apply to web requests that match the rule match statement
+
+    statement:
+      field_to_match:
+        The part of a web request that you want AWS WAF to inspect.
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match
+      text_transformation:
+        Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
 # Logging configuration
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_logging_configuration.html
 variable "log_destination_configs" {
@@ -153,610 +1034,4 @@ variable "association_resource_arns" {
     For more details, refer to https://docs.aws.amazon.com/waf/latest/APIReference/API_AssociateWebACL.html
   DOC
   nullable    = false
-}
-
-# Rules
-variable "byte_match_statement_rules" {
-  type        = list(any)
-  default     = null
-  description = <<-DOC
-    A rule statement that defines a string match search for AWS WAF to apply to web requests.
-
-    action:
-      The action that AWS WAF should take on a web request when it matches the rule's statement.
-    name:
-      A friendly name of the rule.
-    priority:
-      If you define more than one Rule in a WebACL,
-      AWS WAF evaluates each request against the rules in order based on the value of priority.
-      AWS WAF processes rules with lower priority first.
-
-    captcha_config:
-     Specifies how AWS WAF should handle CAPTCHA evaluations.
-
-     immunity_time_property:
-       Defines custom immunity time.
-
-       immunity_time:
-       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
-
-    rule_label:
-       A List of labels to apply to web requests that match the rule match statement
-
-    statement:
-      field_to_match:
-        The part of a web request that you want AWS WAF to inspect.
-        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match
-      text_transformation:
-        Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
-        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
-
-    visibility_config:
-      Defines and enables Amazon CloudWatch metrics and web request sample collection.
-
-      cloudwatch_metrics_enabled:
-        Whether the associated resource sends metrics to CloudWatch.
-      metric_name:
-        A friendly name of the CloudWatch metric.
-      sampled_requests_enabled:
-        Whether AWS WAF should store a sampling of the web requests that match the rules.
-  DOC
-}
-
-variable "geo_allowlist_statement_rules" {
-  type        = list(any)
-  default     = null
-  description = <<-DOC
-    A rule statement used to identify a list of allowed countries which should not be blocked by the WAF.
-
-    name:
-      A friendly name of the rule.
-    priority:
-      If you define more than one Rule in a WebACL,
-      AWS WAF evaluates each request against the rules in order based on the value of priority.
-      AWS WAF processes rules with lower priority first.
-
-    captcha_config:
-     Specifies how AWS WAF should handle CAPTCHA evaluations.
-
-     immunity_time_property:
-       Defines custom immunity time.
-
-       immunity_time:
-       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
-
-    rule_label:
-       A List of labels to apply to web requests that match the rule match statement
-
-    statement:
-      country_codes:
-        A list of two-character country codes.
-      forwarded_ip_config:
-        fallback_behavior:
-          The match status to assign to the web request if the request doesn't have a valid IP address in the specified position.
-          Possible values: `MATCH`, `NO_MATCH`
-        header_name:
-          The name of the HTTP header to use for the IP address.
-
-    visibility_config:
-      Defines and enables Amazon CloudWatch metrics and web request sample collection.
-
-      cloudwatch_metrics_enabled:
-        Whether the associated resource sends metrics to CloudWatch.
-      metric_name:
-        A friendly name of the CloudWatch metric.
-      sampled_requests_enabled:
-        Whether AWS WAF should store a sampling of the web requests that match the rules.
-  DOC
-}
-
-variable "geo_match_statement_rules" {
-  type        = list(any)
-  default     = null
-  description = <<-DOC
-    A rule statement used to identify web requests based on country of origin.
-
-    action:
-      The action that AWS WAF should take on a web request when it matches the rule's statement.
-    name:
-      A friendly name of the rule.
-    priority:
-      If you define more than one Rule in a WebACL,
-      AWS WAF evaluates each request against the rules in order based on the value of priority.
-      AWS WAF processes rules with lower priority first.
-
-    captcha_config:
-     Specifies how AWS WAF should handle CAPTCHA evaluations.
-
-     immunity_time_property:
-       Defines custom immunity time.
-
-       immunity_time:
-       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
-
-    rule_label:
-       A List of labels to apply to web requests that match the rule match statement
-
-    statement:
-      country_codes:
-        A list of two-character country codes.
-      forwarded_ip_config:
-        fallback_behavior:
-          The match status to assign to the web request if the request doesn't have a valid IP address in the specified position.
-          Possible values: `MATCH`, `NO_MATCH`
-        header_name:
-          The name of the HTTP header to use for the IP address.
-
-    visibility_config:
-      Defines and enables Amazon CloudWatch metrics and web request sample collection.
-
-      cloudwatch_metrics_enabled:
-        Whether the associated resource sends metrics to CloudWatch.
-      metric_name:
-        A friendly name of the CloudWatch metric.
-      sampled_requests_enabled:
-        Whether AWS WAF should store a sampling of the web requests that match the rules.
-  DOC
-}
-
-variable "ip_set_reference_statement_rules" {
-  type        = list(any)
-  default     = null
-  description = <<-DOC
-    A rule statement used to detect web requests coming from particular IP addresses or address ranges.
-
-    action:
-      The action that AWS WAF should take on a web request when it matches the rule's statement.
-    name:
-      A friendly name of the rule.
-    priority:
-      If you define more than one Rule in a WebACL,
-      AWS WAF evaluates each request against the rules in order based on the value of priority.
-      AWS WAF processes rules with lower priority first.
-
-    captcha_config:
-     Specifies how AWS WAF should handle CAPTCHA evaluations.
-
-     immunity_time_property:
-       Defines custom immunity time.
-
-       immunity_time:
-       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
-
-    rule_label:
-       A List of labels to apply to web requests that match the rule match statement
-
-    statement:
-      arn:
-        The ARN of the IP Set that this statement references.
-      ip_set:
-        Defines a new IP Set
-
-        description:
-          A friendly description of the IP Set
-        addresses:
-          Contains an array of strings that specifies zero or more IP addresses or blocks of IP addresses.
-          All addresses must be specified using Classless Inter-Domain Routing (CIDR) notation.
-        ip_address_version:
-          Specify `IPV4` or `IPV6`
-      ip_set_forwarded_ip_config:
-        fallback_behavior:
-          The match status to assign to the web request if the request doesn't have a valid IP address in the specified position.
-          Possible values: `MATCH`, `NO_MATCH`
-        header_name:
-          The name of the HTTP header to use for the IP address.
-        position:
-          The position in the header to search for the IP address.
-          Possible values include: `FIRST`, `LAST`, or `ANY`.
-
-    visibility_config:
-      Defines and enables Amazon CloudWatch metrics and web request sample collection.
-
-      cloudwatch_metrics_enabled:
-        Whether the associated resource sends metrics to CloudWatch.
-      metric_name:
-        A friendly name of the CloudWatch metric.
-      sampled_requests_enabled:
-        Whether AWS WAF should store a sampling of the web requests that match the rules.
-  DOC
-}
-
-variable "managed_rule_group_statement_rules" {
-  type        = list(any)
-  default     = null
-  description = <<-DOC
-    A rule statement used to run the rules that are defined in a managed rule group.
-
-    name:
-      A friendly name of the rule.
-    priority:
-      If you define more than one Rule in a WebACL,
-      AWS WAF evaluates each request against the rules in order based on the value of priority.
-      AWS WAF processes rules with lower priority first.
-
-    override_action:
-      The override action to apply to the rules in a rule group.
-      Possible values: `count`, `none`
-
-    captcha_config:
-     Specifies how AWS WAF should handle CAPTCHA evaluations.
-
-     immunity_time_property:
-       Defines custom immunity time.
-
-       immunity_time:
-       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
-
-    rule_label:
-       A List of labels to apply to web requests that match the rule match statement
-
-    statement:
-      name:
-        The name of the managed rule group.
-      vendor_name:
-        The name of the managed rule group vendor.
-      version:
-        The version of the managed rule group.
-        You can set `Version_1.0` or `Version_1.1` etc. If you want to use the default version, do not set anything.
-      rule_action_override:
-        Action settings to use in the place of the rule actions that are configured inside the rule group.
-        You specify one override for each rule whose action you want to change.
-
-    visibility_config:
-      Defines and enables Amazon CloudWatch metrics and web request sample collection.
-
-      cloudwatch_metrics_enabled:
-        Whether the associated resource sends metrics to CloudWatch.
-      metric_name:
-        A friendly name of the CloudWatch metric.
-      sampled_requests_enabled:
-        Whether AWS WAF should store a sampling of the web requests that match the rules.
-  DOC
-}
-
-variable "rate_based_statement_rules" {
-  type        = list(any)
-  default     = null
-  description = <<-DOC
-    A rate-based rule tracks the rate of requests for each originating IP address,
-    and triggers the rule action when the rate exceeds a limit that you specify on the number of requests in any 5-minute time span.
-
-    action:
-      The action that AWS WAF should take on a web request when it matches the rule's statement.
-    name:
-      A friendly name of the rule.
-    priority:
-      If you define more than one Rule in a WebACL,
-      AWS WAF evaluates each request against the rules in order based on the value of priority.
-      AWS WAF processes rules with lower priority first.
-
-    captcha_config:
-     Specifies how AWS WAF should handle CAPTCHA evaluations.
-
-     immunity_time_property:
-       Defines custom immunity time.
-
-       immunity_time:
-       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
-
-    rule_label:
-       A List of labels to apply to web requests that match the rule match statement
-
-    statement:
-      aggregate_key_type:
-         Setting that indicates how to aggregate the request counts.
-         Possible values include: `FORWARDED_IP` or `IP`
-      limit:
-        The limit on requests per 5-minute period for a single originating IP address.
-      forwarded_ip_config:
-        fallback_behavior:
-          The match status to assign to the web request if the request doesn't have a valid IP address in the specified position.
-          Possible values: `MATCH`, `NO_MATCH`
-        header_name:
-          The name of the HTTP header to use for the IP address.
-
-    visibility_config:
-      Defines and enables Amazon CloudWatch metrics and web request sample collection.
-
-      cloudwatch_metrics_enabled:
-        Whether the associated resource sends metrics to CloudWatch.
-      metric_name:
-        A friendly name of the CloudWatch metric.
-      sampled_requests_enabled:
-        Whether AWS WAF should store a sampling of the web requests that match the rules.
-  DOC
-}
-
-variable "regex_pattern_set_reference_statement_rules" {
-  type        = list(any)
-  default     = null
-  description = <<-DOC
-    A rule statement used to search web request components for matches with regular expressions.
-
-    action:
-      The action that AWS WAF should take on a web request when it matches the rule's statement.
-    name:
-      A friendly name of the rule.
-    priority:
-      If you define more than one Rule in a WebACL,
-      AWS WAF evaluates each request against the rules in order based on the value of priority.
-      AWS WAF processes rules with lower priority first.
-
-    captcha_config:
-     Specifies how AWS WAF should handle CAPTCHA evaluations.
-
-     immunity_time_property:
-       Defines custom immunity time.
-
-       immunity_time:
-       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
-
-    rule_label:
-       A List of labels to apply to web requests that match the rule match statement
-
-    statement:
-      arn:
-         The Amazon Resource Name (ARN) of the Regex Pattern Set that this statement references.
-      field_to_match:
-        The part of a web request that you want AWS WAF to inspect.
-        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match
-      text_transformation:
-        Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
-        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
-
-    visibility_config:
-      Defines and enables Amazon CloudWatch metrics and web request sample collection.
-
-      cloudwatch_metrics_enabled:
-        Whether the associated resource sends metrics to CloudWatch.
-      metric_name:
-        A friendly name of the CloudWatch metric.
-      sampled_requests_enabled:
-        Whether AWS WAF should store a sampling of the web requests that match the rules.
-  DOC
-}
-
-variable "regex_match_statement_rules" {
-  type        = list(any)
-  default     = null
-  description = <<-DOC
-    A rule statement used to search web request components for a match against a single regular expression.
-
-    action:
-      The action that AWS WAF should take on a web request when it matches the rule's statement.
-    name:
-      A friendly name of the rule.
-    priority:
-      If you define more than one Rule in a WebACL,
-      AWS WAF evaluates each request against the rules in order based on the value of priority.
-      AWS WAF processes rules with lower priority first.
-
-    captcha_config:
-     Specifies how AWS WAF should handle CAPTCHA evaluations.
-
-     immunity_time_property:
-       Defines custom immunity time.
-
-       immunity_time:
-       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
-
-    rule_label:
-       A List of labels to apply to web requests that match the rule match statement
-
-    statement:
-      regex_string:
-         String representing the regular expression. Minimum of 1 and maximum of 512 characters.
-      field_to_match:
-        The part of a web request that you want AWS WAF to inspect.
-        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl.html#field_to_match
-      text_transformation:
-        Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. At least one required.
-        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
-
-    visibility_config:
-      Defines and enables Amazon CloudWatch metrics and web request sample collection.
-
-      cloudwatch_metrics_enabled:
-        Whether the associated resource sends metrics to CloudWatch.
-      metric_name:
-        A friendly name of the CloudWatch metric.
-      sampled_requests_enabled:
-        Whether AWS WAF should store a sampling of the web requests that match the rules.
-  DOC
-}
-
-variable "rule_group_reference_statement_rules" {
-  type        = list(any)
-  default     = null
-  description = <<-DOC
-    A rule statement used to run the rules that are defined in an WAFv2 Rule Group.
-
-    name:
-      A friendly name of the rule.
-    priority:
-      If you define more than one Rule in a WebACL,
-      AWS WAF evaluates each request against the rules in order based on the value of priority.
-      AWS WAF processes rules with lower priority first.
-
-    override_action:
-      The override action to apply to the rules in a rule group.
-      Possible values: `count`, `none`
-
-    captcha_config:
-     Specifies how AWS WAF should handle CAPTCHA evaluations.
-
-     immunity_time_property:
-       Defines custom immunity time.
-
-       immunity_time:
-       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
-
-    rule_label:
-       A List of labels to apply to web requests that match the rule match statement
-
-    statement:
-      arn:
-        The ARN of the `aws_wafv2_rule_group` resource.
-      rule_action_override:
-        Action settings to use in the place of the rule actions that are configured inside the rule group.
-        You specify one override for each rule whose action you want to change.
-
-    visibility_config:
-      Defines and enables Amazon CloudWatch metrics and web request sample collection.
-
-      cloudwatch_metrics_enabled:
-        Whether the associated resource sends metrics to CloudWatch.
-      metric_name:
-        A friendly name of the CloudWatch metric.
-      sampled_requests_enabled:
-        Whether AWS WAF should store a sampling of the web requests that match the rules.
-  DOC
-}
-
-variable "size_constraint_statement_rules" {
-  type        = list(any)
-  default     = null
-  description = <<-DOC
-    A rule statement that uses a comparison operator to compare a number of bytes against the size of a request component.
-
-    action:
-      The action that AWS WAF should take on a web request when it matches the rule's statement.
-    name:
-      A friendly name of the rule.
-    priority:
-      If you define more than one Rule in a WebACL,
-      AWS WAF evaluates each request against the rules in order based on the value of priority.
-      AWS WAF processes rules with lower priority first.
-
-    captcha_config:
-     Specifies how AWS WAF should handle CAPTCHA evaluations.
-
-     immunity_time_property:
-       Defines custom immunity time.
-
-       immunity_time:
-       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
-
-    rule_label:
-       A List of labels to apply to web requests that match the rule match statement
-
-    statement:
-      comparison_operator:
-         The operator to use to compare the request part to the size setting.
-         Possible values: `EQ`, `NE`, `LE`, `LT`, `GE`, or `GT`.
-      size:
-        The size, in bytes, to compare to the request part, after any transformations.
-        Valid values are integers between `0` and `21474836480`, inclusive.
-      field_to_match:
-        The part of a web request that you want AWS WAF to inspect.
-        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match
-      text_transformation:
-        Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
-        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
-
-    visibility_config:
-      Defines and enables Amazon CloudWatch metrics and web request sample collection.
-
-      cloudwatch_metrics_enabled:
-        Whether the associated resource sends metrics to CloudWatch.
-      metric_name:
-        A friendly name of the CloudWatch metric.
-      sampled_requests_enabled:
-        Whether AWS WAF should store a sampling of the web requests that match the rules.
-  DOC
-}
-
-variable "sqli_match_statement_rules" {
-  type        = list(any)
-  default     = null
-  description = <<-DOC
-    An SQL injection match condition identifies the part of web requests,
-    such as the URI or the query string, that you want AWS WAF to inspect.
-
-    action:
-      The action that AWS WAF should take on a web request when it matches the rule's statement.
-    name:
-      A friendly name of the rule.
-    priority:
-      If you define more than one Rule in a WebACL,
-      AWS WAF evaluates each request against the rules in order based on the value of priority.
-      AWS WAF processes rules with lower priority first.
-
-    rule_label:
-       A List of labels to apply to web requests that match the rule match statement
-
-    captcha_config:
-     Specifies how AWS WAF should handle CAPTCHA evaluations.
-
-     immunity_time_property:
-       Defines custom immunity time.
-
-       immunity_time:
-       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
-
-    statement:
-      field_to_match:
-        The part of a web request that you want AWS WAF to inspect.
-        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match
-      text_transformation:
-        Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
-        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
-
-    visibility_config:
-      Defines and enables Amazon CloudWatch metrics and web request sample collection.
-
-      cloudwatch_metrics_enabled:
-        Whether the associated resource sends metrics to CloudWatch.
-      metric_name:
-        A friendly name of the CloudWatch metric.
-      sampled_requests_enabled:
-        Whether AWS WAF should store a sampling of the web requests that match the rules.
-  DOC
-}
-
-variable "xss_match_statement_rules" {
-  type        = list(any)
-  default     = null
-  description = <<-DOC
-    A rule statement that defines a cross-site scripting (XSS) match search for AWS WAF to apply to web requests.
-
-    action:
-      The action that AWS WAF should take on a web request when it matches the rule's statement.
-    name:
-      A friendly name of the rule.
-    priority:
-      If you define more than one Rule in a WebACL,
-      AWS WAF evaluates each request against the rules in order based on the value of priority.
-      AWS WAF processes rules with lower priority first.
-
-    captcha_config:
-     Specifies how AWS WAF should handle CAPTCHA evaluations.
-
-     immunity_time_property:
-       Defines custom immunity time.
-
-       immunity_time:
-       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
-
-    rule_label:
-       A List of labels to apply to web requests that match the rule match statement
-
-    statement:
-      field_to_match:
-        The part of a web request that you want AWS WAF to inspect.
-        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match
-      text_transformation:
-        Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
-        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
-
-    visibility_config:
-      Defines and enables Amazon CloudWatch metrics and web request sample collection.
-
-      cloudwatch_metrics_enabled:
-        Whether the associated resource sends metrics to CloudWatch.
-      metric_name:
-        A friendly name of the CloudWatch metric.
-      sampled_requests_enabled:
-        Whether AWS WAF should store a sampling of the web requests that match the rules.
-  DOC
 }
