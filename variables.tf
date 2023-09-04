@@ -366,8 +366,12 @@ variable "managed_rule_group_statement_rules" {
     name            = string
     priority        = number
     override_action = optional(string)
-    captcha_config  = optional(map(any), null)
-    rule_label      = optional(list(string), null)
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
     statement = object({
       name        = string
       vendor_name = string
