@@ -388,7 +388,45 @@ variable "managed_rule_group_statement_rules" {
           }), null)
         }), null)
       })), null)
-      managed_rule_group_configs = optional(list(any), null)
+      managed_rule_group_configs = optional(list(object({
+        aws_managed_rules_bot_control_rule_set = optional(object({
+          inspection_level = string
+        }), null)
+        aws_managed_rules_atp_rule_set = optional(object({
+          enable_regex_in_path = optional(bool)
+          login_path           = string
+          request_inspection = optional(object({
+            payload_type = string
+            password_field = object({
+              identifier = string
+            })
+            username_field = object({
+              identifier = string
+            })
+          }), null)
+          response_inspection = optional(object({
+            body_contains = optional(object({
+              success_strings = list(string)
+              failure_strings = list(string)
+            }), null)
+            header = optional(object({
+              name           = string
+              success_values = list(string)
+              failure_values = list(string)
+            }), null)
+            json = optional(object({
+
+              identifier      = string
+              success_strings = list(string)
+              failure_strings = list(string)
+            }), null)
+            status_code = optional(object({
+              success_codes = list(string)
+              failure_codes = list(string)
+            }), null)
+          }), null)
+        }), null)
+      })), null)
     })
     visibility_config = optional(object({
       cloudwatch_metrics_enabled = optional(bool)
