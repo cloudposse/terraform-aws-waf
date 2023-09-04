@@ -644,7 +644,41 @@ variable "regex_match_statement_rules" {
 }
 
 variable "rule_group_reference_statement_rules" {
-  type        = list(any)
+  type = list(object({
+    name            = string
+    priority        = number
+    override_action = optional(string)
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
+    statement = object({
+      arn = string
+      rule_action_override = optional(map(object({
+        action = string
+        custom_request_handling = optional(object({
+          insert_header = object({
+            name  = string
+            value = string
+          })
+        }), null)
+        custom_response = optional(object({
+          response_code = string
+          response_header = optional(object({
+            name  = string
+            value = string
+          }), null)
+        }), null)
+      })), null)
+    })
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
   default     = null
   description = <<-DOC
     A rule statement used to run the rules that are defined in an WAFv2 Rule Group.
