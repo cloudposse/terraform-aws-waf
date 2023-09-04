@@ -95,50 +95,46 @@ module "waf" {
           }
           SignalNonBrowserUserAgent = {
             action = "count"
-            custom_request_handling = [
-              {
-                insert_header_name  = "example-2"
-                insert_header_value = "example-2"
-              },
-              {
-                insert_header_name  = "example-3"
-                insert_header_value = "example-3"
+            custom_request_handling = {
+              insert_header = {
+                name  = "example-2"
+                value = "example-2"
               }
-            ]
+            }
           }
         }
 
-        managed_rule_group_configs = [
-          {
-            aws_managed_rules_bot_control_rule_set = {
-              inspection_level = "COMMON"
-            }
-
-            aws_managed_rules_atp_rule_set = {
-              enable_regex_in_path = false
-              login_path           = "/api/1/signin"
-
-              request_inspection = {
-                payload_type = "JSON"
-
-                password_field = {
-                  identifier = "/password"
-                }
-
-                username_field = {
-                  identifier = "/email"
-                }
-              }
-
-              response_inspection = {
-                status_code = {
-                  failure_codes = ["403"]
-                  success_codes = ["200"]
-                }
-              }
-            }
-          }
-        ]
+        #        managed_rule_group_configs = [
+        #          {
+        #            aws_managed_rules_bot_control_rule_set = {
+        #              inspection_level = "COMMON"
+        #            }
+        #
+        #            aws_managed_rules_atp_rule_set = {
+        #              enable_regex_in_path = false
+        #              login_path           = "/api/1/signin"
+        #
+        #              request_inspection = {
+        #                payload_type = "JSON"
+        #
+        #                password_field = {
+        #                  identifier = "/password"
+        #                }
+        #
+        #                username_field = {
+        #                  identifier = "/email"
+        #                }
+        #              }
+        #
+        #              response_inspection = {
+        #                status_code = {
+        #                  failure_codes = ["403"]
+        #                  success_codes = ["200"]
+        #                }
+        #              }
+        #            }
+        #          }
+        #        ]
       }
 
       visibility_config = {

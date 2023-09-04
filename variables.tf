@@ -362,7 +362,40 @@ variable "ip_set_reference_statement_rules" {
 }
 
 variable "managed_rule_group_statement_rules" {
-  type        = list(any)
+  type = list(object({
+    name            = string
+    priority        = number
+    override_action = optional(string)
+    captcha_config  = optional(map(any), null)
+    rule_label      = optional(list(string), null)
+    statement = object({
+      name        = string
+      vendor_name = string
+      version     = optional(string)
+      rule_action_override = optional(map(object({
+        action = string
+        custom_request_handling = optional(object({
+          insert_header = object({
+            name  = string
+            value = string
+          })
+        }), null)
+        custom_response = optional(object({
+          response_code = string
+          response_header = optional(object({
+            name  = string
+            value = string
+          }), null)
+        }), null)
+      })), null)
+      managed_rule_group_configs = optional(list(any), null)
+    })
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
   default     = null
   description = <<-DOC
     A rule statement used to run the rules that are defined in a managed rule group.

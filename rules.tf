@@ -504,11 +504,11 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "allow" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? [1] : []
                         content {
                           insert_header {
-                            name  = custom_request_handling.value.insert_header_name
-                            value = custom_request_handling.value.insert_header_value
+                            name  = rule_action_override.value.custom_request_handling.insert_header.name
+                            value = rule_action_override.value.custom_request_handling.insert_header.value
                           }
                         }
                       }
@@ -524,10 +524,10 @@ resource "aws_wafv2_web_acl" "default" {
                           response_code            = rule_action_override.value.custom_response.response_code
                           custom_response_body_key = lookup(rule_action_override.value.custom_response, "custom_response_body_key", null)
                           dynamic "response_header" {
-                            for_each = lookup(rule_action_override.value.custom_response, "response_header", null) != null ? rule_action_override.value.custom_response.response_header : []
+                            for_each = lookup(rule_action_override.value.custom_response, "response_header", null) != null ? [1] : []
                             content {
-                              name  = response_header.value.name
-                              value = response_header.value.value
+                              name  = rule_action_override.value.custom_response.response_header.name
+                              value = rule_action_override.value.custom_response.response_header.value
                             }
                           }
                         }
@@ -539,11 +539,11 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "count" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? [1] : []
                         content {
                           insert_header {
-                            name  = custom_request_handling.value.insert_header_name
-                            value = custom_request_handling.value.insert_header_value
+                            name  = rule_action_override.value.custom_request_handling.insert_header.name
+                            value = rule_action_override.value.custom_request_handling.insert_header.value
                           }
                         }
                       }
@@ -554,11 +554,11 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "captcha" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? [1] : []
                         content {
                           insert_header {
-                            name  = custom_request_handling.value.insert_header_name
-                            value = custom_request_handling.value.insert_header_value
+                            name  = rule_action_override.value.custom_request_handling.insert_header.name
+                            value = rule_action_override.value.custom_request_handling.insert_header.value
                           }
                         }
                       }
@@ -569,11 +569,11 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "challenge" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? [1] : []
                         content {
                           insert_header {
-                            name  = custom_request_handling.value.insert_header_name
-                            value = custom_request_handling.value.insert_header_value
+                            name  = rule_action_override.value.custom_request_handling.insert_header.name
+                            value = rule_action_override.value.custom_request_handling.insert_header.value
                           }
                         }
                       }
@@ -1044,17 +1044,18 @@ resource "aws_wafv2_web_acl" "default" {
               content {
                 name = rule_action_override.key
 
+                # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#action-block
                 action_to_use {
                   # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#allow-block
                   dynamic "allow" {
                     for_each = rule_action_override.value.action == "allow" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? [1] : []
                         content {
                           insert_header {
-                            name  = custom_request_handling.value.insert_header_name
-                            value = custom_request_handling.value.insert_header_value
+                            name  = rule_action_override.value.custom_request_handling.insert_header.name
+                            value = rule_action_override.value.custom_request_handling.insert_header.value
                           }
                         }
                       }
@@ -1070,10 +1071,10 @@ resource "aws_wafv2_web_acl" "default" {
                           response_code            = rule_action_override.value.custom_response.response_code
                           custom_response_body_key = lookup(rule_action_override.value.custom_response, "custom_response_body_key", null)
                           dynamic "response_header" {
-                            for_each = lookup(rule_action_override.value.custom_response, "response_header", null) != null ? rule_action_override.value.custom_response.response_header : []
+                            for_each = lookup(rule_action_override.value.custom_response, "response_header", null) != null ? [1] : []
                             content {
-                              name  = response_header.value.name
-                              value = response_header.value.value
+                              name  = rule_action_override.value.custom_response.response_header.name
+                              value = rule_action_override.value.custom_response.response_header.value
                             }
                           }
                         }
@@ -1085,11 +1086,11 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "count" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? [1] : []
                         content {
                           insert_header {
-                            name  = custom_request_handling.value.insert_header_name
-                            value = custom_request_handling.value.insert_header_value
+                            name  = rule_action_override.value.custom_request_handling.insert_header.name
+                            value = rule_action_override.value.custom_request_handling.insert_header.value
                           }
                         }
                       }
@@ -1100,11 +1101,11 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "captcha" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? [1] : []
                         content {
                           insert_header {
-                            name  = custom_request_handling.value.insert_header_name
-                            value = custom_request_handling.value.insert_header_value
+                            name  = rule_action_override.value.custom_request_handling.insert_header.name
+                            value = rule_action_override.value.custom_request_handling.insert_header.value
                           }
                         }
                       }
@@ -1115,11 +1116,11 @@ resource "aws_wafv2_web_acl" "default" {
                     for_each = rule_action_override.value.action == "challenge" ? [1] : []
                     content {
                       dynamic "custom_request_handling" {
-                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? rule_action_override.value.custom_request_handling : []
+                        for_each = lookup(rule_action_override.value, "custom_request_handling", null) != null ? [1] : []
                         content {
                           insert_header {
-                            name  = custom_request_handling.value.insert_header_name
-                            value = custom_request_handling.value.insert_header_value
+                            name  = rule_action_override.value.custom_request_handling.insert_header.name
+                            value = rule_action_override.value.custom_request_handling.insert_header.value
                           }
                         }
                       }
