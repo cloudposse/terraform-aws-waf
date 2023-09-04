@@ -1,14 +1,15 @@
 package test
 
 import (
+	"regexp"
+	"strings"
+	"testing"
+
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	testStructure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"regexp"
-	"strings"
-	"testing"
 )
 
 // Test the Terraform module in examples/complete using Terratest.
