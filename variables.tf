@@ -1035,3 +1035,12 @@ variable "association_resource_arns" {
   DOC
   nullable    = false
 }
+
+variable "default_block_response" {
+  type        = string
+  default     = null
+  description = <<-DOC
+    A HTTP response code that is sent when default block action is used. Only takes effect if default_action is set to `block`.
+  DOC
+  nullable    = true
+}
