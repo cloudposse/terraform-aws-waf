@@ -107,7 +107,14 @@ resource "aws_wafv2_web_acl" "default" {
 
     dynamic "block" {
       for_each = var.default_action == "block" ? [true] : []
-      content {}
+      content {
+        dynamic "custom_response" {
+          for_each = var.default_block_response != null ? [true] : []
+          content {
+            response_code = var.default_block_response
+          }
+        }
+      }
     }
   }
 
