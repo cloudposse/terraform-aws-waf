@@ -353,11 +353,21 @@ resource "aws_wafv2_web_acl" "default" {
             name        = managed_rule_group_statement.value.name
             vendor_name = managed_rule_group_statement.value.vendor_name
 
-            dynamic "excluded_rule" {
-              for_each = lookup(managed_rule_group_statement.value, "excluded_rule", null) != null ? toset(managed_rule_group_statement.value.excluded_rule) : []
+            # dynamic "excluded_rule" {
+            #   for_each = lookup(managed_rule_group_statement.value, "excluded_rule", null) != null ? toset(managed_rule_group_statement.value.excluded_rule) : []
+
+            #   content {
+            #     name = excluded_rule.value
+            #   }
+            # }
+            dynamic "rule_action_override" {
+              for_each = lookup(managed_rule_group_statement.value, "rule_action_override", null) != null ? toset(managed_rule_group_statement.value.rule_action_override) : []
 
               content {
-                name = excluded_rule.value
+                action_to_use {
+                  count {}
+                }
+                name = rule_action_override.value.name
               }
             }
           }
