@@ -154,6 +154,7 @@ variable "geo_allowlist_statement_rules" {
   type = list(object({
     name     = string
     priority = number
+    action   = string
     captcha_config = optional(object({
       immunity_time_property = object({
         immunity_time = number
@@ -171,6 +172,8 @@ variable "geo_allowlist_statement_rules" {
   description = <<-DOC
     A rule statement used to identify a list of allowed countries which should not be blocked by the WAF.
 
+    action:
+      The action that AWS WAF should take on a web request when it matches the rule's statement.
     name:
       A friendly name of the rule.
     priority:
