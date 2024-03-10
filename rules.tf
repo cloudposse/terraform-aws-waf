@@ -129,7 +129,7 @@ resource "aws_wafv2_web_acl" "default" {
     content {
       key          = custom_response_body.key
       content      = custom_response_body.value.content
-      content_type = custom_response_body.value.content
+      content_type = custom_response_body.value.content_type
     }
   }
 
