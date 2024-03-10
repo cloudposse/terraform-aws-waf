@@ -24,10 +24,13 @@ github_repo: cloudposse/terraform-aws-waf
 # Badges to display
 badges:
   - name: Latest Release
-    image: https://img.shields.io/github/release/cloudposse/terraform-aws-waf.svg
+    image: https://img.shields.io/github/release/cloudposse/terraform-aws-waf.svg?style=for-the-badge
     url: https://github.com/cloudposse/terraform-aws-waf/releases/latest
+  - name: Last Updated
+    image: https://img.shields.io/github/last-commit/cloudposse/terraform-aws-waf.svg?style=for-the-badge
+    url: https://github.com/cloudposse/terraform-aws-waf/commits
   - name: Slack Community
-    image: https://slack.cloudposse.com/badge.svg
+    image: https://slack.cloudposse.com/for-the-badge.svg
     url: https://slack.cloudposse.com
 
 # List any related terraform modules that this module may be used with or that this module depends on.
@@ -90,7 +93,7 @@ usage: |-
     source = "cloudposse/label/null"
     # Cloud Posse recommends pinning every module to a specific version
     # version = "x.x.x"
-  
+
     namespace = "eg"
     stage     = "prod"
     name      = "waf"
@@ -158,8 +161,4 @@ include:
   - docs/terraform.md
 
 # Contributors to this project
-contributors:
-  - name: Vladimir Syromyatnikov
-    github: SweetOps
-  - name: "Andriy Knysh"
-    github: "aknysh"
+contributors: []
