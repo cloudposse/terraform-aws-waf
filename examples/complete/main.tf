@@ -422,5 +422,5 @@ module "waf" {
 }
 
 resource "aws_cloudwatch_log_group" "this" {
-  name              = "aws-waf-logs-${module.waf.id}"
+  name = "aws-waf-logs-${module.waf.id}"
 }
