@@ -384,7 +384,7 @@ module "waf" {
 
   # example with cloudwatch
   log_destination_configs = [
-    aws_cloudwatch_log_group.this.arn
+    aws_cloudwatch_log_group.logging_cloudwatch_log_group.arn
   ]
 
   logging_filter = {
@@ -421,6 +421,6 @@ module "waf" {
   context = module.this.context
 }
 
-resource "aws_cloudwatch_log_group" "this" {
+resource "aws_cloudwatch_log_group" "logging_cloudwatch_log_group" {
   name = "aws-waf-logs-${module.waf.id}"
 }
