@@ -382,5 +382,45 @@ module "waf" {
     }
   ]
 
+  # example with cloudwatch
+  log_destination_configs = [
+    aws_cloudwatch_log_group.this.arn
+  ]
+
+  logging_filter = {
+    default_behavior = "DROP"
+
+    filter = [
+      {
+        behavior    = "DROP"
+        requirement = "MEETS_ALL"
+
+        condition = [
+          {
+            action_condition = {
+              action = "ALLOW"
+            }
+          },
+        ]
+      },
+      {
+        behavior    = "KEEP"
+        requirement = "MEETS_ALL"
+
+        condition = [
+          {
+            action_condition = {
+              action = "BLOCK"
+            }
+          },
+        ]
+      },
+    ]
+  }
+
   context = module.this.context
+}
+
+resource "aws_cloudwatch_log_group" "this" {
+  name              = "aws-waf-logs-${module.waf.id}"
 }
