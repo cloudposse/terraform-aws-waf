@@ -303,6 +303,7 @@ module "waf" {
     {
       name     = "rule-90"
       priority = 90
+      action   = "count"
 
       statement = {
         country_codes = ["US"]
@@ -312,6 +313,21 @@ module "waf" {
         cloudwatch_metrics_enabled = false
         sampled_requests_enabled   = false
         metric_name                = "rule-90-metric"
+      }
+    },
+    {
+      name     = "rule-95"
+      priority = 95
+      action   = "block"
+
+      statement = {
+        country_codes = ["US"]
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = false
+        sampled_requests_enabled   = false
+        metric_name                = "rule-95-metric"
       }
     }
   ]

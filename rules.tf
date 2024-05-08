@@ -11,7 +11,7 @@ locals {
     for rule in flatten(var.geo_allowlist_statement_rules) :
     format("%s-%s",
       lookup(rule, "name", null) != null ? rule.name : format("%s-geo-allowlist-%d", module.this.id, rule.priority),
-      "block",
+      rule.action,
     ) => rule
   } : {}
 
@@ -271,7 +271,14 @@ resource "aws_wafv2_web_acl" "default" {
       priority = rule.value.priority
 
       action {
-        block {}
+        dynamic "block" {
+          for_each = rule.value.action == "block" ? [1] : []
+          content {}
+        }
+        dynamic "count" {
+          for_each = rule.value.action == "count" ? [1] : []
+          content {}
+        }
       }
 
       # `geo_allowlist_statement_rules` is a special case where we use `not_statement` to wrap our `statement` block to support
