@@ -714,7 +714,14 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "block" {
           for_each = rule.value.action == "block" ? [1] : []
-          content {}
+          content {
+            dynamic "custom_response" {
+              for_each = rule.value.action == "block" && rule.value.custom_response_code != null ? [1] : []
+              content {
+                response_code = rule.value.custom_response_code
+              }
+            }
+          }
         }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []
@@ -731,8 +738,40 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
           content {
-            aggregate_key_type = lookup(rate_based_statement.value, "aggregate_key_type", "IP")
-            limit              = rate_based_statement.value.limit
+            aggregate_key_type    = lookup(rate_based_statement.value, "aggregate_key_type", "IP")
+            limit                 = rate_based_statement.value.limit
+            evaluation_window_sec = lookup(rate_based_statement.value, "evaluation_window_sec", 300)
+
+            dynamic "scope_down_statement" {
+              for_each = lookup(rate_based_statement.value, "scope_down_statement", null) != null ? [rate_based_statement.value.scope_down_statement] : []
+
+              content {
+                dynamic "scope_down_statement_and" {
+                  for_each = lookup(scope_down_statement.value, "and", null) != null ? scope_down_statement.value.and : []
+                  content {
+                    byte_match_statement {
+                      search_string = scope_down_statement_and.value.search_string
+                      field_to_match {
+                        dynamic "uri_path" {
+                          for_each = lookup(scope_down_statement_and.value, "uri_path", null) != null ? [1] : []
+                          content {}
+                        }
+                        dynamic "single_header" {
+                          for_each = lookup(scope_down_statement_and.value, "single_header", null) != null ? [1] : []
+                          content {
+                            name = single_header.value
+                          }
+                        }
+                        dynamic "method" {
+                          for_each = lookup(scope_down_statement_and.value, "method", null) != null ? [1] : []
+                          content {}
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
 
             dynamic "forwarded_ip_config" {
               for_each = lookup(rate_based_statement.value, "forwarded_ip_config", null) != null ? [rate_based_statement.value.forwarded_ip_config] : []
