@@ -501,6 +501,7 @@ variable "rate_based_statement_rules" {
     }), null)
     rule_label = optional(list(string), null)
     statement  = any
+    custom_response_code = optional(number, null)
     visibility_config = optional(object({
       cloudwatch_metrics_enabled = optional(bool)
       metric_name                = string
