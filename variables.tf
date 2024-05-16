@@ -1047,3 +1047,14 @@ variable "default_block_response" {
   DOC
   nullable    = true
 }
+
+variable "default_block_custom_response_body_key" {
+  type        = string
+  default     = null
+  description = <<-DOC
+    References the default response body that you want AWS WAF to return to the web request client.
+    This must reference a key defined in a custom_response_body block of this resource.
+    Only takes effect if default_action is set to `block`.
+  DOC
+  nullable    = true
+}
