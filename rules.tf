@@ -746,6 +746,42 @@ resource "aws_wafv2_web_acl" "default" {
               for_each = lookup(rate_based_statement.value, "scope_down_statement", null) != null ? [rate_based_statement.value.scope_down_statement] : []
 
               content {
+                dynamic "byte_match_statement" {
+                  for_each = lookup(scope_down_statement.value, "byte_match_statement", null) != null ? [scope_down_statement.value.byte_match_statement] : []
+                  content {
+                    search_string         = byte_match_statement.value.search_string
+                    positional_constraint = byte_match_statement.value.positional_constraint
+                    field_to_match {
+                      dynamic "uri_path" {
+                        for_each = lookup(byte_match_statement.value, "uri_path", null) != null ? [1] : []
+                        content {}
+                      }
+                      dynamic "single_header" {
+                        for_each = lookup(byte_match_statement.value, "single_header", null) != null ? [byte_match_statement.value.single_header] : []
+                        content {
+                          name = single_header.value
+                        }
+                      }
+                      dynamic "method" {
+                        for_each = lookup(byte_match_statement.value, "method", null) != null ? [1] : []
+                        content {}
+                      }
+                    }
+                    dynamic "text_transformation" {
+                      for_each = lookup(byte_match_statement.value, "text_transformation", [
+                        {
+                          priority = 0
+                          type     = "NONE"
+                        }
+                      ])
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
                 dynamic "and_statement" {
                   for_each = length(lookup(scope_down_statement.value, "and", [])) > 0 ? [scope_down_statement.value.and] : []
                   content {
