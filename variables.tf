@@ -546,6 +546,10 @@ variable "rate_based_statement_rules" {
           Possible values: `MATCH`, `NO_MATCH`
         header_name:
           The name of the HTTP header to use for the IP address.
+    
+    custom_response_code:
+      The HTTP status code to return when the request is blocked.
+      For example, `403`, or more applicable to rate based rules, `429`.
 
     visibility_config:
       Defines and enables Amazon CloudWatch metrics and web request sample collection.
