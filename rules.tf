@@ -111,6 +111,7 @@ resource "aws_wafv2_web_acl" "default" {
         dynamic "custom_response" {
           for_each = var.default_block_response != null ? [true] : []
           content {
+            custom_response_body_key = var.default_custom_response_body_key
             response_code = var.default_block_response
           }
         }

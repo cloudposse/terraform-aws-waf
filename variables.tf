@@ -15,6 +15,16 @@ variable "default_action" {
   }
 }
 
+variable "default_custom_response_body_key" {
+  type        = string
+  default     = null
+  nullable    = true
+  description = <<-DOC
+    The key to use to assign the default custom response body.
+    It corresponds to a `key` attribute of the `custom_response_body` map(object({})).
+  DOC
+}
+
 variable "custom_response_body" {
   type = map(object({
     content      = string
