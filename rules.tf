@@ -88,6 +88,8 @@ locals {
       rule.action,
     ) => rule
   } : {}
+
+  default_custom_response_body_key = var.default_block_custom_response_body_key != null ? contains(keys(var.custom_response_body), var.default_block_custom_response_body_key) ? var.default_block_custom_response_body_key : null : null
 }
 
 resource "aws_wafv2_web_acl" "default" {
@@ -111,7 +113,8 @@ resource "aws_wafv2_web_acl" "default" {
         dynamic "custom_response" {
           for_each = var.default_block_response != null ? [true] : []
           content {
-            response_code = var.default_block_response
+            response_code            = var.default_block_response
+            custom_response_body_key = local.default_custom_response_body_key
           }
         }
       }
