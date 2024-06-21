@@ -545,6 +545,13 @@ variable "rate_based_statement_rules" {
           Possible values: `MATCH`, `NO_MATCH`
         header_name:
           The name of the HTTP header to use for the IP address.
+        position:
+          Position in the header to search for the IP address.
+          
+      scope_down_statement:
+        Narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement,
+        and you can nest statements at any level below this scope-down statement.
+        For more information, see: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#statement-block
 
     visibility_config:
       Defines and enables Amazon CloudWatch metrics and web request sample collection.

@@ -747,6 +747,19 @@ resource "aws_wafv2_web_acl" "default" {
             }
           }
         }
+
+        dynamic "scope_down_statement" {
+          for_each = lookup(rate_based_statement.value, "scope_down_statement", null) != null ? [rate_based_statement.value.scope_down_statement] : []
+
+          content {
+            dynamic "and_statement" {
+
+              content {
+                statement = rate_based_statement.value.scope_down_statement.and_statement.statement
+              }
+            }
+          }
+        }
       }
 
       dynamic "visibility_config" {
