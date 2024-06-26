@@ -811,7 +811,7 @@ resource "aws_wafv2_web_acl" "default" {
 
                     dynamic "text_transformation" {
                       for_each = lookup(rule.value.statement, "text_transformation", null) != null ? [
-                        for rule in lookup(rule.value.statement, "text_transformation") : {
+                        for rule in rule.value.statement.text_transformation : {
                           priority = rule.priority
                           type     = rule.type
                       }] : []
