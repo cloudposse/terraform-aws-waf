@@ -545,6 +545,23 @@ variable "rate_based_statement_rules" {
           Possible values: `MATCH`, `NO_MATCH`
         header_name:
           The name of the HTTP header to use for the IP address.
+        position:
+          Position in the header to search for the IP address.
+          
+      scope_down_statement:
+        Narrows the scope of the rate-based statement to matching web requests.
+        For more information, see: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl.html#scope_down_statement
+        byte_match_statement:
+          positional_constraint:
+          Area within the portion of a web request that you want AWS WAF to search for search_string. Valid values include the following: EXACTLY, STARTS_WITH, ENDS_WITH, CONTAINS, CONTAINS_WORD.
+        search_string
+          String value that you want AWS WAF to search for. AWS WAF searches only in the part of web requests that you designate for inspection in field_to_match.
+        field_to_match:
+          The part of a web request that you want AWS WAF to inspect.
+          See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match
+        text_transformation:
+          Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
+          See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
 
     visibility_config:
       Defines and enables Amazon CloudWatch metrics and web request sample collection.
