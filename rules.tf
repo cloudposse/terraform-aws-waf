@@ -751,14 +751,14 @@ resource "aws_wafv2_web_acl" "default" {
 
               content {
                 dynamic "byte_match_statement" {
-                  for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
+                  for_each = lookup(scope_down_statement.value, "byte_match_statement", null) != null ? [scope_down_statement.value.byte_match_statement] : []
 
                   content {
                     positional_constraint = byte_match_statement.value.positional_constraint
                     search_string         = byte_match_statement.value.search_string
 
                     dynamic "field_to_match" {
-                      for_each = lookup(rule.value.statement, "field_to_match", null) != null ? [rule.value.statement.field_to_match] : []
+                      for_each = lookup(byte_match_statement.value, "field_to_match", null) != null ? [byte_match_statement.value.field_to_match] : []
 
                       content {
                         dynamic "all_query_arguments" {
@@ -810,7 +810,7 @@ resource "aws_wafv2_web_acl" "default" {
                     }
 
                     dynamic "text_transformation" {
-                      for_each = lookup(rule.value.statement, "text_transformation", null) != null ? [
+                      for_each = lookup(byte_match_statement.value, "text_transformation", null) != null ? [
                         for rule in rule.value.statement.text_transformation : {
                           priority = rule.priority
                           type     = rule.type
