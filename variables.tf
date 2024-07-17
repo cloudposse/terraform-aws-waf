@@ -529,8 +529,8 @@ variable "rate_based_statement_rules" {
       }), null)
     })
     visibility_config = optional(object({
-      cloudwatch_metrics_enabled = optional(bool),
-      metric_name                = string,
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
       sampled_requests_enabled   = optional(bool)
     }), null)
   }))
@@ -587,6 +587,7 @@ variable "rate_based_statement_rules" {
           The maximum length of the value is 50 bytes.
         text_transformation:
           Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
+          See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
         
     visibility_config:
       Defines and enables Amazon CloudWatch metrics and web request sample collection.
