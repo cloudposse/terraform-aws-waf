@@ -588,7 +588,7 @@ variable "rate_based_statement_rules" {
         text_transformation:
           Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
           See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
-        
+
     visibility_config:
       Defines and enables Amazon CloudWatch metrics and web request sample collection.
 
