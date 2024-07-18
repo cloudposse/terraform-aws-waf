@@ -734,8 +734,9 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
           content {
-            aggregate_key_type = lookup(rate_based_statement.value, "aggregate_key_type", "IP")
-            limit              = rate_based_statement.value.limit
+            aggregate_key_type    = lookup(rate_based_statement.value, "aggregate_key_type", "IP")
+            limit                 = rate_based_statement.value.limit
+            evaluation_window_sec = lookup(rate_based_statement.value, "evaluation_window_sec", 300)
 
             dynamic "forwarded_ip_config" {
               for_each = lookup(rate_based_statement.value, "forwarded_ip_config", null) != null ? [rate_based_statement.value.forwarded_ip_config] : []
@@ -811,7 +812,7 @@ resource "aws_wafv2_web_acl" "default" {
 
                     dynamic "text_transformation" {
                       for_each = lookup(byte_match_statement.value, "text_transformation", null) != null ? [
-                        for rule in rule.value.statement.text_transformation : {
+                        for rule in byte_match_statement.value.text_transformation : {
                           priority = rule.priority
                           type     = rule.type
                       }] : []

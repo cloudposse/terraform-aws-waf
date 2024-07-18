@@ -500,7 +500,34 @@ variable "rate_based_statement_rules" {
       })
     }), null)
     rule_label = optional(list(string), null)
-    statement  = any
+    statement = object({
+      limit                 = number
+      aggregate_key_type    = string
+      evaluation_window_sec = optional(number)
+      forwarded_ip_config = optional(object({
+        fallback_behavior = string
+        header_name       = string
+      }), null)
+      scope_down_statement = optional(object({
+        byte_match_statement = object({
+          positional_constraint = string
+          search_string         = string
+          field_to_match = object({
+            all_query_arguments   = optional(bool)
+            body                  = optional(bool)
+            method                = optional(bool)
+            query_string          = optional(bool)
+            single_header         = optional(object({ name = string }))
+            single_query_argument = optional(object({ name = string }))
+            uri_path              = optional(bool)
+          })
+          text_transformation = list(object({
+            priority = number
+            type     = string
+          }))
+        })
+      }), null)
+    })
     visibility_config = optional(object({
       cloudwatch_metrics_enabled = optional(bool)
       metric_name                = string
@@ -539,26 +566,25 @@ variable "rate_based_statement_rules" {
          Possible values include: `FORWARDED_IP` or `IP`
       limit:
         The limit on requests per 5-minute period for a single originating IP address.
+      evaluation_window_sec:
+        The amount of time, in seconds, that AWS WAF should include in its request counts, looking back from the current time.
+        Valid values are 60, 120, 300, and 600. Defaults to 300 (5 minutes).
       forwarded_ip_config:
         fallback_behavior:
           The match status to assign to the web request if the request doesn't have a valid IP address in the specified position.
           Possible values: `MATCH`, `NO_MATCH`
         header_name:
           The name of the HTTP header to use for the IP address.
-        position:
-          Position in the header to search for the IP address.
-          
-      scope_down_statement:
-        Narrows the scope of the rate-based statement to matching web requests.
-        For more information, see: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl.html#scope_down_statement
-        byte_match_statement:
-          positional_constraint:
-          Area within the portion of a web request that you want AWS WAF to search for search_string. Valid values include the following: EXACTLY, STARTS_WITH, ENDS_WITH, CONTAINS, CONTAINS_WORD.
-        search_string
-          String value that you want AWS WAF to search for. AWS WAF searches only in the part of web requests that you designate for inspection in field_to_match.
+      byte_match_statement:
         field_to_match:
-          The part of a web request that you want AWS WAF to inspect.
-          See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#field-to-match
+          Part of a web request that you want AWS WAF to inspect.
+        positional_constraint:
+          Area within the portion of a web request that you want AWS WAF to search for search_string. 
+          Valid values include the following: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`.
+        search_string:
+          String value that you want AWS WAF to search for.
+          AWS WAF searches only in the part of web requests that you designate for inspection in `field_to_match`.
+          The maximum length of the value is 50 bytes.
         text_transformation:
           Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
           See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
@@ -574,6 +600,7 @@ variable "rate_based_statement_rules" {
         Whether AWS WAF should store a sampling of the web requests that match the rules.
   DOC
 }
+
 
 variable "regex_pattern_set_reference_statement_rules" {
   type = list(object({
