@@ -608,7 +608,8 @@ resource "aws_wafv2_web_acl" "default" {
                 dynamic "aws_managed_rules_bot_control_rule_set" {
                   for_each = lookup(managed_rule_group_configs.value, "aws_managed_rules_bot_control_rule_set", null) != null ? [1] : []
                   content {
-                    inspection_level = managed_rule_group_configs.value.aws_managed_rules_bot_control_rule_set.inspection_level
+                    inspection_level        = managed_rule_group_configs.value.aws_managed_rules_bot_control_rule_set.inspection_level
+                    enable_machine_learning = managed_rule_group_configs.value.aws_managed_rules_bot_control_rule_set.enable_machine_learning
                   }
                 }
 
