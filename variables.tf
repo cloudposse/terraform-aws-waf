@@ -391,7 +391,8 @@ variable "managed_rule_group_statement_rules" {
       })), null)
       managed_rule_group_configs = optional(list(object({
         aws_managed_rules_bot_control_rule_set = optional(object({
-          inspection_level = string
+          inspection_level        = string
+          enable_machine_learning = optional(bool, true)
         }), null)
         aws_managed_rules_atp_rule_set = optional(object({
           enable_regex_in_path = optional(bool)
