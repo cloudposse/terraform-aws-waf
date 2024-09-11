@@ -88,6 +88,8 @@ locals {
       rule.action,
     ) => rule
   } : {}
+
+  default_custom_response_body_key = var.default_block_custom_response_body_key != null ? contains(keys(var.custom_response_body), var.default_block_custom_response_body_key) ? var.default_block_custom_response_body_key : null : null
 }
 
 resource "aws_wafv2_web_acl" "default" {
@@ -111,7 +113,8 @@ resource "aws_wafv2_web_acl" "default" {
         dynamic "custom_response" {
           for_each = var.default_block_response != null ? [true] : []
           content {
-            response_code = var.default_block_response
+            response_code            = var.default_block_response
+            custom_response_body_key = local.default_custom_response_body_key
           }
         }
       }
@@ -605,7 +608,8 @@ resource "aws_wafv2_web_acl" "default" {
                 dynamic "aws_managed_rules_bot_control_rule_set" {
                   for_each = lookup(managed_rule_group_configs.value, "aws_managed_rules_bot_control_rule_set", null) != null ? [1] : []
                   content {
-                    inspection_level = managed_rule_group_configs.value.aws_managed_rules_bot_control_rule_set.inspection_level
+                    inspection_level        = managed_rule_group_configs.value.aws_managed_rules_bot_control_rule_set.inspection_level
+                    enable_machine_learning = managed_rule_group_configs.value.aws_managed_rules_bot_control_rule_set.enable_machine_learning
                   }
                 }
 
@@ -731,8 +735,9 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
           content {
-            aggregate_key_type = lookup(rate_based_statement.value, "aggregate_key_type", "IP")
-            limit              = rate_based_statement.value.limit
+            aggregate_key_type    = lookup(rate_based_statement.value, "aggregate_key_type", "IP")
+            limit                 = rate_based_statement.value.limit
+            evaluation_window_sec = lookup(rate_based_statement.value, "evaluation_window_sec", 300)
 
             dynamic "forwarded_ip_config" {
               for_each = lookup(rate_based_statement.value, "forwarded_ip_config", null) != null ? [rate_based_statement.value.forwarded_ip_config] : []
@@ -740,6 +745,86 @@ resource "aws_wafv2_web_acl" "default" {
               content {
                 fallback_behavior = forwarded_ip_config.value.fallback_behavior
                 header_name       = forwarded_ip_config.value.header_name
+              }
+            }
+
+            dynamic "scope_down_statement" {
+              for_each = lookup(rate_based_statement.value, "scope_down_statement", null) != null ? [rate_based_statement.value.scope_down_statement] : []
+
+              content {
+                dynamic "byte_match_statement" {
+                  for_each = lookup(scope_down_statement.value, "byte_match_statement", null) != null ? [scope_down_statement.value.byte_match_statement] : []
+
+                  content {
+                    positional_constraint = byte_match_statement.value.positional_constraint
+                    search_string         = byte_match_statement.value.search_string
+
+                    dynamic "field_to_match" {
+                      for_each = lookup(byte_match_statement.value, "field_to_match", null) != null ? [byte_match_statement.value.field_to_match] : []
+
+                      content {
+                        dynamic "all_query_arguments" {
+                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "body" {
+                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "method" {
+                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "query_string" {
+                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "single_header" {
+                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                          content {
+                            name = single_header.value.name
+                          }
+                        }
+
+                        dynamic "single_query_argument" {
+                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                          content {
+                            name = single_query_argument.value.name
+                          }
+                        }
+
+                        dynamic "uri_path" {
+                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                          content {}
+                        }
+                      }
+                    }
+
+                    dynamic "text_transformation" {
+                      for_each = lookup(byte_match_statement.value, "text_transformation", null) != null ? [
+                        for rule in byte_match_statement.value.text_transformation : {
+                          priority = rule.priority
+                          type     = rule.type
+                      }] : []
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
               }
             }
           }
