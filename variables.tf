@@ -227,6 +227,14 @@ variable "geo_match_statement_rules" {
     }), null)
     rule_label = optional(list(string), null)
     statement  = any
+    custom_response = optional(object({
+      response_code            = string
+      custom_response_body_key = string
+      response_header = optional(object({
+        name  = string
+        value = string
+      }), null)
+    }), null)
     visibility_config = optional(object({
       cloudwatch_metrics_enabled = optional(bool)
       metric_name                = string
@@ -292,6 +300,14 @@ variable "ip_set_reference_statement_rules" {
     }), null)
     rule_label = optional(list(string), null)
     statement  = any
+    custom_response = optional(object({
+      response_code            = string
+      custom_response_body_key = string
+      response_header = optional(object({
+        name  = string
+        value = string
+      }), null)
+    }), null)
     visibility_config = optional(object({
       cloudwatch_metrics_enabled = optional(bool)
       metric_name                = string
