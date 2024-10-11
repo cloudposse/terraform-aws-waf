@@ -23,6 +23,14 @@ locals {
     ) => rule
   } : {}
 
+  label_match_statement_rules = local.enabled && var.label_match_statement_rules != null ? {
+    for rule in flatten(var.label_match_statement_rules) :
+    format("%s-%s",
+      lookup(rule, "name", null) != null ? rule.name : format("%s-label-match-%d", module.this.id, rule.priority),
+      rule.action,
+    ) => rule
+  } : {}
+
   ip_set_reference_statement_rules = local.enabled && var.ip_set_reference_statement_rules != null ? {
     for indx, rule in flatten(var.ip_set_reference_statement_rules) :
     format("%s-%s",
@@ -373,6 +381,87 @@ resource "aws_wafv2_web_acl" "default" {
                 header_name       = forwarded_ip_config.value.header_name
               }
             }
+          }
+        }
+      }
+
+      dynamic "visibility_config" {
+        for_each = lookup(rule.value, "visibility_config", null) != null ? [rule.value.visibility_config] : []
+
+        content {
+          cloudwatch_metrics_enabled = lookup(visibility_config.value, "cloudwatch_metrics_enabled", true)
+          metric_name                = visibility_config.value.metric_name
+          sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
+        }
+      }
+
+      dynamic "captcha_config" {
+        for_each = lookup(rule.value, "captcha_config", null) != null ? [rule.value.captcha_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
+
+      dynamic "rule_label" {
+        for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
+        content {
+          name = rule_label.value
+        }
+      }
+    }
+  }
+
+  dynamic "rule" {
+    for_each = local.label_match_statement_rules
+
+    content {
+      name     = rule.value.name
+      priority = rule.value.priority
+
+      action {
+        dynamic "allow" {
+          for_each = rule.value.action == "allow" ? [1] : []
+          content {}
+        }
+        dynamic "block" {
+          for_each = rule.value.action == "block" ? [1] : []
+          content {
+            dynamic "custom_response" {
+              for_each = lookup(rule.value, "custom_response", null) != null ? [1] : []
+              content {
+                response_code            = rule.value.custom_response.response_code
+                custom_response_body_key = lookup(rule.value.custom_response, "custom_response_body_key", null)
+                dynamic "response_header" {
+                  for_each = lookup(rule.value.custom_response, "response_header", null) != null ? [1] : []
+                  content {
+                    name  = rule.value.custom_response.response_header.name
+                    value = rule.value.custom_response.response_header.value
+                  }
+                }
+              }
+            }
+          }
+        }
+        dynamic "count" {
+          for_each = rule.value.action == "count" ? [1] : []
+          content {}
+        }
+        dynamic "captcha" {
+          for_each = rule.value.action == "captcha" ? [1] : []
+          content {}
+        }
+      }
+
+      statement {
+        dynamic "label_match_statement" {
+          for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
+
+          content {
+            key   = label_match_statement.value.key
+            scope = label_match_statement.value.scope
           }
         }
       }
