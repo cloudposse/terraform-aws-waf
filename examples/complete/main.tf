@@ -151,6 +151,50 @@ module "waf" {
     }
   ]
 
+  # Example from https://docs.aws.amazon.com/waf/latest/developerguide/waf-bot-control-example-user-agent-exception.html
+  custom_rules = [
+    {
+      name     = "user_agent_match_rule"
+      priority = 1000
+      action   = "block"
+
+      and_statement = [
+        {
+          type = "LabelMatchStatement"
+          statement = {
+            key   = "awswaf:managed:aws:bot-control:signal:non-browser-user-agent"
+            scope = "LABEL"
+          }
+        },
+        {
+          type = "NotStatement"
+          statement = {
+            type = "ByteMatchStatement"
+            field_to_match = {
+              single_header = {
+                name = "user-agent"
+              }
+            }
+            positional_constraint = "EXACTLY"
+            search_string         = "PostmanRuntime/7.29.2"
+            text_transformation = [
+              {
+                priority = 0
+                type     = "NONE"
+              }
+            ]
+          }
+        }
+      ]
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = true
+        metric_name                = "user_agent_match_rule"
+      }
+    }
+  ]
+
   rate_based_statement_rules = [
     {
       name     = "rule-40"
