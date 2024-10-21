@@ -390,6 +390,8 @@ variable "managed_rule_group_statement_rules" {
         }), null)
       })), null)
       managed_rule_group_configs = optional(list(object({
+        # The `inspection_level` must be set to `TARGETED` to enable machine learning analysis
+        # https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html
         aws_managed_rules_bot_control_rule_set = optional(object({
           inspection_level        = string
           enable_machine_learning = optional(bool, true)
@@ -580,7 +582,7 @@ variable "rate_based_statement_rules" {
         field_to_match:
           Part of a web request that you want AWS WAF to inspect.
         positional_constraint:
-          Area within the portion of a web request that you want AWS WAF to search for search_string. 
+          Area within the portion of a web request that you want AWS WAF to search for search_string.
           Valid values include the following: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`.
         search_string:
           String value that you want AWS WAF to search for.
