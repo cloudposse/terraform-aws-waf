@@ -185,6 +185,28 @@ resource "aws_wafv2_web_acl" "default" {
                   content {}
                 }
 
+                dynamic "headers" {
+                  for_each = lookup(field_to_match.value, "headers", null) != null ? [field_to_match.value.headers] : []
+
+                  content {
+                    dynamic "match_pattern" {
+                      for_each = [headers.value.match_pattern]
+
+                      content {
+                        dynamic "all" {
+                          for_each = lookup(match_pattern.value, "all", null) != null ? [1] : []
+
+                          content {}
+                        }
+                        included_headers = lookup(match_pattern.value, "included_headers", null) != null ? match_pattern.value.included_headers : null
+                        excluded_headers = lookup(match_pattern.value, "excluded_headers", null) != null ? match_pattern.value.excluded_headers : null
+                      }
+                    }
+                    match_scope = headers.value.match_scope
+                    oversize_handling = headers.value.oversize_handling
+                  }
+                }
+
                 dynamic "method" {
                   for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
 
@@ -775,6 +797,28 @@ resource "aws_wafv2_web_acl" "default" {
                           content {}
                         }
 
+                        dynamic "headers" {
+                          for_each = lookup(field_to_match.value, "headers", null) != null ? [field_to_match.value.headers] : []
+
+                          content {
+                            dynamic "match_pattern" {
+                              for_each = [headers.value.match_pattern]
+
+                              content {
+                                dynamic "all" {
+                                  for_each = lookup(match_pattern.value, "all", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                                included_headers = lookup(match_pattern.value, "included_headers", null) != null ? match_pattern.value.included_headers : null
+                                excluded_headers = lookup(match_pattern.value, "excluded_headers", null) != null ? match_pattern.value.excluded_headers : null
+                              }
+                            }
+                            match_scope = headers.value.match_scope
+                            oversize_handling = headers.value.oversize_handling
+                          }
+                        }
+
                         dynamic "method" {
                           for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
 
@@ -905,6 +949,28 @@ resource "aws_wafv2_web_acl" "default" {
                   content {}
                 }
 
+                dynamic "headers" {
+                  for_each = lookup(field_to_match.value, "headers", null) != null ? [field_to_match.value.headers] : []
+
+                  content {
+                    dynamic "match_pattern" {
+                      for_each = [headers.value.match_pattern]
+
+                      content {
+                        dynamic "all" {
+                          for_each = lookup(match_pattern.value, "all", null) != null ? [1] : []
+
+                          content {}
+                        }
+                        included_headers = lookup(match_pattern.value, "included_headers", null) != null ? match_pattern.value.included_headers : null
+                        excluded_headers = lookup(match_pattern.value, "excluded_headers", null) != null ? match_pattern.value.excluded_headers : null
+                      }
+                    }
+                    match_scope = headers.value.match_scope
+                    oversize_handling = headers.value.oversize_handling
+                  }
+                }
+
                 dynamic "method" {
                   for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
 
@@ -1029,6 +1095,28 @@ resource "aws_wafv2_web_acl" "default" {
                   for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
 
                   content {}
+                }
+
+                dynamic "headers" {
+                  for_each = lookup(field_to_match.value, "headers", null) != null ? [field_to_match.value.headers] : []
+
+                  content {
+                    dynamic "match_pattern" {
+                      for_each = [headers.value.match_pattern]
+
+                      content {
+                        dynamic "all" {
+                          for_each = lookup(match_pattern.value, "all", null) != null ? [1] : []
+
+                          content {}
+                        }
+                        included_headers = lookup(match_pattern.value, "included_headers", null) != null ? match_pattern.value.included_headers : null
+                        excluded_headers = lookup(match_pattern.value, "excluded_headers", null) != null ? match_pattern.value.excluded_headers : null
+                      }
+                    }
+                    match_scope = headers.value.match_scope
+                    oversize_handling = headers.value.oversize_handling
+                  }
                 }
 
                 dynamic "method" {
@@ -1317,6 +1405,28 @@ resource "aws_wafv2_web_acl" "default" {
                   }
                 }
 
+                dynamic "headers" {
+                  for_each = lookup(field_to_match.value, "headers", null) != null ? [field_to_match.value.headers] : []
+
+                  content {
+                    dynamic "match_pattern" {
+                      for_each = [headers.value.match_pattern]
+
+                      content {
+                        dynamic "all" {
+                          for_each = lookup(match_pattern.value, "all", null) != null ? [1] : []
+
+                          content {}
+                        }
+                        included_headers = lookup(match_pattern.value, "included_headers", null) != null ? match_pattern.value.included_headers : null
+                        excluded_headers = lookup(match_pattern.value, "excluded_headers", null) != null ? match_pattern.value.excluded_headers : null
+                      }
+                    }
+                    match_scope = headers.value.match_scope
+                    oversize_handling = headers.value.oversize_handling
+                  }
+                }
+
                 dynamic "method" {
                   for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
 
@@ -1446,6 +1556,28 @@ resource "aws_wafv2_web_acl" "default" {
                   content {}
                 }
 
+                dynamic "headers" {
+                  for_each = lookup(field_to_match.value, "headers", null) != null ? [field_to_match.value.headers] : []
+
+                  content {
+                    dynamic "match_pattern" {
+                      for_each = [headers.value.match_pattern]
+
+                      content {
+                        dynamic "all" {
+                          for_each = lookup(match_pattern.value, "all", null) != null ? [1] : []
+
+                          content {}
+                        }
+                        included_headers = lookup(match_pattern.value, "included_headers", null) != null ? match_pattern.value.included_headers : null
+                        excluded_headers = lookup(match_pattern.value, "excluded_headers", null) != null ? match_pattern.value.excluded_headers : null
+                      }
+                    }
+                    match_scope = headers.value.match_scope
+                    oversize_handling = headers.value.oversize_handling
+                  }
+                }
+
                 dynamic "method" {
                   for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
 
@@ -1573,6 +1705,28 @@ resource "aws_wafv2_web_acl" "default" {
                   for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
 
                   content {}
+                }
+
+                dynamic "headers" {
+                  for_each = lookup(field_to_match.value, "headers", null) != null ? [field_to_match.value.headers] : []
+
+                  content {
+                    dynamic "match_pattern" {
+                      for_each = [headers.value.match_pattern]
+
+                      content {
+                        dynamic "all" {
+                          for_each = lookup(match_pattern.value, "all", null) != null ? [1] : []
+
+                          content {}
+                        }
+                        included_headers = lookup(match_pattern.value, "included_headers", null) != null ? match_pattern.value.included_headers : null
+                        excluded_headers = lookup(match_pattern.value, "excluded_headers", null) != null ? match_pattern.value.excluded_headers : null
+                      }
+                    }
+                    match_scope = headers.value.match_scope
+                    oversize_handling = headers.value.oversize_handling
+                  }
                 }
 
                 dynamic "method" {
