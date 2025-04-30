@@ -202,7 +202,7 @@ resource "aws_wafv2_web_acl" "default" {
                         excluded_headers = lookup(match_pattern.value, "excluded_headers", null) != null ? match_pattern.value.excluded_headers : null
                       }
                     }
-                    match_scope = headers.value.match_scope
+                    match_scope       = headers.value.match_scope
                     oversize_handling = headers.value.oversize_handling
                   }
                 }
@@ -814,7 +814,7 @@ resource "aws_wafv2_web_acl" "default" {
                                 excluded_headers = lookup(match_pattern.value, "excluded_headers", null) != null ? match_pattern.value.excluded_headers : null
                               }
                             }
-                            match_scope = headers.value.match_scope
+                            match_scope       = headers.value.match_scope
                             oversize_handling = headers.value.oversize_handling
                           }
                         }
@@ -966,7 +966,7 @@ resource "aws_wafv2_web_acl" "default" {
                         excluded_headers = lookup(match_pattern.value, "excluded_headers", null) != null ? match_pattern.value.excluded_headers : null
                       }
                     }
-                    match_scope = headers.value.match_scope
+                    match_scope       = headers.value.match_scope
                     oversize_handling = headers.value.oversize_handling
                   }
                 }
@@ -1114,7 +1114,7 @@ resource "aws_wafv2_web_acl" "default" {
                         excluded_headers = lookup(match_pattern.value, "excluded_headers", null) != null ? match_pattern.value.excluded_headers : null
                       }
                     }
-                    match_scope = headers.value.match_scope
+                    match_scope       = headers.value.match_scope
                     oversize_handling = headers.value.oversize_handling
                   }
                 }
@@ -1422,7 +1422,7 @@ resource "aws_wafv2_web_acl" "default" {
                         excluded_headers = lookup(match_pattern.value, "excluded_headers", null) != null ? match_pattern.value.excluded_headers : null
                       }
                     }
-                    match_scope = headers.value.match_scope
+                    match_scope       = headers.value.match_scope
                     oversize_handling = headers.value.oversize_handling
                   }
                 }
@@ -1573,7 +1573,7 @@ resource "aws_wafv2_web_acl" "default" {
                         excluded_headers = lookup(match_pattern.value, "excluded_headers", null) != null ? match_pattern.value.excluded_headers : null
                       }
                     }
-                    match_scope = headers.value.match_scope
+                    match_scope       = headers.value.match_scope
                     oversize_handling = headers.value.oversize_handling
                   }
                 }
@@ -1724,7 +1724,7 @@ resource "aws_wafv2_web_acl" "default" {
                         excluded_headers = lookup(match_pattern.value, "excluded_headers", null) != null ? match_pattern.value.excluded_headers : null
                       }
                     }
-                    match_scope = headers.value.match_scope
+                    match_scope       = headers.value.match_scope
                     oversize_handling = headers.value.oversize_handling
                   }
                 }
