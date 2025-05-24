@@ -89,6 +89,11 @@ locals {
     ) => rule
   } : {}
 
+  nested_statement_rules = local.enabled && var.nested_statement_rules != null ? {
+    for rule in var.nested_statement_rules :
+    format("%s-%s", rule.name, rule.action) => rule
+  } : {}
+
   default_custom_response_body_key = var.default_block_custom_response_body_key != null ? contains(keys(var.custom_response_body), var.default_block_custom_response_body_key) ? var.default_block_custom_response_body_key : null : null
 }
 
