@@ -580,7 +580,7 @@ variable "rate_based_statement_rules" {
         field_to_match:
           Part of a web request that you want AWS WAF to inspect.
         positional_constraint:
-          Area within the portion of a web request that you want AWS WAF to search for search_string. 
+          Area within the portion of a web request that you want AWS WAF to search for search_string.
           Valid values include the following: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`.
         search_string:
           String value that you want AWS WAF to search for.
@@ -1009,6 +1009,58 @@ variable "xss_match_statement_rules" {
       sampled_requests_enabled:
         Whether AWS WAF should store a sampling of the web requests that match the rules.
   DOC
+}
+
+variable "nested_statement_rules" {
+  type = list(object({
+    name     = string
+    priority = number
+    action   = string
+    statement = object({
+      and_statement = optional(object({ statements = list(any) }))
+      or_statement  = optional(object({ statements = list(any) }))
+      not_statement = optional(object({ statement = any }))
+      # ... individual statement types
+    })
+    visibility_config = optional(object({
+      metric_name = string
+    }))
+  }))
+  default     = []
+  description = <<-DOC
+    Rule statement to define nested statement rules to create nested complex rules including AND, OR, NOT statements.
+
+    action:
+      The actions that AWS WAF should take on nestes requests to conditionally match different and various rules.
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    statement:
+      and_statement:
+        Additional creation of a conditional group with AND statement
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#and-statement
+      or_statement:
+        Additional creation of a conditional group with OR statement
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#or-statement
+      not_statement:
+        Additional creation of a conditional group with NOT statement
+        See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#not-statement
+
+
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+
 }
 
 # Logging configuration
