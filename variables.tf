@@ -291,7 +291,18 @@ variable "ip_set_reference_statement_rules" {
       })
     }), null)
     rule_label = optional(list(string), null)
-    statement  = any
+    statement  = object({
+      ip_set = object({
+        addresses          = list(string)
+        description        = optional(string)
+        ip_address_version = string
+      })
+      ip_set_forwarded_ip_config = optional(object({
+        fallback_behavior = string
+        header_name       = string
+        position          = string
+      }), null)
+    })
     visibility_config = optional(object({
       cloudwatch_metrics_enabled = optional(bool)
       metric_name                = string
@@ -580,7 +591,7 @@ variable "rate_based_statement_rules" {
         field_to_match:
           Part of a web request that you want AWS WAF to inspect.
         positional_constraint:
-          Area within the portion of a web request that you want AWS WAF to search for search_string. 
+          Area within the portion of a web request that you want AWS WAF to search for search_string.
           Valid values include the following: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`.
         search_string:
           String value that you want AWS WAF to search for.
