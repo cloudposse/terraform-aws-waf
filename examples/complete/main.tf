@@ -488,7 +488,9 @@ module "waf" {
       }
 
       visibility_config = {
-        metric_name = "complex-and-with-not-statements"
+        cloudwatch_metrics_enabled = false
+        sampled_requests_enabled   = false
+        metric_name                = "rule-120-metric"
       }
     }
   ]
