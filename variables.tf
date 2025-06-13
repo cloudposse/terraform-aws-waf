@@ -1037,14 +1037,23 @@ variable "nested_statement_rules" {
     priority = number
     action   = string
     statement = object({
-      and_statement = optional(object({ statements = any }), null)
-      or_statement  = optional(object({ statements = any }), null)
-      not_statement = optional(object({ statement = any }), null)
-      # ... individual statement types
+      and_statement = object({
+        statements = list(object({
+          label_match_statement = optional(object({
+            scope = string
+            key   = string
+          }))
+          not_statement = optional(object({
+            statement = map(any)
+          }))
+        }))
+      })
     })
     visibility_config = optional(object({
-      metric_name = string
-    }))
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
   }))
   default     = null
   description = <<-DOC
