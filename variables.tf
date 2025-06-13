@@ -1037,16 +1037,16 @@ variable "nested_statement_rules" {
     priority = number
     action   = string
     statement = object({
-      and_statement = optional(object({ statements = list(any) }))
-      or_statement  = optional(object({ statements = list(any) }))
-      not_statement = optional(object({ statement = any }))
+      and_statement = optional(object({ statements = any }), null)
+      or_statement  = optional(object({ statements = any }), null)
+      not_statement = optional(object({ statement = any }), null)
       # ... individual statement types
     })
     visibility_config = optional(object({
       metric_name = string
     }))
   }))
-  default     = []
+  default     = null
   description = <<-DOC
     Rule statement to define nested statement rules to create nested complex rules including AND, OR, NOT statements.
 
