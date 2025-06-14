@@ -98,12 +98,10 @@ locals {
 
       statements = [
         for stmt in rule.statement.and_statement.statements : {
-          label_match_statement = lookup(stmt, "label_match_statement", null)
-
-          not_byte_match_statement = lookup(stmt, "not_statement", null) != null ? lookup(stmt.not_statement.statement, "byte_match_statement", null) : null
-
-          # This pattern is extensible. You could add more negated types here:
-          # not_geo_match_statement = lookup(stmt, "not_statement", null) != null ? lookup(stmt.not_statement.statement, "geo_match_statement", null) : null
+          label_match_statement    = stmt.type == "label_match_statement" ? jsondecode(stmt.statement) : null
+          not_byte_match_statement = stmt.type == "not_byte_match_statement" ? jsondecode(stmt.statement) : null
+          # This is now easily extensible with other types:
+          # not_geo_match_statement = stmt.type == "not_geo_match" ? jsondecode(stmt.statement) : null
         }
       ]
     }
@@ -1853,10 +1851,10 @@ resource "aws_wafv2_web_acl" "default" {
       }
 
       statement {
-        dynamic "and_statement" {
-          for_each = lookup(statement.value, "and_statement", null) != null ? [1] : []
-          content {
-            statement {
+        and_statement {
+          dynamic "statement" {
+            for_each = rule.value.statements
+            content {
               dynamic "label_match_statement" {
                 for_each = statement.value.label_match_statement != null ? [statement.value.label_match_statement] : []
                 content {
@@ -1874,11 +1872,13 @@ resource "aws_wafv2_web_acl" "default" {
                         positional_constraint = byte_match_statement.value.positional_constraint
                         search_string         = byte_match_statement.value.search_string
 
-                        dynamic "field_to_match" {
-                          for_each = byte_match_statement.value.field_to_match[*]
-                          content {
-                            uri_path      = try(field_to_match.value.uri_path, null)
-                            single_header = try(field_to_match.value.single_header, null)
+                        field_to_match {
+                          uri_path = try(byte_match_statement.value.field_to_match.uri_path, null) != null ? {} : null
+                          dynamic "single_header" {
+                            for_each = try(byte_match_statement.value.field_to_match.single_header, null) != null ? [byte_match_statement.value.field_to_match.single_header] : []
+                            content {
+                              name = single_header.value.name
+                            }
                           }
                         }
 

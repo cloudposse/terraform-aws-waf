@@ -1039,13 +1039,8 @@ variable "nested_statement_rules" {
     statement = object({
       and_statement = object({
         statements = list(object({
-          label_match_statement = optional(object({
-            scope = string
-            key   = string
-          }))
-          not_statement = optional(object({
-            statement = map(any)
-          }))
+          type      = string
+          statement = string
         }))
       })
     })

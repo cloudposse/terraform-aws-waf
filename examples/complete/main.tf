@@ -442,46 +442,41 @@ module "waf" {
         and_statement = {
           statements = [
             {
-              label_match_statement = {
+              type = "label_match_statement"
+              statement = jsonencode({
                 scope = "LABEL"
                 key   = "internal"
-              }
+              })
             },
             {
-              not_statement = {
-                statement = {
-                  byte_match_statement = {
-                    positional_constraint = "EXACTLY"
-                    search_string         = "/authorized"
-                    field_to_match = {
-                      uri_path = true
-                    }
-                    text_transformation = [{
-                      priority = 1,
-                      type     = "URL_DECODE"
-                    }]
-                  }
+              type = "not_byte_statement"
+              statement = jsonencode({
+                positional_constraint = "EXACTLY"
+                search_string         = "/authorized"
+                field_to_match = {
+                  uri_path = {}
                 }
-              }
+                text_transformation = [{
+                  priority = 1,
+                  type     = "URL_DECODE"
+                }]
+              })
             },
             {
-              not_statement = {
-                statement = {
-                  byte_match_statement = {
-                    positional_constraint = "CONTAINS"
-                    search_string         = "AuthorizedBot"
-                    field_to_match = {
-                      single_header = {
-                        name = "user-agent"
-                      }
-                    }
-                    text_transformation = [{
-                      priority = 0,
-                      type     = "LOWERCASE"
-                    }]
+              type = "not_byte_statement"
+              statement = jsonencode({
+                positional_constraint = "CONTAINS"
+                search_string         = "AuthorizedBot"
+                field_to_match = {
+                  single_header = {
+                    name = "user-agent"
                   }
                 }
-              }
+                text_transformation = [{
+                  priority = 1,
+                  type     = "LOWERCASE"
+                }]
+              })
             }
           ]
         }
