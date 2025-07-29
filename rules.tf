@@ -90,7 +90,7 @@ locals {
   } : {}
 
   nested_rule_group_statement_rules = {
-    for rule in var.nested_statement_rules != null ? var.var.nested_statement_rules : [] : rule.name => {
+    for rule in var.nested_statement_rules != null ? var.nested_statement_rules : [] : rule.name => {
       name              = rule.name
       priority          = rule.priority
       action            = rule.action
