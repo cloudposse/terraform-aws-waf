@@ -90,7 +90,7 @@ locals {
   } : {}
 
   nested_rule_group_statement_rules = {
-    for rule in var.nested_statement_rules : rule.name => {
+    for rule in var.nested_statement_rules != null ? var.var.nested_statement_rules : [] : rule.name => {
       name              = rule.name
       priority          = rule.priority
       action            = rule.action
@@ -98,8 +98,8 @@ locals {
 
       statements = [
         for stmt in rule.statement.and_statement.statements : {
-          label_match_statement    = stmt.type == "label_match_statement" ? jsondecode(stmt.statement) : null
-          not_byte_match_statement = stmt.type == "not_byte_match_statement" ? jsondecode(stmt.statement) : null
+          label_match_statement    = stmt.type == "label_match_statement" ? try(jsondecode(stmt.statement), null) : null
+          not_byte_match_statement = stmt.type == "not_byte_match_statement" ? try(jsondecode(stmt.statement), null) : null
           # This is now easily extensible with other types:
           # not_geo_match_statement = stmt.type == "not_geo_match" ? jsondecode(stmt.statement) : null
         }
