@@ -449,7 +449,7 @@ module "waf" {
               })
             },
             {
-              type = "not_byte_statement"
+              type = "not_byte_match_statement"
               statement = jsonencode({
                 positional_constraint = "EXACTLY"
                 search_string         = "/authorized"
@@ -463,7 +463,7 @@ module "waf" {
               })
             },
             {
-              type = "not_byte_statement"
+              type = "not_byte_match_statement"
               statement = jsonencode({
                 positional_constraint = "CONTAINS"
                 search_string         = "AuthorizedBot"
