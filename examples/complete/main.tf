@@ -20,6 +20,20 @@ module "waf" {
       statement = {
         name        = "AWSManagedRulesAdminProtectionRuleSet"
         vendor_name = "AWS"
+
+        scope_down_statement = {
+          byte_match_statement = {
+            search_string         = "/admin"
+            positional_constraint = "STARTS_WITH"
+            field_to_match = {
+              uri_path = true
+            }
+            text_transformation = {
+              priority = 0
+              type     = "NONE"
+            }
+          }
+        }
       }
 
       visibility_config = {

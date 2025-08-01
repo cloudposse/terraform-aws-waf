@@ -17,4 +17,3 @@ output "logging_config_id" {
   description = "The ARN of the WAFv2 Web ACL logging configuration."
   value       = one(aws_wafv2_web_acl_logging_configuration.default[*].id)
 }
-
