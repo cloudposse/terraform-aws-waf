@@ -389,6 +389,25 @@ variable "managed_rule_group_statement_rules" {
           }), null)
         }), null)
       })), null)
+      scope_down_statement = optional(object({
+        byte_match_statement = object({
+          positional_constraint = string
+          search_string         = string
+          field_to_match = object({
+            all_query_arguments   = optional(bool)
+            body                  = optional(bool)
+            method                = optional(bool)
+            query_string          = optional(bool)
+            single_header         = optional(object({ name = string }))
+            single_query_argument = optional(object({ name = string }))
+            uri_path              = optional(bool)
+          })
+          text_transformation = list(object({
+            priority = number
+            type     = string
+          }))
+        })
+      }), null)
       managed_rule_group_configs = optional(list(object({
         aws_managed_rules_bot_control_rule_set = optional(object({
           inspection_level        = string
@@ -580,7 +599,7 @@ variable "rate_based_statement_rules" {
         field_to_match:
           Part of a web request that you want AWS WAF to inspect.
         positional_constraint:
-          Area within the portion of a web request that you want AWS WAF to search for search_string. 
+          Area within the portion of a web request that you want AWS WAF to search for search_string.
           Valid values include the following: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`.
         search_string:
           String value that you want AWS WAF to search for.
