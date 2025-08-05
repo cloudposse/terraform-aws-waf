@@ -1873,7 +1873,11 @@ resource "aws_wafv2_web_acl" "default" {
                         search_string         = byte_match_statement.value.search_string
 
                         field_to_match {
-                          uri_path = try(byte_match_statement.value.field_to_match.uri_path, null) != null ? {} : null
+                          dynamic "uri_path" {
+                            for_each = try(byte_match_statement.value.field_to_match.uri_path, null) != null ? [{}] : []
+                            content {}
+                          }
+
                           dynamic "single_header" {
                             for_each = try(byte_match_statement.value.field_to_match.single_header, null) != null ? [byte_match_statement.value.field_to_match.single_header] : []
                             content {
