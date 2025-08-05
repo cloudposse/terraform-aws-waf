@@ -740,7 +740,7 @@ resource "aws_wafv2_web_acl" "default" {
                         for rule in byte_match_statement.value.text_transformation : {
                           priority = rule.priority
                           type     = rule.type
-                        }] : []
+                      }] : []
 
                       content {
                         priority = text_transformation.value.priority
