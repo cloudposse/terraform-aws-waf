@@ -432,5 +432,31 @@ module "waf" {
     }
   ]
 
+  ip_set_reference_statement_rules_forwarded_ip_config = [
+    {
+      name     = "rule-120"
+      priority = 120
+      action   = "block"
+
+      statement = {
+        ip_set = {
+          ip_address_version = "IPV4"
+          addresses          = ["18.0.0.0/8"]
+        }
+        ip_set_forwarded_ip_config = {
+          header_name       = "X-Forwarded-For"
+          fallback_behavior = "NO_MATCH"
+          position          = "FIRST"
+        }
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = false
+        sampled_requests_enabled   = false
+        metric_name                = "rule-120-metric"
+      }
+    }
+  ]
+
   context = module.this.context
 }

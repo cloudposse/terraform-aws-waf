@@ -291,7 +291,18 @@ variable "ip_set_reference_statement_rules" {
       })
     }), null)
     rule_label = optional(list(string), null)
-    statement  = any
+    statement  = object({
+      ip_set = object({
+        addresses          = list(string)
+        description        = optional(string)
+        ip_address_version = string
+      })
+      ip_set_forwarded_ip_config = optional(object({
+        fallback_behavior = string
+        header_name       = string
+        position          = string
+      }), null)
+    })
     visibility_config = optional(object({
       cloudwatch_metrics_enabled = optional(bool)
       metric_name                = string
