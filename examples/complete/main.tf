@@ -432,5 +432,56 @@ module "waf" {
     }
   ]
 
+  label_match_statement_rules = [
+    {
+      name     = "block_sanctioned_ukraine_regions_Luhansk"
+      action   = "block"
+      priority = 201
+
+      statement = {
+        key   = "awswaf:clientip:geo:region:UA-09"
+        scope = "LABEL"
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = true
+        metric_name                = "block_sanctioned_ukraine_regions"
+      }
+    },
+    {
+      name     = "block_sanctioned_ukraine_regions_Donetsk"
+      action   = "block"
+      priority = 202
+
+      statement = {
+        key   = "awswaf:clientip:geo:region:UA-14"
+        scope = "LABEL"
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = true
+        metric_name                = "block_sanctioned_ukraine_regions"
+      }
+    },
+    {
+      name     = "block_sanctioned_ukraine_regions_Crimea"
+      action   = "block"
+      priority = 203
+
+      statement = {
+        key   = "awswaf:clientip:geo:region:UA-43"
+        scope = "LABEL"
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = true
+        metric_name                = "block_sanctioned_ukraine_regions"
+      }
+    },
+  ]
+
   context = module.this.context
 }

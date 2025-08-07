@@ -280,6 +280,85 @@ variable "geo_match_statement_rules" {
   DOC
 }
 
+variable "label_match_statement_rules" {
+  type = list(object({
+    name     = string
+    priority = number
+    action   = string
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
+    statement  = any
+    custom_response = optional(object({
+      response_code            = string
+      custom_response_body_key = string
+      response_header = optional(object({
+        name  = string
+        value = string
+      }), null)
+    }), null)
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+    A rule statement used to identify web requests based on labels.
+
+    This can be useful to either block or allow specific regions inside a country.
+
+    action:
+      The action that AWS WAF should take on a web request when it matches the rule's statement.
+    name:
+      A friendly name of the rule.
+    priority:
+      If you define more than one Rule in a WebACL,
+      AWS WAF evaluates each request against the rules in order based on the value of priority.
+      AWS WAF processes rules with lower priority first.
+
+    captcha_config:
+     Specifies how AWS WAF should handle CAPTCHA evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    rule_label:
+       A List of labels to apply to web requests that match the rule match statement.
+
+    custom_response:
+      response_code:
+        The HTTP status code to return when the request is blocked.
+      custom_response_body_key:
+        The key of the custom response body to use in the response.
+      response_header:
+        The response header to send with the response.
+
+    statement:
+      key:
+        Specify whether you want to match using the label name or just the namespace. Valid values are `LABEL` or `NAMESPACE`.
+      scope:
+        String to match against.
+
+    visibility_config:
+      Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+      cloudwatch_metrics_enabled:
+        Whether the associated resource sends metrics to CloudWatch.
+      metric_name:
+        A friendly name of the CloudWatch metric.
+      sampled_requests_enabled:
+        Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
 variable "ip_set_reference_statement_rules" {
   type = list(object({
     name     = string
