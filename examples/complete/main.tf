@@ -432,5 +432,63 @@ module "waf" {
     }
   ]
 
+  nested_statement_rules = [
+    {
+      name     = "rule-120"
+      priority = 120
+      action   = "block"
+
+      statement = {
+        and_statement = {
+          statements = [
+            {
+              type = "label_match_statement"
+              statement = jsonencode({
+                scope = "LABEL"
+                key   = "internal"
+              })
+            },
+            {
+              type = "not_byte_match_statement"
+              statement = jsonencode({
+                positional_constraint = "EXACTLY"
+                search_string         = "/authorized"
+                field_to_match = {
+                  uri_path = {}
+                }
+                text_transformation = [{
+                  priority = 1,
+                  type     = "URL_DECODE"
+                }]
+              })
+            },
+            {
+              type = "not_byte_match_statement"
+              statement = jsonencode({
+                positional_constraint = "CONTAINS"
+                search_string         = "AuthorizedBot"
+                field_to_match = {
+                  single_header = {
+                    name = "user-agent"
+                  }
+                }
+                text_transformation = [{
+                  priority = 1,
+                  type     = "LOWERCASE"
+                }]
+              })
+            }
+          ]
+        }
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = false
+        sampled_requests_enabled   = false
+        metric_name                = "rule-120-metric"
+      }
+    }
+  ]
+
   context = module.this.context
 }
