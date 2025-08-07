@@ -673,7 +673,7 @@ resource "aws_wafv2_web_acl" "default" {
             }
 
             dynamic "scope_down_statement" {
-              for_each = lookup(managed_rule_group_statement.value, "scope_down_statement", null) != null && !lookup(managed_rule_group_statement.value, "use_not_statement_for_scope_down", false) ? [managed_rule_group_statement.value.scope_down_statement] : []
+              for_each = lookup(managed_rule_group_statement.value, "scope_down_statement", null) != null && !lookup(managed_rule_group_statement.value, "scope_down_not_statement_enabled", false) ? [managed_rule_group_statement.value.scope_down_statement] : []
               content {
                 dynamic "byte_match_statement" {
                   for_each = lookup(scope_down_statement.value, "byte_match_statement", null) != null ? [scope_down_statement.value.byte_match_statement] : []
@@ -734,7 +734,7 @@ resource "aws_wafv2_web_acl" "default" {
             }
 
             dynamic "scope_down_statement" {
-              for_each = lookup(managed_rule_group_statement.value, "scope_down_statement", null) != null && lookup(managed_rule_group_statement.value, "use_not_statement_for_scope_down", false) ? [managed_rule_group_statement.value.scope_down_statement] : []
+              for_each = lookup(managed_rule_group_statement.value, "scope_down_statement", null) != null && lookup(managed_rule_group_statement.value, "scope_down_not_statement_enabled", false) ? [managed_rule_group_statement.value.scope_down_statement] : []
               content {
                 not_statement {
                   statement {

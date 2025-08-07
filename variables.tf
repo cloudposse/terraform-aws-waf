@@ -372,7 +372,7 @@ variable "managed_rule_group_statement_rules" {
     statement = object({
       name                             = string
       vendor_name                      = string
-      use_not_statement_for_scope_down = optional(bool, false)
+      scope_down_not_statement_enabled = optional(bool, false)
       scope_down_statement = optional(object({
         byte_match_statement = object({
           positional_constraint = string
