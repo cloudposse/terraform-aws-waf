@@ -128,6 +128,25 @@ module "waf" {
         ]
       }
 
+      scope_down_not_statement_enabled = true
+      scope_down_statement = {
+        byte_match_statement = {
+          field_to_match = {
+            single_header = {
+              name = "x-bypass-token"
+            }
+          }
+          positional_constraint = "EXACTLY"
+          search_string         = "TEST_TOKEN"
+          text_transformation = [
+            {
+              priority = 20
+              type     = "NONE"
+            }
+          ]
+        }
+      }
+
       visibility_config = {
         cloudwatch_metrics_enabled = true
         sampled_requests_enabled   = true
