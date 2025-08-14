@@ -20,6 +20,21 @@ module "waf" {
       statement = {
         name        = "AWSManagedRulesAdminProtectionRuleSet"
         vendor_name = "AWS"
+        scope_down_statement = {
+          byte_match_statement = {
+            positional_constraint = "STARTS_WITH"
+            search_string         = "example-scope-down-statement"
+            field_to_match = {
+              uri_path = true
+            }
+            text_transformation = [
+              {
+                priority = 40
+                type     = "NONE"
+              }
+            ]
+          }
+        }
       }
 
       visibility_config = {
@@ -111,6 +126,25 @@ module "waf" {
             }
           }
         ]
+      }
+
+      scope_down_not_statement_enabled = true
+      scope_down_statement = {
+        byte_match_statement = {
+          field_to_match = {
+            single_header = {
+              name = "x-bypass-token"
+            }
+          }
+          positional_constraint = "EXACTLY"
+          search_string         = "TEST_TOKEN"
+          text_transformation = [
+            {
+              priority = 20
+              type     = "NONE"
+            }
+          ]
+        }
       }
 
       visibility_config = {

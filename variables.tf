@@ -381,9 +381,29 @@ variable "managed_rule_group_statement_rules" {
     }), null)
     rule_label = optional(list(string), null)
     statement = object({
-      name        = string
-      vendor_name = string
-      version     = optional(string)
+      name                             = string
+      vendor_name                      = string
+      scope_down_not_statement_enabled = optional(bool, false)
+      scope_down_statement = optional(object({
+        byte_match_statement = object({
+          positional_constraint = string
+          search_string         = string
+          field_to_match = object({
+            all_query_arguments   = optional(bool)
+            body                  = optional(bool)
+            method                = optional(bool)
+            query_string          = optional(bool)
+            single_header         = optional(object({ name = string }))
+            single_query_argument = optional(object({ name = string }))
+            uri_path              = optional(bool)
+          })
+          text_transformation = list(object({
+            priority = number
+            type     = string
+          }))
+        })
+      }), null)
+      version = optional(string)
       rule_action_override = optional(map(object({
         action = string
         custom_request_handling = optional(object({
