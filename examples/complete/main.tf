@@ -11,6 +11,14 @@ module "waf" {
     sampled_requests_enabled   = false
   }
 
+  # Custom response bodies for rate limiting
+  custom_response_body = {
+    rate_limit_exceeded = {
+      content      = "{\"error\": \"Rate limit exceeded\", \"message\": \"Too many requests. Please try again later.\", \"retry_after\": 300}"
+      content_type = "APPLICATION_JSON"
+    }
+  }
+
   # https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html
   managed_rule_group_statement_rules = [
     {
@@ -190,6 +198,16 @@ module "waf" {
       name     = "rule-40"
       action   = "block"
       priority = 40
+
+      # Custom response for rate limiting with HTTP 429 status
+      custom_response = {
+        response_code            = "429"
+        custom_response_body_key = "rate_limit_exceeded"
+        response_header = {
+          name  = "Retry-After"
+          value = "300"
+        }
+      }
 
       statement = {
         limit                 = 100
