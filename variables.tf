@@ -102,7 +102,7 @@ variable "byte_match_statement_rules" {
         value = string
       }), null)
     }), null)
-    statement  = any
+    statement = any
     visibility_config = optional(object({
       cloudwatch_metrics_enabled = optional(bool)
       metric_name                = string
@@ -242,7 +242,7 @@ variable "geo_match_statement_rules" {
         value = string
       }), null)
     }), null)
-    statement  = any
+    statement = any
     visibility_config = optional(object({
       cloudwatch_metrics_enabled = optional(bool)
       metric_name                = string
@@ -315,7 +315,7 @@ variable "ip_set_reference_statement_rules" {
         value = string
       }), null)
     }), null)
-    statement  = any
+    statement = any
     visibility_config = optional(object({
       cloudwatch_metrics_enabled = optional(bool)
       metric_name                = string
