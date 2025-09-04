@@ -1078,6 +1078,14 @@ variable "nested_statement_rules" {
     name     = string
     priority = number
     action   = string
+    custom_response = optional(object({
+      response_code            = string
+      custom_response_body_key = optional(string, null)
+      response_header = optional(object({
+        name  = string
+        value = string
+      }), null)
+    }), null)
     statement = object({
       and_statement = object({
         statements = list(object({
