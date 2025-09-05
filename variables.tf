@@ -410,6 +410,20 @@ variable "managed_rule_group_statement_rules" {
         }), null)
       })), null)
       managed_rule_group_configs = optional(list(object({
+
+        aws_managed_rules_anti_ddos_rule_set = optional(object({
+          sensitivity_to_block = optional(string)
+          client_side_action_config = optional(object({
+            challenge = object({
+              usage_of_action = string
+              sensitivity     = optional(string)
+              exempt_uri_regular_expression = optional(list(object({
+                regex_string = string
+              })))
+            })
+          }))
+        }))
+
         aws_managed_rules_bot_control_rule_set = optional(object({
           inspection_level        = string
           enable_machine_learning = optional(bool, true)
