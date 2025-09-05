@@ -168,7 +168,7 @@ module "waf" {
               client_side_action_config = {
                 challenge = {
                   usage_of_action = "ENABLED"
-                  sensitivity = "LOW"
+                  sensitivity     = "LOW"
                   exempt_uri_regular_expression = [
                     {
                       regex_string = "/api/|\\.(acc|avi|css|gif|jpe?g|js|mp[34]|ogg|otf|pdf|png|tiff?|ttf|webm|webp|woff2?)$"
