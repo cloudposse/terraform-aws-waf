@@ -635,7 +635,7 @@ resource "aws_wafv2_web_acl" "default" {
                           dynamic "exempt_uri_regular_expression" {
                             for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config.challenge, "exempt_uri_regular_expression", null) != null ? managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config.challenge.exempt_uri_regular_expression : []
                             content {
-                              regex_string = managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config.challenge.exempt_uri_regular_expression.value.regex_string
+                              regex_string = exempt_uri_regular_expression.value.regex_string
                             }
                           }
                         }
