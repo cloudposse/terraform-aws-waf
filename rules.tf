@@ -621,7 +621,6 @@ resource "aws_wafv2_web_acl" "default" {
             # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#managed_rule_group_configs-block
             dynamic "managed_rule_group_configs" {
               for_each = lookup(managed_rule_group_statement.value, "managed_rule_group_configs", null) != null ? managed_rule_group_statement.value.managed_rule_group_configs : []
-
               content {
                 dynamic "aws_managed_rules_anti_ddos_rule_set" {
                   for_each = lookup(managed_rule_group_configs.value, "aws_managed_rules_anti_ddos_rule_set", null) != null ? [1] : []
@@ -632,18 +631,16 @@ resource "aws_wafv2_web_acl" "default" {
                       content {
                         challenge {
                           usage_of_action = managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config.challenge.usage_of_action
-                          sensitivity     = managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config.challenge.sensitivity
+                          sensitivity     = lookup(managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config.challenge, "sensitivity", null)
                           dynamic "exempt_uri_regular_expression" {
-                            for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config, "exempt_uri_regular_expression", null) != null ? managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config.exempt_uri_regular_expression : []
+                            for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config.challenge, "exempt_uri_regular_expression", null) != null ? managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config.challenge.exempt_uri_regular_expression : []
                             content {
-                              regex_string = exempt_uri_regular_expression.value.regex_string
+                              regex_string = managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config.challenge.exempt_uri_regular_expression.value.regex_string
                             }
                           }
-
                         }
                       }
                     }
-
                   }
                 }
 
