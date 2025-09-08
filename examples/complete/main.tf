@@ -152,6 +152,40 @@ module "waf" {
         sampled_requests_enabled   = true
         metric_name                = "AWS-AWSManagedRulesBotControlRuleSet"
       }
+    },
+    {
+      name     = "AWS-AWSManagedRulesAntiDDoSRuleSet"
+      priority = 6
+
+      statement = {
+        name        = "AWSManagedRulesAntiDDoSRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs = [
+          {
+            aws_managed_rules_anti_ddos_rule_set = {
+              sensitivity_to_block = "LOW"
+              client_side_action_config = {
+                challenge = {
+                  usage_of_action = "ENABLED"
+                  sensitivity     = "LOW"
+                  exempt_uri_regular_expression = [
+                    {
+                      regex_string = "/api/|\\.(acc|avi|css|gif|jpe?g|js|mp[34]|ogg|otf|pdf|png|tiff?|ttf|webm|webp|woff2?)$"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = true
+        metric_name                = "AWS-AWSManagedRulesAntiDDoSRuleSet"
+      }
     }
   ]
 
