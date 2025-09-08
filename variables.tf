@@ -467,12 +467,21 @@ variable "managed_rule_group_statement_rules" {
           registration_page_path = string
           request_inspection = optional(object({
             payload_type = string
-            password_field = object({
+            password_field = optional(object({
               identifier = string
-            })
-            username_field = object({
+            }), null)
+            username_field = optional(object({
               identifier = string
-            })
+            }), null)
+            email_field = optional(object({
+              identifier = string
+            }), null)
+            address_fields = optional(object({
+              identifiers = list(string)
+            }), null)
+            phone_number_fields = optional(object({
+              identifiers = list(string)
+            }), null)
           }), null)
           response_inspection = optional(object({
             body_contains = optional(object({

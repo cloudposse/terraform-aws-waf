@@ -207,25 +207,22 @@ module "waf" {
                 username_field = {
                   identifier = "username1"
                 }
+                email_field = {
+                  identifier = "email"
+                }
+                address_fields = {
+                    identifiers = ["primaryaddressline1", "primaryaddressline2"]
+                }
+                phone_number_fields = {
+                    identifiers = ["cellphone", "homephone"]
+                }
               }
               response_inspection = {
-                body_contains = {
-                  success_strings = ["Account creation successful", "Welcome to our site!"]
-                  failure_strings = ["Access Denied"]
-                }
-                header = {
-                  name           = "LOGIN_HEADER"
-                  success_values =  [ "LoginPassed", "Successful login" ]
-                  failure_values = [ "LoginFailed", "Failed login" ]
-                }
+                #NOTE: you can only have one entry here, cannot have multiple of header, json, status_code
                 json = {
                   identifier      = "/login/success"
                   success_values = ["True", "Succeeded"]
                   failure_values = ["Failure JSON"]
-                }
-                status_codes = {
-                  success_codes = [200]
-                  failure_codes = [ 400, 404 ]
                 }
               }
             }

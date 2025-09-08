@@ -720,11 +720,35 @@ resource "aws_wafv2_web_acl" "default" {
                       for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set, "request_inspection", null) != null ? [1] : []
                       content {
                         payload_type = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection.payload_type
-                        username_field {
-                          identifier = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection.username_field.identifier
+                        dynamic "username_field" {
+                          for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection, "username_field", null) != null ? [1] : []
+                          content {
+                            identifier = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection.username_field.identifier
+                          }
                         }
-                        password_field {
-                          identifier = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection.password_field.identifier
+                        dynamic "password_field" {
+                          for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection, "password_field", null) != null ? [1] : []
+                          content {
+                            identifier = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection.password_field.identifier
+                          }
+                        }
+                        dynamic "email_field" {
+                          for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection, "email_field", null) != null ? [1] : []
+                          content {
+                            identifier = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection.email_field.identifier
+                          }
+                        }
+                        dynamic "address_fields" {
+                          for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection, "address_fields", null) != null ? [1] : []
+                          content {
+                            identifiers = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection.address_fields.identifiers
+                          }
+                        }
+                        dynamic "phone_number_fields" {
+                          for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection, "phone_number_fields", null) != null ? [1] : []
+                          content {
+                            identifiers = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection.phone_number_fields.identifiers
+                          }
                         }
                       }
                     }
