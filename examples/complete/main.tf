@@ -186,6 +186,58 @@ module "waf" {
         sampled_requests_enabled   = true
         metric_name                = "AWS-AWSManagedRulesAntiDDoSRuleSet"
       }
+    },
+    {
+      name     = "AWS-AWSManagedRulesACFPRuleSet"
+      priority = 7
+
+      statement = {
+        name        = "AWSManagedRulesACFPRuleSet"
+        vendor_name = "AWS"
+        managed_rule_group_configs = [
+          {
+            aws_managed_rules_acfp_rule_set = {
+              creation_path = "/web/newaccount"
+              registration_page_path  = "/web/registerhere"
+              request_inspection = {
+                payload_type = "FORM_ENCODED"
+                password_field = {
+                  identifier = "password"
+                }
+                username_field = {
+                  identifier = "username1"
+                }
+              }
+              response_inspection = {
+                body_contains = {
+                  success_strings = ["Account creation successful", "Welcome to our site!"]
+                  failure_strings = ["Access Denied"]
+                }
+                header = {
+                  name           = "LOGIN_HEADER"
+                  success_values =  [ "LoginPassed", "Successful login" ]
+                  failure_values = [ "LoginFailed", "Failed login" ]
+                }
+                json = {
+                  identifier      = "/login/success"
+                  success_values = ["True", "Succeeded"]
+                  failure_values = ["Failure JSON"]
+                }
+                status_codes = {
+                  success_codes = [200]
+                  failure_codes = [ 400, 404 ]
+                }
+              }
+            }
+          }
+        ]
+      }
+      
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = true
+        metric_name                = "AWS-AWSManagedRulesACFPRuleSet"
+      }
     }
   ]
 
