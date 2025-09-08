@@ -218,7 +218,7 @@ module "waf" {
                 }
               }
               response_inspection = {
-                #NOTE: you can only have one entry here, cannot have multiple of header, json, status_code
+                #you can only have one entry here. Cannot have multiple of header, json, status_code
                 json = {
                   identifier      = "/login/success"
                   success_values = ["True", "Succeeded"]
