@@ -364,7 +364,16 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "block" {
           for_each = rule.value.action == "block" ? [1] : []
-          content {}
+          content {
+            # Only include the custom_response block if it's present in rule.value
+            dynamic "custom_response" {
+              for_each = rule.value.custom_response != null ? [rule.value.custom_response] : []
+              content {
+                response_code            = lookup(custom_response.value, "response_code", null)
+                custom_response_body_key = lookup(custom_response.value, "custom_response_body_key", null)
+              }
+            }
+          }
         }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []
@@ -438,7 +447,16 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "block" {
           for_each = rule.value.action == "block" ? [1] : []
-          content {}
+          content {
+            # Only include the custom_response block if it's present in rule.value
+            dynamic "custom_response" {
+              for_each = rule.value.custom_response != null ? [rule.value.custom_response] : []
+              content {
+                response_code            = lookup(custom_response.value, "response_code", null)
+                custom_response_body_key = lookup(custom_response.value, "custom_response_body_key", null)
+              }
+            }
+          }
         }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []
