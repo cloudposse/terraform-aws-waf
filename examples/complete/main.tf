@@ -217,14 +217,15 @@ module "waf" {
                     identifiers = ["cellphone", "homephone"]
                 }
               }
-              response_inspection = {
-                #you can only have one entry here. Cannot have multiple of header, json, status_code
-                json = {
-                  identifier      = "/login/success"
-                  success_values = ["True", "Succeeded"]
-                  failure_values = ["Failure JSON"]
-                }
-              }
+              # Note that Response Inspection is available only on web ACLs that protect CloudFront distributions.
+              # response_inspection = {
+              #   #you can only have one entry here. Cannot have multiple of header, json, status_code
+              #   json = {
+              #     identifier      = "/login/success"
+              #     success_values = ["True", "Succeeded"]
+              #     failure_values = ["Failure JSON"]
+              #   }
+              # }
             }
           }
         ]
