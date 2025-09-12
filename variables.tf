@@ -462,8 +462,8 @@ variable "managed_rule_group_statement_rules" {
           }), null)
         }), null)
         aws_managed_rules_acfp_rule_set = optional(object({
-          creation_path = string
-          enable_regex_in_path = optional(bool)
+          creation_path          = string
+          enable_regex_in_path   = optional(bool)
           registration_page_path = string
           request_inspection = optional(object({
             payload_type = string
@@ -494,7 +494,7 @@ variable "managed_rule_group_statement_rules" {
               failure_values = list(string)
             }), null)
             json = optional(object({
-              identifier      = string
+              identifier     = string
               success_values = list(string)
               failure_values = list(string)
             }), null)

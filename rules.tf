@@ -708,12 +708,12 @@ resource "aws_wafv2_web_acl" "default" {
                     }
                   }
                 }
-                
+
                 dynamic "aws_managed_rules_acfp_rule_set" {
                   for_each = lookup(managed_rule_group_configs.value, "aws_managed_rules_acfp_rule_set", null) != null ? [1] : []
                   content {
-                    creation_path = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.creation_path
-                    enable_regex_in_path = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set, "enable_regex_in_path", true)
+                    creation_path          = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.creation_path
+                    enable_regex_in_path   = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set, "enable_regex_in_path", true)
                     registration_page_path = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.registration_page_path
 
                     dynamic "request_inspection" {
