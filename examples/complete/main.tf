@@ -197,8 +197,8 @@ module "waf" {
         managed_rule_group_configs = [
           {
             aws_managed_rules_acfp_rule_set = {
-              creation_path = "/web/newaccount"
-              registration_page_path  = "/web/registerhere"
+              creation_path          = "/web/newaccount"
+              registration_page_path = "/web/registerhere"
               request_inspection = {
                 payload_type = "FORM_ENCODED"
                 password_field = {
@@ -211,10 +211,10 @@ module "waf" {
                   identifier = "email"
                 }
                 address_fields = {
-                    identifiers = ["primaryaddressline1", "primaryaddressline2"]
+                  identifiers = ["primaryaddressline1", "primaryaddressline2"]
                 }
                 phone_number_fields = {
-                    identifiers = ["cellphone", "homephone"]
+                  identifiers = ["cellphone", "homephone"]
                 }
               }
               # Note that Response Inspection is available only on web ACLs that protect CloudFront distributions.
