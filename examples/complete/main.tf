@@ -230,7 +230,7 @@ module "waf" {
           }
         ]
       }
-      
+
       visibility_config = {
         cloudwatch_metrics_enabled = true
         sampled_requests_enabled   = true
