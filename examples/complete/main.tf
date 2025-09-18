@@ -186,6 +186,56 @@ module "waf" {
         sampled_requests_enabled   = true
         metric_name                = "AWS-AWSManagedRulesAntiDDoSRuleSet"
       }
+    },
+    {
+      name     = "AWS-AWSManagedRulesACFPRuleSet"
+      priority = 7
+
+      statement = {
+        name        = "AWSManagedRulesACFPRuleSet"
+        vendor_name = "AWS"
+        managed_rule_group_configs = [
+          {
+            aws_managed_rules_acfp_rule_set = {
+              creation_path          = "/web/newaccount"
+              registration_page_path = "/web/registerhere"
+              request_inspection = {
+                payload_type = "FORM_ENCODED"
+                password_field = {
+                  identifier = "password"
+                }
+                username_field = {
+                  identifier = "username1"
+                }
+                email_field = {
+                  identifier = "email"
+                }
+                address_fields = {
+                  identifiers = ["primaryaddressline1", "primaryaddressline2"]
+                }
+                phone_number_fields = {
+                  identifiers = ["cellphone", "homephone"]
+                }
+              }
+              # Note that Response Inspection is available only on web ACLs that protect CloudFront distributions.
+              # response_inspection = {
+              #   #you can only have one entry here. Cannot have multiple of header, json, status_code
+              #   json = {
+              #     identifier      = "/login/success"
+              #     success_values = ["True", "Succeeded"]
+              #     failure_values = ["Failure JSON"]
+              #   }
+              # }
+            }
+          }
+        ]
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = true
+        metric_name                = "AWS-AWSManagedRulesACFPRuleSet"
+      }
     }
   ]
 
