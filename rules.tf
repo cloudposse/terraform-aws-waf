@@ -311,6 +311,10 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = rule.value.action == "block" ? [1] : []
           content {}
         }
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
+          content {}
+        }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []
           content {}
@@ -666,8 +670,29 @@ resource "aws_wafv2_web_acl" "default" {
             # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#managed_rule_group_configs-block
             dynamic "managed_rule_group_configs" {
               for_each = lookup(managed_rule_group_statement.value, "managed_rule_group_configs", null) != null ? managed_rule_group_statement.value.managed_rule_group_configs : []
-
               content {
+                dynamic "aws_managed_rules_anti_ddos_rule_set" {
+                  for_each = lookup(managed_rule_group_configs.value, "aws_managed_rules_anti_ddos_rule_set", null) != null ? [1] : []
+                  content {
+                    sensitivity_to_block = managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.sensitivity_to_block
+                    dynamic "client_side_action_config" {
+                      for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set, "client_side_action_config", null) != null ? [managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config] : []
+                      content {
+                        challenge {
+                          usage_of_action = managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config.challenge.usage_of_action
+                          sensitivity     = lookup(managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config.challenge, "sensitivity", null)
+                          dynamic "exempt_uri_regular_expression" {
+                            for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config.challenge, "exempt_uri_regular_expression", null) != null ? managed_rule_group_configs.value.aws_managed_rules_anti_ddos_rule_set.client_side_action_config.challenge.exempt_uri_regular_expression : []
+                            content {
+                              regex_string = exempt_uri_regular_expression.value.regex_string
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+
                 dynamic "aws_managed_rules_bot_control_rule_set" {
                   for_each = lookup(managed_rule_group_configs.value, "aws_managed_rules_bot_control_rule_set", null) != null ? [1] : []
                   content {
@@ -726,6 +751,88 @@ resource "aws_wafv2_web_acl" "default" {
                           content {
                             failure_codes = managed_rule_group_configs.value.aws_managed_rules_atp_rule_set.response_inspection.status_code.failure_codes
                             success_codes = managed_rule_group_configs.value.aws_managed_rules_atp_rule_set.response_inspection.status_code.success_codes
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+
+                dynamic "aws_managed_rules_acfp_rule_set" {
+                  for_each = lookup(managed_rule_group_configs.value, "aws_managed_rules_acfp_rule_set", null) != null ? [1] : []
+                  content {
+                    creation_path          = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.creation_path
+                    enable_regex_in_path   = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set, "enable_regex_in_path", true)
+                    registration_page_path = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.registration_page_path
+
+                    dynamic "request_inspection" {
+                      for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set, "request_inspection", null) != null ? [1] : []
+                      content {
+                        payload_type = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection.payload_type
+                        dynamic "username_field" {
+                          for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection, "username_field", null) != null ? [1] : []
+                          content {
+                            identifier = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection.username_field.identifier
+                          }
+                        }
+                        dynamic "password_field" {
+                          for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection, "password_field", null) != null ? [1] : []
+                          content {
+                            identifier = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection.password_field.identifier
+                          }
+                        }
+                        dynamic "email_field" {
+                          for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection, "email_field", null) != null ? [1] : []
+                          content {
+                            identifier = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection.email_field.identifier
+                          }
+                        }
+                        dynamic "address_fields" {
+                          for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection, "address_fields", null) != null ? [1] : []
+                          content {
+                            identifiers = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection.address_fields.identifiers
+                          }
+                        }
+                        dynamic "phone_number_fields" {
+                          for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection, "phone_number_fields", null) != null ? [1] : []
+                          content {
+                            identifiers = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.request_inspection.phone_number_fields.identifiers
+                          }
+                        }
+                      }
+                    }
+
+                    dynamic "response_inspection" {
+                      for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set, "response_inspection", null) != null ? [1] : []
+                      content {
+                        dynamic "body_contains" {
+                          for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.response_inspection, "body_contains", null) != null ? [1] : []
+                          content {
+                            failure_strings = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.response_inspection.body_contains.failure_strings
+                            success_strings = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.response_inspection.body_contains.success_strings
+                          }
+                        }
+                        dynamic "header" {
+                          for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.response_inspection, "header", null) != null ? [1] : []
+                          content {
+                            failure_values = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.response_inspection.header.failure_values
+                            name           = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.response_inspection.header.name
+                            success_values = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.response_inspection.header.success_values
+                          }
+                        }
+                        dynamic "json" {
+                          for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.response_inspection, "json", null) != null ? [1] : []
+                          content {
+                            failure_values = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.response_inspection.json.failure_values
+                            identifier     = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.response_inspection.json.identifier
+                            success_values = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.response_inspection.json.success_values
+                          }
+                        }
+                        dynamic "status_code" {
+                          for_each = lookup(managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.response_inspection, "status_code", null) != null ? [1] : []
+                          content {
+                            failure_codes = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.response_inspection.status_code.failure_codes
+                            success_codes = managed_rule_group_configs.value.aws_managed_rules_acfp_rule_set.response_inspection.status_code.success_codes
                           }
                         }
                       }
