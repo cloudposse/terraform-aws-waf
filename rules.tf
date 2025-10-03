@@ -170,7 +170,22 @@ resource "aws_wafv2_web_acl" "default" {
         dynamic "block" {
           for_each = rule.value.action == "block" ? [1] : []
 
-          content {}
+          content {
+            dynamic "custom_response" {
+              for_each = lookup(rule.value, "custom_response", null) != null ? [rule.value.custom_response] : []
+              content {
+                response_code            = custom_response.value.response_code
+                custom_response_body_key = lookup(custom_response.value, "custom_response_body_key", null)
+                dynamic "response_header" {
+                  for_each = lookup(custom_response.value, "response_header", null) != null ? [custom_response.value.response_header] : []
+                  content {
+                    name  = response_header.value.name
+                    value = response_header.value.value
+                  }
+                }
+              }
+            }
+          }
         }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []
@@ -368,7 +383,22 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "block" {
           for_each = rule.value.action == "block" ? [1] : []
-          content {}
+          content {
+            dynamic "custom_response" {
+              for_each = lookup(rule.value, "custom_response", null) != null ? [rule.value.custom_response] : []
+              content {
+                response_code            = custom_response.value.response_code
+                custom_response_body_key = lookup(custom_response.value, "custom_response_body_key", null)
+                dynamic "response_header" {
+                  for_each = lookup(custom_response.value, "response_header", null) != null ? [custom_response.value.response_header] : []
+                  content {
+                    name  = response_header.value.name
+                    value = response_header.value.value
+                  }
+                }
+              }
+            }
+          }
         }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []
@@ -442,7 +472,22 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "block" {
           for_each = rule.value.action == "block" ? [1] : []
-          content {}
+          content {
+            dynamic "custom_response" {
+              for_each = lookup(rule.value, "custom_response", null) != null ? [rule.value.custom_response] : []
+              content {
+                response_code            = custom_response.value.response_code
+                custom_response_body_key = lookup(custom_response.value, "custom_response_body_key", null)
+                dynamic "response_header" {
+                  for_each = lookup(custom_response.value, "response_header", null) != null ? [custom_response.value.response_header] : []
+                  content {
+                    name  = response_header.value.name
+                    value = response_header.value.value
+                  }
+                }
+              }
+            }
+          }
         }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []
@@ -993,7 +1038,22 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "block" {
           for_each = rule.value.action == "block" ? [1] : []
-          content {}
+          content {
+            dynamic "custom_response" {
+              for_each = lookup(rule.value, "custom_response", null) != null ? [rule.value.custom_response] : []
+              content {
+                response_code            = custom_response.value.response_code
+                custom_response_body_key = lookup(custom_response.value, "custom_response_body_key", null)
+                dynamic "response_header" {
+                  for_each = lookup(custom_response.value, "response_header", null) != null ? [custom_response.value.response_header] : []
+                  content {
+                    name  = response_header.value.name
+                    value = response_header.value.value
+                  }
+                }
+              }
+            }
+          }
         }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []
@@ -1945,7 +2005,22 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "block" {
           for_each = rule.value.action == "block" ? [1] : []
-          content {}
+          content {
+            dynamic "custom_response" {
+              for_each = lookup(rule.value, "custom_response", null) != null ? [rule.value.custom_response] : []
+              content {
+                response_code            = custom_response.value.response_code
+                custom_response_body_key = lookup(custom_response.value, "custom_response_body_key", null)
+                dynamic "response_header" {
+                  for_each = lookup(custom_response.value, "response_header", null) != null ? [custom_response.value.response_header] : []
+                  content {
+                    name  = response_header.value.name
+                    value = response_header.value.value
+                  }
+                }
+              }
+            }
+          }
         }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []

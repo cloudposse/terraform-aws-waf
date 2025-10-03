@@ -94,7 +94,15 @@ variable "byte_match_statement_rules" {
       })
     }), null)
     rule_label = optional(list(string), null)
-    statement  = any
+    custom_response = optional(object({
+      response_code            = string
+      custom_response_body_key = optional(string, null)
+      response_header = optional(object({
+        name  = string
+        value = string
+      }), null)
+    }), null)
+    statement = any
     visibility_config = optional(object({
       cloudwatch_metrics_enabled = optional(bool)
       metric_name                = string
@@ -226,7 +234,15 @@ variable "geo_match_statement_rules" {
       })
     }), null)
     rule_label = optional(list(string), null)
-    statement  = any
+    custom_response = optional(object({
+      response_code            = string
+      custom_response_body_key = optional(string, null)
+      response_header = optional(object({
+        name  = string
+        value = string
+      }), null)
+    }), null)
+    statement = any
     visibility_config = optional(object({
       cloudwatch_metrics_enabled = optional(bool)
       metric_name                = string
@@ -291,7 +307,15 @@ variable "ip_set_reference_statement_rules" {
       })
     }), null)
     rule_label = optional(list(string), null)
-    statement  = any
+    custom_response = optional(object({
+      response_code            = string
+      custom_response_body_key = optional(string, null)
+      response_header = optional(object({
+        name  = string
+        value = string
+      }), null)
+    }), null)
+    statement = any
     visibility_config = optional(object({
       cloudwatch_metrics_enabled = optional(bool)
       metric_name                = string
@@ -577,6 +601,14 @@ variable "rate_based_statement_rules" {
       })
     }), null)
     rule_label = optional(list(string), null)
+    custom_response = optional(object({
+      response_code            = string
+      custom_response_body_key = optional(string, null)
+      response_header = optional(object({
+        name  = string
+        value = string
+      }), null)
+    }), null)
     statement = object({
       limit                 = number
       aggregate_key_type    = string
@@ -636,6 +668,16 @@ variable "rate_based_statement_rules" {
 
     rule_label:
        A List of labels to apply to web requests that match the rule match statement
+
+    custom_response:
+      Defines a custom response for the web request. Only valid when action is set to 'block'.
+
+      response_code:
+        The HTTP status code to return to the client. For rate limiting, use "429" for "Too Many Requests".
+      custom_response_body_key:
+        References a key defined in custom_response_body to use as the response body.
+      response_header:
+        The name and value of a custom header to add to the response.
 
     statement:
       aggregate_key_type:
@@ -1092,6 +1134,14 @@ variable "nested_statement_rules" {
     name     = string
     priority = number
     action   = string
+    custom_response = optional(object({
+      response_code            = string
+      custom_response_body_key = optional(string, null)
+      response_header = optional(object({
+        name  = string
+        value = string
+      }), null)
+    }), null)
     statement = object({
       and_statement = object({
         statements = list(object({
