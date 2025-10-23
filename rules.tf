@@ -100,6 +100,7 @@ locals {
         for stmt in rule.statement.and_statement.statements : {
           label_match_statement    = stmt.type == "label_match_statement" ? try(jsondecode(stmt.statement), null) : null
           not_byte_match_statement = stmt.type == "not_byte_match_statement" ? try(jsondecode(stmt.statement), null) : null
+          byte_match_statement     = stmt.type == "byte_match_statement" ? try(jsondecode(stmt.statement), null) : null
           # This is now easily extensible with other types:
           # not_geo_match_statement = stmt.type == "not_geo_match" ? jsondecode(stmt.statement) : null
         }
@@ -2076,6 +2077,62 @@ resource "aws_wafv2_web_acl" "default" {
                           }
                         }
                       }
+                    }
+                  }
+                }
+              }
+              dynamic "byte_match_statement" {
+                for_each = statement.value.byte_match_statement != null ? [statement.value.byte_match_statement] : []
+                content {
+                  positional_constraint = byte_match_statement.value.positional_constraint
+                  search_string         = byte_match_statement.value.search_string
+
+                  field_to_match {
+                    dynamic "all_query_arguments" {
+                      for_each = try(byte_match_statement.value.field_to_match.all_query_arguments, null) != null ? [{}] : []
+                      content {}
+                    }
+
+                    dynamic "body" {
+                      for_each = try(byte_match_statement.value.field_to_match.body, null) != null ? [{}] : []
+                      content {}
+                    }
+
+                    dynamic "method" {
+                      for_each = try(byte_match_statement.value.field_to_match.method, null) != null ? [{}] : []
+                      content {}
+                    }
+
+                    dynamic "query_string" {
+                      for_each = try(byte_match_statement.value.field_to_match.query_string, null) != null ? [{}] : []
+                      content {}
+                    }
+
+                    dynamic "single_header" {
+                      for_each = try(byte_match_statement.value.field_to_match.single_header, null) != null ? [byte_match_statement.value.field_to_match.single_header] : []
+                      content {
+                        name = single_header.value.name
+                      }
+                    }
+
+                    dynamic "single_query_argument" {
+                      for_each = try(byte_match_statement.value.field_to_match.single_query_argument, null) != null ? [byte_match_statement.value.field_to_match.single_query_argument] : []
+                      content {
+                        name = single_query_argument.value.name
+                      }
+                    }
+
+                    dynamic "uri_path" {
+                      for_each = try(byte_match_statement.value.field_to_match.uri_path, null) != null ? [{}] : []
+                      content {}
+                    }
+                  }
+
+                  dynamic "text_transformation" {
+                    for_each = byte_match_statement.value.text_transformation
+                    content {
+                      priority = text_transformation.value.priority
+                      type     = text_transformation.value.type
                     }
                   }
                 }
