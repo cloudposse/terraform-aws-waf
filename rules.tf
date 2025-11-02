@@ -1036,6 +1036,10 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = rule.value.action == "allow" ? [1] : []
           content {}
         }
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
+          content {}
+        }
         dynamic "block" {
           for_each = rule.value.action == "block" ? [1] : []
           content {
@@ -1335,6 +1339,10 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "block" {
           for_each = rule.value.action == "block" ? [1] : []
+          content {}
+        }
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
           content {}
         }
         dynamic "count" {
