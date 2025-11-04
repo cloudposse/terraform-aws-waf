@@ -617,6 +617,16 @@ variable "rate_based_statement_rules" {
         fallback_behavior = string
         header_name       = string
       }), null)
+      custom_key = optional(list(object({
+        ip = optional(object({}), null)
+        header = optional(object({
+          name                = string
+          text_transformation = list(object({
+            priority = number
+            type     = string
+          }))
+        }), null)
+      })), null)
       scope_down_statement = optional(object({
         byte_match_statement = object({
           positional_constraint = string
