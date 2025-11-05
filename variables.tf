@@ -944,6 +944,14 @@ variable "size_constraint_statement_rules" {
       })
     }), null)
     rule_label = optional(list(string), null)
+    custom_response = object({
+      response_code            = string
+      custom_response_body_key = optional(string, null)
+      response_header = optional(object({
+        name  = string
+        value = string
+      }), null)
+    })
     statement  = any
     visibility_config = optional(object({
       cloudwatch_metrics_enabled = optional(bool)
