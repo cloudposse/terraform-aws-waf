@@ -620,7 +620,7 @@ variable "rate_based_statement_rules" {
       custom_key = optional(list(object({
         ip = optional(object({}), null)
         header = optional(object({
-          name                = string
+          name = string
           text_transformation = list(object({
             priority = number
             type     = string
