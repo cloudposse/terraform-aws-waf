@@ -612,7 +612,33 @@ variable "rate_based_statement_rules" {
     statement = object({
       limit                 = number
       aggregate_key_type    = string
+      validation {
+        condition     = contains(["FORWARDED_IP", "IP", "CUSTOM_KEYS"], var.rate_based_statement_rules.aggregate_key_type)
+        error_message = "aggregate_key_type must be one of: FORWARDED_IP, IP, CUSTOM_KEYS"
+      }
+      validation {
+        condition = can([
+          for key in coalesce(var.rate_based_statement_rules.custom_keys, []) : regex("^(ALL|VALUE)$", coalesce(key.header.match_scope, "VALUE"))
+          if key.header != null
+        ])
+        error_message = "match_scope must be either ALL or VALUE"
+      }
+      validation {
+        condition = can([
+          for key in coalesce(var.rate_based_statement_rules.custom_keys, []) : regex("^(CONTINUE|MATCH)$", coalesce(key.header.oversize_handling, "CONTINUE"))
+          if key.header != null
+        ])
+        error_message = "oversize_handling must be either CONTINUE or MATCH"
+      }
       evaluation_window_sec = optional(number)
+      custom_keys = optional(list(object({
+        header = optional(object({
+          name              = string
+          match_scope       = optional(string, "VALUE")
+          oversize_handling = optional(string, "CONTINUE")
+        }))
+        uri_path = optional(map(string))
+      })))
       forwarded_ip_config = optional(object({
         fallback_behavior = string
         header_name       = string
@@ -680,9 +706,19 @@ variable "rate_based_statement_rules" {
         The name and value of a custom header to add to the response.
 
     statement:
-      aggregate_key_type:
+    aggregate_key_type:
          Setting that indicates how to aggregate the request counts.
-         Possible values include: `FORWARDED_IP` or `IP`
+         Possible values include: `FORWARDED_IP`, `IP`, or `CUSTOM_KEYS`.
+      custom_keys:
+         When using `aggregate_key_type = "CUSTOM_KEYS"`, defines the components to use as the rate limit key.
+         Each custom key can include:
+         - header: A header to use in the key with:
+           - name: Header name (e.g., "authorization")
+           - match_scope: How to handle the header value. Valid values: "ALL" or "VALUE" (default)
+           - oversize_handling: What to do if the header is too large. Valid values: "CONTINUE" (default) or "MATCH"
+         - uri_path: Include the URI path in the rate limit key
+      When using `CUSTOM_KEYS`, define custom keys using the `rate_based_custom_keys` input. The `rate_based_custom_keys` map should use the rule name as the key and a list of key objects as the value. Example:
+      `{ "my-rule" = [{ header = { name = "authorization" } }, { uri_path = {} }] }`
       limit:
         The limit on requests per 5-minute period for a single originating IP address.
       evaluation_window_sec:
@@ -719,6 +755,7 @@ variable "rate_based_statement_rules" {
         Whether AWS WAF should store a sampling of the web requests that match the rules.
   DOC
 }
+
 
 
 variable "regex_pattern_set_reference_statement_rules" {

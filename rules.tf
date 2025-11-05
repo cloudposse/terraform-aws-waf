@@ -1083,6 +1083,26 @@ resource "aws_wafv2_web_acl" "default" {
               }
             }
 
+            dynamic "custom_keys" {
+              for_each = lookup(rate_based_statement.value, "custom_keys", [])
+
+              content {
+                dynamic "header" {
+                  for_each = lookup(custom_keys.value, "header", null) != null ? [custom_keys.value.header] : []
+                  content {
+                    name              = header.value.name
+                    match_scope       = lookup(header.value, "match_scope", "VALUE")
+                    oversize_handling = lookup(header.value, "oversize_handling", "CONTINUE")
+                  }
+                }
+
+                dynamic "uri_path" {
+                  for_each = lookup(custom_keys.value, "uri_path", null) != null ? [custom_keys.value.uri_path] : []
+                  content {}
+                }
+              }
+            }
+
             dynamic "scope_down_statement" {
               for_each = lookup(rate_based_statement.value, "scope_down_statement", null) != null ? [rate_based_statement.value.scope_down_statement] : []
 

@@ -279,6 +279,43 @@ module "waf" {
 
   rate_based_statement_rules = [
     {
+      name     = "webhook-test-token-rate-limit-block"
+      action   = "block"
+      priority = 15
+      statement = {
+        limit                 = 2
+        aggregate_key_type    = "CUSTOM_KEYS"
+        evaluation_window_sec = 60
+        custom_keys = [
+          {
+            header = {
+              name              = "authorization"
+              match_scope       = "VALUE"
+              oversize_handling = "CONTINUE"
+            }
+          }
+        ]
+        scope_down_statement = {
+          byte_match_statement = {
+            search_string         = "/webhook/test"
+            field_to_match        = { uri_path = true }
+            positional_constraint = "CONTAINS"
+            text_transformation = [
+              {
+                type     = "NONE"
+                priority = 0
+              }
+            ]
+          }
+        }
+      }
+      visibility_config = {
+        cloudwatch_metrics_enabled = true
+        sampled_requests_enabled   = true
+        metric_name                = "web-acl-webhook-test-token-rate-limit"
+      }
+    },
+    {
       name     = "rule-40"
       action   = "block"
       priority = 40
@@ -319,8 +356,34 @@ module "waf" {
         sampled_requests_enabled   = false
         metric_name                = "rule-40-metric"
       }
+    },
+    {
+      name     = "rule-custom"
+      action   = "block"
+      priority = 45
+
+      # Example rate-based rule using CUSTOM_KEYS to aggregate by header + uri path
+      statement = {
+        limit                 = 50
+        aggregate_key_type    = "CUSTOM_KEYS"
+        evaluation_window_sec = 300
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = false
+        sampled_requests_enabled   = false
+        metric_name                = "rule-custom-metric"
+      }
     }
   ]
+
+  # Map of custom keys for rate-based rules. Use the rule name as the key.
+  rate_based_custom_keys = {
+    "rule-custom" = [
+      { header = { name = "authorization" } },
+      { uri_path = {} }
+    ]
+  }
 
   size_constraint_statement_rules = [
     {
