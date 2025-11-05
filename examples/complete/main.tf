@@ -297,7 +297,7 @@ module "waf" {
         ]
         scope_down_statement = {
           byte_match_statement = {
-            search_string         = "api/v3/webhooks/test"
+            search_string         = "/webhook/test"
             field_to_match        = { uri_path = true }
             positional_constraint = "CONTAINS"
             text_transformation = [
