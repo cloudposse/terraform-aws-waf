@@ -274,6 +274,39 @@ module "waf" {
         sampled_requests_enabled   = false
         metric_name                = "rule-30-metric"
       }
+    },
+    {
+      name     = "rule-31"
+      action   = "block"
+      priority = 31
+
+      statement = {
+        positional_constraint = "EXACTLY"
+        search_string         = "x-you-can-trust-me"
+
+        text_transformation = [
+          {
+            priority = 0
+            type     = "LOWERCASE"
+          }
+        ]
+
+        field_to_match = {
+          headers = {
+            match_pattern = {
+              all = {}
+            }
+            match_scope       = "KEY"
+            oversize_handling = "CONTINUE"
+          }
+        }
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = false
+        sampled_requests_enabled   = false
+        metric_name                = "rule-31-metric"
+      }
     }
   ]
 
