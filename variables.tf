@@ -158,6 +158,51 @@ variable "byte_match_statement_rules" {
   DOC
 }
 
+variable "custom_rules" {
+  type = list(object({
+    name          = string
+    priority      = number
+    action        = string
+    rule_label    = optional(list(string), null)
+    and_statement = optional(any)
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+  A rule statement that defines a custom rule for AWS WAF to apply to web requests.
+
+  action:
+    The action that AWS WAF should take on a web request when it matches the rule's statement.
+  name:
+    A friendly name of the rule.
+  priority:
+    If you define more than one Rule in a WebACL,
+    AWS WAF evaluates each request against the rules in order based on the value of priority.
+    AWS WAF processes rules with lower priority first.
+
+  rule_label:
+    A List of labels to apply to web requests that match the rule match statement
+
+  and_statement:
+    A logical rule statement used to combine other rule statements with AND logic.
+    See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#and-statement
+
+  visibility_config:
+    Defines and enables Amazon CloudWatch metrics and web request sample collection.
+
+    cloudwatch_metrics_enabled:
+      Whether the associated resource sends metrics to CloudWatch.
+    metric_name:
+      A friendly name of the CloudWatch metric.
+    sampled_requests_enabled:
+      Whether AWS WAF should store a sampling of the web requests that match the rules.
+  DOC
+}
+
 variable "geo_allowlist_statement_rules" {
   type = list(object({
     name     = string
