@@ -93,6 +93,11 @@ variable "byte_match_statement_rules" {
         immunity_time = number
       })
     }), null)
+    challenge_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
     rule_label = optional(list(string), null)
     custom_response = optional(object({
       response_code            = string
@@ -131,6 +136,15 @@ variable "byte_match_statement_rules" {
        immunity_time:
        The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
+    challenge_config:
+     Specifies how AWS WAF should handle challenge evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
     rule_label:
        A List of labels to apply to web requests that match the rule match statement
 
@@ -168,6 +182,11 @@ variable "geo_allowlist_statement_rules" {
         immunity_time = number
       })
     }), null)
+    challenge_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
     rule_label = optional(list(string), null)
     statement  = any
     visibility_config = optional(object({
@@ -197,6 +216,15 @@ variable "geo_allowlist_statement_rules" {
 
        immunity_time:
        The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    challenge_config:
+     Specifies how AWS WAF should handle challenge evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
     rule_label:
        A List of labels to apply to web requests that match the rule match statement
@@ -229,6 +257,11 @@ variable "geo_match_statement_rules" {
     priority = number
     action   = string
     captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    challenge_config = optional(object({
       immunity_time_property = object({
         immunity_time = number
       })
@@ -271,6 +304,15 @@ variable "geo_match_statement_rules" {
        immunity_time:
        The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
+    challenge_config:
+     Specifies how AWS WAF should handle challenge evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
     rule_label:
        A List of labels to apply to web requests that match the rule match statement
 
@@ -302,6 +344,11 @@ variable "ip_set_reference_statement_rules" {
     priority = number
     action   = string
     captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    challenge_config = optional(object({
       immunity_time_property = object({
         immunity_time = number
       })
@@ -343,6 +390,15 @@ variable "ip_set_reference_statement_rules" {
 
        immunity_time:
        The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    challenge_config:
+     Specifies how AWS WAF should handle challenge evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
     rule_label:
        A List of labels to apply to web requests that match the rule match statement
@@ -388,6 +444,11 @@ variable "managed_rule_group_statement_rules" {
     priority        = number
     override_action = optional(string)
     captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    challenge_config = optional(object({
       immunity_time_property = object({
         immunity_time = number
       })
@@ -560,6 +621,15 @@ variable "managed_rule_group_statement_rules" {
        immunity_time:
        The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
+    challenge_config:
+     Specifies how AWS WAF should handle challenge evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
     rule_label:
        A List of labels to apply to web requests that match the rule match statement
 
@@ -596,6 +666,11 @@ variable "rate_based_statement_rules" {
     priority = number
     action   = string
     captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    challenge_config = optional(object({
       immunity_time_property = object({
         immunity_time = number
       })
@@ -666,6 +741,15 @@ variable "rate_based_statement_rules" {
        immunity_time:
        The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
+    challenge_config:
+     Specifies how AWS WAF should handle challenge evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
     rule_label:
        A List of labels to apply to web requests that match the rule match statement
 
@@ -731,6 +815,11 @@ variable "regex_pattern_set_reference_statement_rules" {
         immunity_time = number
       })
     }), null)
+    challenge_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
     rule_label = optional(list(string), null)
     statement  = any
     visibility_config = optional(object({
@@ -760,6 +849,15 @@ variable "regex_pattern_set_reference_statement_rules" {
 
        immunity_time:
        The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    challenge_config:
+     Specifies how AWS WAF should handle challenge evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
     rule_label:
        A List of labels to apply to web requests that match the rule match statement
@@ -796,6 +894,11 @@ variable "regex_match_statement_rules" {
         immunity_time = number
       })
     }), null)
+    challenge_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
     rule_label = optional(list(string), null)
     statement  = any
     visibility_config = optional(object({
@@ -825,6 +928,15 @@ variable "regex_match_statement_rules" {
 
        immunity_time:
        The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    challenge_config:
+     Specifies how AWS WAF should handle challenge evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
     rule_label:
        A List of labels to apply to web requests that match the rule match statement
@@ -857,6 +969,11 @@ variable "rule_group_reference_statement_rules" {
     priority        = number
     override_action = optional(string)
     captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    challenge_config = optional(object({
       immunity_time_property = object({
         immunity_time = number
       })
@@ -911,6 +1028,15 @@ variable "rule_group_reference_statement_rules" {
        immunity_time:
        The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
+    challenge_config:
+     Specifies how AWS WAF should handle challenge evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
     rule_label:
        A List of labels to apply to web requests that match the rule match statement
 
@@ -939,6 +1065,11 @@ variable "size_constraint_statement_rules" {
     priority = number
     action   = string
     captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    challenge_config = optional(object({
       immunity_time_property = object({
         immunity_time = number
       })
@@ -972,6 +1103,15 @@ variable "size_constraint_statement_rules" {
 
        immunity_time:
        The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    challenge_config:
+     Specifies how AWS WAF should handle challenge evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
     rule_label:
        A List of labels to apply to web requests that match the rule match statement
@@ -1012,6 +1152,11 @@ variable "sqli_match_statement_rules" {
         immunity_time = number
       })
     }), null)
+    challenge_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
     rule_label = optional(list(string), null)
     statement  = any
     visibility_config = optional(object({
@@ -1046,6 +1191,15 @@ variable "sqli_match_statement_rules" {
        immunity_time:
        The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
+    challenge_config:
+     Specifies how AWS WAF should handle challenge evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
     statement:
       field_to_match:
         The part of a web request that you want AWS WAF to inspect.
@@ -1072,6 +1226,11 @@ variable "xss_match_statement_rules" {
     priority = number
     action   = string
     captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    challenge_config = optional(object({
       immunity_time_property = object({
         immunity_time = number
       })
@@ -1105,6 +1264,15 @@ variable "xss_match_statement_rules" {
 
        immunity_time:
        The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+    challenge_config:
+     Specifies how AWS WAF should handle challenge evaluations.
+
+     immunity_time_property:
+       Defines custom immunity time.
+
+       immunity_time:
+       The amount of time, in seconds, that a challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
     rule_label:
        A List of labels to apply to web requests that match the rule match statement
