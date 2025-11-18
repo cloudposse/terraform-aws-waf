@@ -290,6 +290,16 @@ resource "aws_wafv2_web_acl" "default" {
         }
       }
 
+      dynamic "challenge_config" {
+        for_each = lookup(rule.value, "challenge_config", null) != null ? [rule.value.challenge_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = challenge_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
+
       dynamic "rule_label" {
         for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
         content {
@@ -366,6 +376,16 @@ resource "aws_wafv2_web_acl" "default" {
           }
         }
       }
+
+      dynamic "challenge_config" {
+        for_each = lookup(rule.value, "challenge_config", null) != null ? [rule.value.challenge_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = challenge_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
     }
   }
 
@@ -408,6 +428,10 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = rule.value.action == "captcha" ? [1] : []
           content {}
         }
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
+          content {}
+        }
       }
 
       statement {
@@ -445,6 +469,16 @@ resource "aws_wafv2_web_acl" "default" {
         content {
           immunity_time_property {
             immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
+
+      dynamic "challenge_config" {
+        for_each = lookup(rule.value, "challenge_config", null) != null ? [rule.value.challenge_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = challenge_config.value.immunity_time_property.immunity_time
           }
         }
       }
@@ -497,6 +531,10 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = rule.value.action == "captcha" ? [1] : []
           content {}
         }
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
+          content {}
+        }
       }
 
       statement {
@@ -535,6 +573,16 @@ resource "aws_wafv2_web_acl" "default" {
         content {
           immunity_time_property {
             immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
+
+      dynamic "challenge_config" {
+        for_each = lookup(rule.value, "challenge_config", null) != null ? [rule.value.challenge_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = challenge_config.value.immunity_time_property.immunity_time
           }
         }
       }
@@ -1015,6 +1063,16 @@ resource "aws_wafv2_web_acl" "default" {
         }
       }
 
+      dynamic "challenge_config" {
+        for_each = lookup(rule.value, "challenge_config", null) != null ? [rule.value.challenge_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = challenge_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
+
       dynamic "rule_label" {
         for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
         content {
@@ -1034,6 +1092,10 @@ resource "aws_wafv2_web_acl" "default" {
       action {
         dynamic "allow" {
           for_each = rule.value.action == "allow" ? [1] : []
+          content {}
+        }
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
           content {}
         }
         dynamic "block" {
@@ -1061,6 +1123,10 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "captcha" {
           for_each = rule.value.action == "captcha" ? [1] : []
+          content {}
+        }
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
           content {}
         }
       }
@@ -1218,6 +1284,16 @@ resource "aws_wafv2_web_acl" "default" {
         }
       }
 
+      dynamic "challenge_config" {
+        for_each = lookup(rule.value, "challenge_config", null) != null ? [rule.value.challenge_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = challenge_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
+
       dynamic "rule_label" {
         for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
         content {
@@ -1344,6 +1420,16 @@ resource "aws_wafv2_web_acl" "default" {
         }
       }
 
+      dynamic "challenge_config" {
+        for_each = lookup(rule.value, "challenge_config", null) != null ? [rule.value.challenge_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = challenge_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
+
       dynamic "rule_label" {
         for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
         content {
@@ -1367,6 +1453,10 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "block" {
           for_each = rule.value.action == "block" ? [1] : []
+          content {}
+        }
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
           content {}
         }
         dynamic "count" {
@@ -1466,6 +1556,16 @@ resource "aws_wafv2_web_acl" "default" {
         content {
           immunity_time_property {
             immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
+
+      dynamic "challenge_config" {
+        for_each = lookup(rule.value, "challenge_config", null) != null ? [rule.value.challenge_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = challenge_config.value.immunity_time_property.immunity_time
           }
         }
       }
@@ -1619,6 +1719,16 @@ resource "aws_wafv2_web_acl" "default" {
         }
       }
 
+      dynamic "challenge_config" {
+        for_each = lookup(rule.value, "challenge_config", null) != null ? [rule.value.challenge_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = challenge_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
+
       dynamic "rule_label" {
         for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
         content {
@@ -1665,6 +1775,10 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "captcha" {
           for_each = rule.value.action == "captcha" ? [1] : []
+          content {}
+        }
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
           content {}
         }
       }
@@ -1771,6 +1885,16 @@ resource "aws_wafv2_web_acl" "default" {
         }
       }
 
+      dynamic "challenge_config" {
+        for_each = lookup(rule.value, "challenge_config", null) != null ? [rule.value.challenge_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = challenge_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
+
       dynamic "rule_label" {
         for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
         content {
@@ -1802,6 +1926,10 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "captcha" {
           for_each = rule.value.action == "captcha" ? [1] : []
+          content {}
+        }
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
           content {}
         }
       }
@@ -1900,6 +2028,16 @@ resource "aws_wafv2_web_acl" "default" {
         }
       }
 
+      dynamic "challenge_config" {
+        for_each = lookup(rule.value, "challenge_config", null) != null ? [rule.value.challenge_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = challenge_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
+
       dynamic "rule_label" {
         for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
         content {
@@ -1931,6 +2069,10 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "captcha" {
           for_each = rule.value.action == "captcha" ? [1] : []
+          content {}
+        }
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
           content {}
         }
       }
@@ -2029,6 +2171,16 @@ resource "aws_wafv2_web_acl" "default" {
         }
       }
 
+      dynamic "challenge_config" {
+        for_each = lookup(rule.value, "challenge_config", null) != null ? [rule.value.challenge_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = challenge_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
+
       dynamic "rule_label" {
         for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
         content {
@@ -2075,6 +2227,10 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "captcha" {
           for_each = rule.value.action == "captcha" ? [1] : []
+          content {}
+        }
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
           content {}
         }
       }
@@ -2148,6 +2304,16 @@ resource "aws_wafv2_web_acl" "default" {
         content {
           immunity_time_property {
             immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
+
+      dynamic "challenge_config" {
+        for_each = lookup(rule.value, "challenge_config", null) != null ? [rule.value.challenge_config] : []
+
+        content {
+          immunity_time_property {
+            immunity_time = challenge_config.value.immunity_time_property.immunity_time
           }
         }
       }
