@@ -1149,6 +1149,38 @@ resource "aws_wafv2_web_acl" "default" {
               }
             }
 
+            dynamic "custom_key" {
+              for_each = lookup(rate_based_statement.value, "custom_key", null) != null ? rate_based_statement.value.custom_key : []
+
+              content {
+                dynamic "ip" {
+                  for_each = lookup(custom_key.value, "ip", null) != null ? [1] : []
+                  content {}
+                }
+
+                dynamic "header" {
+                  for_each = lookup(custom_key.value, "header", null) != null ? [custom_key.value.header] : []
+
+                  content {
+                    name = header.value.name
+
+                    dynamic "text_transformation" {
+                      for_each = lookup(header.value, "text_transformation", null) != null ? [
+                        for rule in header.value.text_transformation : {
+                          priority = rule.priority
+                          type     = rule.type
+                      }] : []
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
             dynamic "scope_down_statement" {
               for_each = lookup(rate_based_statement.value, "scope_down_statement", null) != null ? [rate_based_statement.value.scope_down_statement] : []
 
@@ -1720,7 +1752,22 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "block" {
           for_each = rule.value.action == "block" ? [1] : []
-          content {}
+          content {
+            dynamic "custom_response" {
+              for_each = lookup(rule.value, "custom_response", null) != null ? [rule.value.custom_response] : []
+              content {
+                response_code            = custom_response.value.response_code
+                custom_response_body_key = lookup(custom_response.value, "custom_response_body_key", null)
+                dynamic "response_header" {
+                  for_each = lookup(custom_response.value, "response_header", null) != null ? [custom_response.value.response_header] : []
+                  content {
+                    name  = response_header.value.name
+                    value = response_header.value.value
+                  }
+                }
+              }
+            }
+          }
         }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []

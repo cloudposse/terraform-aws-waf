@@ -692,6 +692,16 @@ variable "rate_based_statement_rules" {
         fallback_behavior = string
         header_name       = string
       }), null)
+      custom_key = optional(list(object({
+        ip = optional(object({}), null)
+        header = optional(object({
+          name = string
+          text_transformation = list(object({
+            priority = number
+            type     = string
+          }))
+        }), null)
+      })), null)
       scope_down_statement = optional(object({
         byte_match_statement = object({
           positional_constraint = string
@@ -1075,7 +1085,15 @@ variable "size_constraint_statement_rules" {
       })
     }), null)
     rule_label = optional(list(string), null)
-    statement  = any
+    custom_response = optional(object({
+      response_code            = string
+      custom_response_body_key = optional(string, null)
+      response_header = optional(object({
+        name  = string
+        value = string
+      }), null)
+    }), null)
+    statement = any
     visibility_config = optional(object({
       cloudwatch_metrics_enabled = optional(bool)
       metric_name                = string
