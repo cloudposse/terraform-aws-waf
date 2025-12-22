@@ -90,22 +90,52 @@ locals {
   } : {}
 
   nested_rule_group_statement_rules = {
-    for rule in var.nested_statement_rules != null ? var.nested_statement_rules : [] : rule.name => {
+    for rule in var.nested_statement_rules != null ? var.nested_statement_rules : [] :
+    rule.name => {
       name              = rule.name
       priority          = rule.priority
       action            = rule.action
+      rule_label        = rule.rule_label
       visibility_config = rule.visibility_config
 
-      statements = [
-        for stmt in rule.statement.and_statement.statements : {
-          label_match_statement    = stmt.type == "label_match_statement" ? try(jsondecode(stmt.statement), null) : null
-          not_byte_match_statement = stmt.type == "not_byte_match_statement" ? try(jsondecode(stmt.statement), null) : null
-          # This is now easily extensible with other types:
-          # not_geo_match_statement = stmt.type == "not_geo_match" ? jsondecode(stmt.statement) : null
-        }
-      ]
+      and_statement = try(rule.statement.and_statement, null) != null ? {
+        statements = [
+          for stmt in try(rule.statement.and_statement.statements, []) : {
+            label_match_statement                     = stmt.type == "label_match_statement" ? try(jsondecode(stmt.statement), null) : null
+            not_label_match_statement                 = stmt.type == "not_label_match_statement" ? try(jsondecode(stmt.statement), null) : null
+            size_constraint_statement                 = stmt.type == "size_constraint_statement" ? try(jsondecode(stmt.statement), null) : null
+            not_size_constraint_statement             = stmt.type == "not_size_constraint_statement" ? try(jsondecode(stmt.statement), null) : null
+            byte_match_statement                      = stmt.type == "byte_match_statement" ? try(jsondecode(stmt.statement), null) : null
+            not_byte_match_statement                  = stmt.type == "not_byte_match_statement" ? try(jsondecode(stmt.statement), null) : null
+            ip_set_reference_statement                = stmt.type == "ip_set_reference_statement" ? try(jsondecode(stmt.statement), null) : null
+            not_ip_set_reference_statement            = stmt.type == "not_ip_set_reference_statement" ? try(jsondecode(stmt.statement), null) : null
+            regex_pattern_set_reference_statement     = stmt.type == "regex_pattern_set_reference_statement" ? try(jsondecode(stmt.statement), null) : null
+            not_regex_pattern_set_reference_statement = stmt.type == "not_regex_pattern_set_reference_statement" ? try(jsondecode(stmt.statement), null) : null
+          }
+        ]
+      } : null
+
+      or_statement = try(rule.statement.or_statement, null) != null ? {
+        statements = [
+          for stmt in try(rule.statement.or_statement.statements, []) : {
+            label_match_statement                     = stmt.type == "label_match_statement" ? try(jsondecode(stmt.statement), null) : null
+            not_label_match_statement                 = stmt.type == "not_label_match_statement" ? try(jsondecode(stmt.statement), null) : null
+            size_constraint_statement                 = stmt.type == "size_constraint_statement" ? try(jsondecode(stmt.statement), null) : null
+            not_size_constraint_statement             = stmt.type == "not_size_constraint_statement" ? try(jsondecode(stmt.statement), null) : null
+            byte_match_statement                      = stmt.type == "byte_match_statement" ? try(jsondecode(stmt.statement), null) : null
+            not_byte_match_statement                  = stmt.type == "not_byte_match_statement" ? try(jsondecode(stmt.statement), null) : null
+            ip_set_reference_statement                = stmt.type == "ip_set_reference_statement" ? try(jsondecode(stmt.statement), null) : null
+            not_ip_set_reference_statement            = stmt.type == "not_ip_set_reference_statement" ? try(jsondecode(stmt.statement), null) : null
+            regex_pattern_set_reference_statement     = stmt.type == "regex_pattern_set_reference_statement" ? try(jsondecode(stmt.statement), null) : null
+            not_regex_pattern_set_reference_statement = stmt.type == "not_regex_pattern_set_reference_statement" ? try(jsondecode(stmt.statement), null) : null
+          }
+        ]
+      } : null
     }
   }
+
+
+
 
   default_custom_response_body_key = var.default_block_custom_response_body_key != null ? contains(keys(var.custom_response_body), var.default_block_custom_response_body_key) ? var.default_block_custom_response_body_key : null : null
 }
@@ -203,7 +233,7 @@ resource "aws_wafv2_web_acl" "default" {
             search_string         = byte_match_statement.value.search_string
 
             dynamic "field_to_match" {
-              for_each = lookup(rule.value.statement, "field_to_match", null) != null ? [rule.value.statement.field_to_match] : []
+              for_each = lookup(byte_match_statement.value.statement, "field_to_match", null) != null ? [byte_match_statement.value.statement.field_to_match] : []
 
               content {
                 dynamic "all_query_arguments" {
@@ -228,6 +258,22 @@ resource "aws_wafv2_web_acl" "default" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
 
                   content {}
+                }
+
+                dynamic "ja3_fingerprint" {
+                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                  content {
+                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                  }
+                }
+
+                dynamic "ja4_fingerprint" {
+                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                  content {
+                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                  }
                 }
 
                 dynamic "single_header" {
@@ -255,8 +301,8 @@ resource "aws_wafv2_web_acl" "default" {
             }
 
             dynamic "text_transformation" {
-              for_each = lookup(rule.value.statement, "text_transformation", null) != null ? [
-                for rule in lookup(rule.value.statement, "text_transformation") : {
+              for_each = lookup(byte_match_statement.value.statement, "text_transformation", null) != null ? [
+                for rule in lookup(byte_match_statement.value.statement, "text_transformation") : {
                   priority = rule.priority
                   type     = rule.type
               }] : []
@@ -328,13 +374,14 @@ resource "aws_wafv2_web_acl" "default" {
         not_statement {
           statement {
             dynamic "geo_match_statement" {
+              iterator = stmt
               for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
               content {
-                country_codes = geo_match_statement.value.country_codes
+                country_codes = stmt.value.country_codes
 
                 dynamic "forwarded_ip_config" {
-                  for_each = lookup(geo_match_statement.value, "forwarded_ip_config", null) != null ? [geo_match_statement.value.forwarded_ip_config] : []
+                  for_each = lookup(stmt.value, "forwarded_ip_config", null) != null ? [stmt.value.forwarded_ip_config] : []
 
                   content {
                     fallback_behavior = forwarded_ip_config.value.fallback_behavior
@@ -412,17 +459,43 @@ resource "aws_wafv2_web_acl" "default" {
 
       statement {
         dynamic "geo_match_statement" {
+          iterator = stmt
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
           content {
-            country_codes = geo_match_statement.value.country_codes
+            country_codes = stmt.value.country_codes
 
             dynamic "forwarded_ip_config" {
-              for_each = lookup(geo_match_statement.value, "forwarded_ip_config", null) != null ? [geo_match_statement.value.forwarded_ip_config] : []
+              for_each = lookup(stmt.value, "forwarded_ip_config", null) != null ? [stmt.value.forwarded_ip_config] : []
 
               content {
                 fallback_behavior = forwarded_ip_config.value.fallback_behavior
                 header_name       = forwarded_ip_config.value.header_name
+              }
+            }
+          }
+        }
+        dynamic "not_statement" {
+          for_each = lookup(rule.value, "not_statement", null) != null ? [1] : []
+
+          content {
+            statement {
+              dynamic "geo_match_statement" {
+                iterator = stmt
+                for_each = lookup(rule.value, "not_statement", null) != null ? [rule.value.not_statement] : []
+
+                content {
+                  country_codes = stmt.value.country_codes
+
+                  dynamic "forwarded_ip_config" {
+                    for_each = lookup(stmt.value, "forwarded_ip_config", null) != null ? [stmt.value.forwarded_ip_config] : []
+
+                    content {
+                      fallback_behavior = forwarded_ip_config.value.fallback_behavior
+                      header_name       = forwarded_ip_config.value.header_name
+                    }
+                  }
+                }
               }
             }
           }
@@ -448,6 +521,7 @@ resource "aws_wafv2_web_acl" "default" {
           }
         }
       }
+
 
       dynamic "rule_label" {
         for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
@@ -504,7 +578,7 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
           content {
-            arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : ip_set_reference_statement.value.arn
+            arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
 
             dynamic "ip_set_forwarded_ip_config" {
               for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
@@ -568,15 +642,16 @@ resource "aws_wafv2_web_acl" "default" {
 
       statement {
         dynamic "managed_rule_group_statement" {
+          iterator = stmt
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
           content {
-            name        = managed_rule_group_statement.value.name
-            vendor_name = managed_rule_group_statement.value.vendor_name
-            version     = lookup(managed_rule_group_statement.value, "version", null)
+            name        = stmt.value.name
+            vendor_name = stmt.value.vendor_name
+            version     = lookup(stmt.value, "version", null)
 
             dynamic "rule_action_override" {
-              for_each = lookup(managed_rule_group_statement.value, "rule_action_override", null) != null ? managed_rule_group_statement.value.rule_action_override : {}
+              for_each = lookup(stmt.value, "rule_action_override", null) != null ? stmt.value.rule_action_override : {}
 
               content {
                 name = rule_action_override.key
@@ -669,7 +744,7 @@ resource "aws_wafv2_web_acl" "default" {
 
             # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#managed_rule_group_configs-block
             dynamic "managed_rule_group_configs" {
-              for_each = lookup(managed_rule_group_statement.value, "managed_rule_group_configs", null) != null ? managed_rule_group_statement.value.managed_rule_group_configs : []
+              for_each = lookup(stmt.value, "managed_rule_group_configs", null) != null ? stmt.value.managed_rule_group_configs : []
               content {
                 dynamic "aws_managed_rules_anti_ddos_rule_set" {
                   for_each = lookup(managed_rule_group_configs.value, "aws_managed_rules_anti_ddos_rule_set", null) != null ? [1] : []
@@ -842,43 +917,77 @@ resource "aws_wafv2_web_acl" "default" {
               }
             }
 
+
             dynamic "scope_down_statement" {
-              for_each = lookup(managed_rule_group_statement.value, "scope_down_statement", null) != null && !lookup(managed_rule_group_statement.value, "scope_down_not_statement_enabled", false) ? [managed_rule_group_statement.value.scope_down_statement] : []
-
+              for_each = lookup(stmt.value, "scope_down_statement", null) != null ? [stmt.value.scope_down_statement] : []
               content {
-                dynamic "byte_match_statement" {
-                  for_each = lookup(scope_down_statement.value, "byte_match_statement", null) != null ? [scope_down_statement.value.byte_match_statement] : []
-
+                dynamic "ip_set_reference_statement" {
+                  for_each = scope_down_statement.value.ip_set_reference_statement != null ? [scope_down_statement.value.ip_set_reference_statement] : []
                   content {
-                    positional_constraint = byte_match_statement.value.positional_constraint
-                    search_string         = byte_match_statement.value.search_string
+                    arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                    dynamic "ip_set_forwarded_ip_config" {
+                      for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                      content {
+                        fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                        header_name       = ip_set_forwarded_ip_config.value.header_name
+                        position          = ip_set_forwarded_ip_config.value.position
+                      }
+                    }
+                  }
+                }
+                dynamic "regex_pattern_set_reference_statement" {
+                  for_each = scope_down_statement.value.regex_pattern_set_reference_statement != null ? [scope_down_statement.value.regex_pattern_set_reference_statement] : []
+                  content {
+                    arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
 
                     dynamic "field_to_match" {
-                      for_each = lookup(byte_match_statement.value, "field_to_match", null) != null ? [byte_match_statement.value.field_to_match] : []
-
+                      for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
                       content {
                         dynamic "all_query_arguments" {
                           for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
                           content {}
                         }
 
                         dynamic "body" {
                           for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
                           content {}
                         }
 
                         dynamic "method" {
                           for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
                           content {}
                         }
 
                         dynamic "query_string" {
                           for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
                           content {}
+                        }
+
+                        dynamic "ja3_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "ja4_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                          }
                         }
 
                         dynamic "single_header" {
                           for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
                           content {
                             name = single_header.value.name
                           }
@@ -886,6 +995,7 @@ resource "aws_wafv2_web_acl" "default" {
 
                         dynamic "single_query_argument" {
                           for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
                           content {
                             name = single_query_argument.value.name
                           }
@@ -893,17 +1003,14 @@ resource "aws_wafv2_web_acl" "default" {
 
                         dynamic "uri_path" {
                           for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
                           content {}
                         }
                       }
                     }
 
                     dynamic "text_transformation" {
-                      for_each = lookup(byte_match_statement.value, "text_transformation", null) != null ? [
-                        for rule in byte_match_statement.value.text_transformation : {
-                          priority = rule.priority
-                          type     = rule.type
-                      }] : []
+                      for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
 
                       content {
                         priority = text_transformation.value.priority
@@ -912,77 +1019,1606 @@ resource "aws_wafv2_web_acl" "default" {
                     }
                   }
                 }
-              }
-            }
+                dynamic "label_match_statement" {
+                  for_each = scope_down_statement.value.label_match_statement != null ? [scope_down_statement.value.label_match_statement] : []
+                  content {
+                    scope = label_match_statement.value.scope
+                    key   = label_match_statement.value.key
+                  }
+                }
+                dynamic "size_constraint_statement" {
+                  for_each = scope_down_statement.value.size_constraint_statement != null ? [scope_down_statement.value.size_constraint_statement] : []
+                  content {
+                    comparison_operator = size_constraint_statement.value.comparison_operator
+                    size                = size_constraint_statement.value.size
 
-            dynamic "scope_down_statement" {
-              for_each = lookup(managed_rule_group_statement.value, "scope_down_statement", null) != null && lookup(managed_rule_group_statement.value, "scope_down_not_statement_enabled", false) ? [managed_rule_group_statement.value.scope_down_statement] : []
-
-              content {
-                not_statement {
-                  statement {
-                    dynamic "byte_match_statement" {
-                      for_each = lookup(scope_down_statement.value, "byte_match_statement", null) != null ? [scope_down_statement.value.byte_match_statement] : []
+                    dynamic "field_to_match" {
+                      for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
 
                       content {
-                        positional_constraint = byte_match_statement.value.positional_constraint
-                        search_string         = byte_match_statement.value.search_string
+                        dynamic "all_query_arguments" {
+                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
 
-                        dynamic "field_to_match" {
-                          for_each = lookup(byte_match_statement.value, "field_to_match", null) != null ? [byte_match_statement.value.field_to_match] : []
+                          content {}
+                        }
+
+                        dynamic "body" {
+                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
 
                           content {
-                            dynamic "all_query_arguments" {
-                              for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
-                              content {}
-                            }
-
-                            dynamic "body" {
-                              for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
-                              content {}
-                            }
-
-                            dynamic "method" {
-                              for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
-                              content {}
-                            }
-
-                            dynamic "query_string" {
-                              for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
-                              content {}
-                            }
-
-                            dynamic "single_header" {
-                              for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
-                              content {
-                                name = single_header.value.name
-                              }
-                            }
-
-                            dynamic "single_query_argument" {
-                              for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
-                              content {
-                                name = single_query_argument.value.name
-                              }
-                            }
-
-                            dynamic "uri_path" {
-                              for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
-                              content {}
-                            }
+                            # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                            # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                            # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                            # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                            oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
                           }
                         }
 
-                        dynamic "text_transformation" {
-                          for_each = lookup(byte_match_statement.value, "text_transformation", null) != null ? [
-                            for rule in byte_match_statement.value.text_transformation : {
-                              priority = rule.priority
-                              type     = rule.type
-                          }] : []
+                        dynamic "method" {
+                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "query_string" {
+                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "single_header" {
+                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
 
                           content {
-                            priority = text_transformation.value.priority
-                            type     = text_transformation.value.type
+                            name = single_header.value.name
+                          }
+                        }
+
+                        dynamic "single_query_argument" {
+                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                          content {
+                            name = single_query_argument.value.name
+                          }
+                        }
+
+                        dynamic "uri_path" {
+                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                          content {}
+                        }
+                      }
+                    }
+
+                    dynamic "text_transformation" {
+                      for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+                dynamic "byte_match_statement" {
+                  for_each = scope_down_statement.value.byte_match_statement != null ? [scope_down_statement.value.byte_match_statement] : []
+                  content {
+                    positional_constraint = byte_match_statement.value.positional_constraint
+                    search_string         = byte_match_statement.value.search_string
+
+                    dynamic "field_to_match" {
+                      for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+
+                      content {
+                        dynamic "all_query_arguments" {
+                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "body" {
+                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "method" {
+                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "query_string" {
+                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "ja3_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "ja4_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "single_header" {
+                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                          content {
+                            name = single_header.value.name
+                          }
+                        }
+
+                        dynamic "single_query_argument" {
+                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                          content {
+                            name = single_query_argument.value.name
+                          }
+                        }
+
+                        dynamic "uri_path" {
+                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                          content {}
+                        }
+                      }
+                    }
+
+                    dynamic "text_transformation" {
+                      for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+                dynamic "not_statement" {
+                  for_each = scope_down_statement.value.not_byte_match_statement != null || scope_down_statement.value.not_label_match_statement != null || scope_down_statement.value.not_regex_pattern_set_reference_statement != null || scope_down_statement.value.not_size_constraint_statement != null || scope_down_statement.value.not_ip_set_reference_statement != null ? [1] : []
+                  content {
+                    dynamic "statement" {
+                      for_each = scope_down_statement.value.not_size_constraint_statement != null ? [1] : []
+                      content {
+                        dynamic "size_constraint_statement" {
+                          for_each = scope_down_statement.value.not_size_constraint_statement != null ? [scope_down_statement.value.not_size_constraint_statement] : []
+                          content {
+                            comparison_operator = size_constraint_statement.value.comparison_operator
+                            size                = size_constraint_statement.value.size
+
+                            dynamic "field_to_match" {
+                              for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {
+                                    # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                    # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                    # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                    # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                    oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                  }
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = scope_down_statement.value.not_byte_match_statement != null ? [1] : []
+                      content {
+                        dynamic "byte_match_statement" {
+                          for_each = statement.value.not_byte_match_statement != null ? [statement.value.not_byte_match_statement] : []
+                          content {
+                            positional_constraint = byte_match_statement.value.positional_constraint
+                            search_string         = byte_match_statement.value.search_string
+
+                            dynamic "field_to_match" {
+                              for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = scope_down_statement.value.not_label_match_statement != null ? [1] : []
+                      content {
+                        dynamic "label_match_statement" {
+                          for_each = statement.value.not_label_match_statement != null ? [statement.value.not_label_match_statement] : []
+                          content {
+                            scope = label_match_statement.value.scope
+                            key   = label_match_statement.value.key
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = scope_down_statement.value.not_ip_set_reference_statement != null ? [1] : []
+                      content {
+                        dynamic "ip_set_reference_statement" {
+                          for_each = statement.value.not_ip_set_reference_statement != null ? [statement.value.not_ip_set_reference_statement] : []
+                          content {
+                            arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                            dynamic "ip_set_forwarded_ip_config" {
+                              for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                              content {
+                                fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                header_name       = ip_set_forwarded_ip_config.value.header_name
+                                position          = ip_set_forwarded_ip_config.value.position
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = scope_down_statement.value.not_regex_pattern_set_reference_statement != null ? [1] : []
+                      content {
+                        dynamic "regex_pattern_set_reference_statement" {
+                          for_each = statement.value.not_regex_pattern_set_reference_statement != null ? [statement.value.not_regex_pattern_set_reference_statement] : []
+                          content {
+                            arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                            dynamic "field_to_match" {
+                              for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                // Working Rendering from encoded json
+                dynamic "and_statement" {
+                  for_each = lookup(scope_down_statement.value, "and_statement", null) != null ? [scope_down_statement.value.and_statement] : []
+                  content {
+                    dynamic "statement" {
+                      iterator = nested_statement
+                      for_each = and_statement.value.statements
+                      content {
+                        dynamic "size_constraint_statement" {
+                          for_each = nested_statement.value.type == "size_constraint_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            comparison_operator = size_constraint_statement.value.comparison_operator
+                            size                = size_constraint_statement.value.size
+
+                            dynamic "field_to_match" {
+                              for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {
+                                    # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                    # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                    # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                    # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                    oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                  }
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "byte_match_statement" {
+                          for_each = nested_statement.value.type == "byte_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            positional_constraint = byte_match_statement.value.positional_constraint
+                            search_string         = byte_match_statement.value.search_string
+
+                            dynamic "field_to_match" {
+                              for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "regex_pattern_set_reference_statement" {
+                          for_each = nested_statement.value.type == "regex_pattern_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                            dynamic "field_to_match" {
+                              for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "ip_set_reference_statement" {
+                          for_each = nested_statement.value.type == "ip_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                            dynamic "ip_set_forwarded_ip_config" {
+                              for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                              content {
+                                fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                header_name       = ip_set_forwarded_ip_config.value.header_name
+                                position          = ip_set_forwarded_ip_config.value.position
+                              }
+                            }
+                          }
+                        }
+                        dynamic "label_match_statement" {
+                          for_each = nested_statement.value.type == "label_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            scope = label_match_statement.value.scope
+                            key   = label_match_statement.value.key
+                          }
+                        }
+                        dynamic "not_statement" {
+                          for_each = nested_statement.value.type == "not_byte_match_statement" || nested_statement.value.type == "not_label_match_statement" || nested_statement.value.type == "not_regex_pattern_set_reference_statement" || nested_statement.value.type == "not_size_constraint_statement" || nested_statement.value.type == "not_ip_set_reference_statement" ? [1] : []
+                          content {
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_size_constraint_statement" ? [1] : []
+                              content {
+                                dynamic "size_constraint_statement" {
+                                  for_each = nested_statement.value.type == "not_size_constraint_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    comparison_operator = size_constraint_statement.value.comparison_operator
+                                    size                = size_constraint_statement.value.size
+
+                                    dynamic "field_to_match" {
+                                      for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {
+                                            # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                            # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                            # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                            # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                            oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                          }
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_byte_match_statement" ? [1] : []
+                              content {
+
+                                dynamic "byte_match_statement" {
+                                  for_each = nested_statement.value.type == "not_byte_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    positional_constraint = byte_match_statement.value.positional_constraint
+                                    search_string         = byte_match_statement.value.search_string
+
+                                    dynamic "field_to_match" {
+                                      for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "ja3_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "ja4_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_label_match_statement" ? [1] : []
+                              content {
+                                dynamic "label_match_statement" {
+                                  for_each = nested_statement.value.type == "not_label_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    scope = label_match_statement.value.scope
+                                    key   = label_match_statement.value.key
+                                  }
+                                }
+                              }
+                            }
+
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_ip_set_reference_statement" ? [1] : []
+                              content {
+                                dynamic "ip_set_reference_statement" {
+                                  for_each = nested_statement.value.type == "not_ip_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                                    dynamic "ip_set_forwarded_ip_config" {
+                                      for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                                      content {
+                                        fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                        header_name       = ip_set_forwarded_ip_config.value.header_name
+                                        position          = ip_set_forwarded_ip_config.value.position
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_regex_pattern_set_reference_statement" ? [1] : []
+                              content {
+                                dynamic "regex_pattern_set_reference_statement" {
+                                  for_each = nested_statement.value.type == "not_regex_pattern_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                                    dynamic "field_to_match" {
+                                      for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "ja3_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "ja4_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+
+                  }
+                }
+                dynamic "or_statement" {
+                  for_each = lookup(scope_down_statement.value, "or_statement", null) != null ? [scope_down_statement.value.or_statement] : []
+                  content {
+                    dynamic "statement" {
+                      iterator = nested_statement
+                      for_each = or_statement.value.statements
+                      content {
+                        dynamic "size_constraint_statement" {
+                          for_each = nested_statement.value.type == "size_constraint_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            comparison_operator = size_constraint_statement.value.comparison_operator
+                            size                = size_constraint_statement.value.size
+
+                            dynamic "field_to_match" {
+                              for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {
+                                    # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                    # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                    # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                    # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                    oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                  }
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "byte_match_statement" {
+                          for_each = nested_statement.value.type == "byte_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            positional_constraint = byte_match_statement.value.positional_constraint
+                            search_string         = byte_match_statement.value.search_string
+
+                            dynamic "field_to_match" {
+                              for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "regex_pattern_set_reference_statement" {
+                          for_each = nested_statement.value.type == "regex_pattern_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                            dynamic "field_to_match" {
+                              for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "ip_set_reference_statement" {
+                          for_each = nested_statement.value.type == "ip_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                            dynamic "ip_set_forwarded_ip_config" {
+                              for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                              content {
+                                fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                header_name       = ip_set_forwarded_ip_config.value.header_name
+                                position          = ip_set_forwarded_ip_config.value.position
+                              }
+                            }
+                          }
+                        }
+                        dynamic "label_match_statement" {
+                          for_each = nested_statement.value.type == "label_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            scope = label_match_statement.value.scope
+                            key   = label_match_statement.value.key
+                          }
+                        }
+                        dynamic "not_statement" {
+                          for_each = nested_statement.value.type == "not_byte_match_statement" || nested_statement.value.type == "not_label_match_statement" || nested_statement.value.type == "not_regex_pattern_set_reference_statement" || nested_statement.value.type == "not_size_constraint_statement" || nested_statement.value.type == "not_ip_set_reference_statement" ? [1] : []
+                          content {
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_size_constraint_statement" ? [1] : []
+                              content {
+                                dynamic "size_constraint_statement" {
+                                  for_each = nested_statement.value.type == "not_size_constraint_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    comparison_operator = size_constraint_statement.value.comparison_operator
+                                    size                = size_constraint_statement.value.size
+
+                                    dynamic "field_to_match" {
+                                      for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {
+                                            # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                            # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                            # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                            # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                            oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                          }
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_byte_match_statement" ? [1] : []
+                              content {
+                                dynamic "byte_match_statement" {
+                                  for_each = nested_statement.value.type == "not_byte_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    positional_constraint = byte_match_statement.value.positional_constraint
+                                    search_string         = byte_match_statement.value.search_string
+
+                                    dynamic "field_to_match" {
+                                      for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "ja3_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "ja4_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_label_match_statement" ? [1] : []
+                              content {
+                                dynamic "label_match_statement" {
+                                  for_each = nested_statement.value.type == "not_label_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    scope = label_match_statement.value.scope
+                                    key   = label_match_statement.value.key
+                                  }
+                                }
+                              }
+                            }
+
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_ip_set_reference_statement" ? [1] : []
+                              content {
+                                dynamic "ip_set_reference_statement" {
+                                  for_each = nested_statement.value.type == "not_ip_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                                    dynamic "ip_set_forwarded_ip_config" {
+                                      for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                                      content {
+                                        fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                        header_name       = ip_set_forwarded_ip_config.value.header_name
+                                        position          = ip_set_forwarded_ip_config.value.position
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_regex_pattern_set_reference_statement" ? [1] : []
+                              content {
+                                dynamic "regex_pattern_set_reference_statement" {
+                                  for_each = nested_statement.value.type == "not_regex_pattern_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                                    dynamic "field_to_match" {
+                                      for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "ja3_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "ja4_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
                           }
                         }
                       }
@@ -1063,19 +2699,25 @@ resource "aws_wafv2_web_acl" "default" {
           for_each = rule.value.action == "captcha" ? [1] : []
           content {}
         }
+        # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#challenge-block
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
+          content {}
+        }
       }
 
       statement {
         dynamic "rate_based_statement" {
+          iterator = stmt
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
           content {
-            aggregate_key_type    = lookup(rate_based_statement.value, "aggregate_key_type", "IP")
-            limit                 = rate_based_statement.value.limit
-            evaluation_window_sec = lookup(rate_based_statement.value, "evaluation_window_sec", 300)
+            aggregate_key_type    = lookup(stmt.value, "aggregate_key_type", "IP")
+            limit                 = stmt.value.limit
+            evaluation_window_sec = lookup(stmt.value, "evaluation_window_sec", 300)
 
             dynamic "forwarded_ip_config" {
-              for_each = lookup(rate_based_statement.value, "forwarded_ip_config", null) != null ? [rate_based_statement.value.forwarded_ip_config] : []
+              for_each = lookup(stmt.value, "forwarded_ip_config", null) != null ? [stmt.value.forwarded_ip_config] : []
 
               content {
                 fallback_behavior = forwarded_ip_config.value.fallback_behavior
@@ -1084,7 +2726,7 @@ resource "aws_wafv2_web_acl" "default" {
             }
 
             dynamic "custom_key" {
-              for_each = lookup(rate_based_statement.value, "custom_key", null) != null ? rate_based_statement.value.custom_key : []
+              for_each = lookup(stmt.value, "custom_key", null) != null ? stmt.value.custom_key : []
 
               content {
                 dynamic "ip" {
@@ -1114,21 +2756,32 @@ resource "aws_wafv2_web_acl" "default" {
                 }
               }
             }
-
             dynamic "scope_down_statement" {
-              for_each = lookup(rate_based_statement.value, "scope_down_statement", null) != null ? [rate_based_statement.value.scope_down_statement] : []
-
+              for_each = lookup(stmt.value, "scope_down_statement", null) != null ? [stmt.value.scope_down_statement] : []
               content {
-                dynamic "byte_match_statement" {
-                  for_each = lookup(scope_down_statement.value, "byte_match_statement", null) != null ? [scope_down_statement.value.byte_match_statement] : []
-
+                dynamic "ip_set_reference_statement" {
+                  for_each = scope_down_statement.value.ip_set_reference_statement != null ? [scope_down_statement.value.ip_set_reference_statement] : []
                   content {
-                    positional_constraint = byte_match_statement.value.positional_constraint
-                    search_string         = byte_match_statement.value.search_string
+                    arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                    dynamic "ip_set_forwarded_ip_config" {
+                      for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                      content {
+                        fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                        header_name       = ip_set_forwarded_ip_config.value.header_name
+                        position          = ip_set_forwarded_ip_config.value.position
+                      }
+                    }
+                  }
+                }
+                dynamic "regex_pattern_set_reference_statement" {
+                  for_each = scope_down_statement.value.regex_pattern_set_reference_statement != null ? [scope_down_statement.value.regex_pattern_set_reference_statement] : []
+                  content {
+                    arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
 
                     dynamic "field_to_match" {
-                      for_each = lookup(byte_match_statement.value, "field_to_match", null) != null ? [byte_match_statement.value.field_to_match] : []
-
+                      for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
                       content {
                         dynamic "all_query_arguments" {
                           for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
@@ -1140,6 +2793,103 @@ resource "aws_wafv2_web_acl" "default" {
                           for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
 
                           content {}
+                        }
+
+                        dynamic "method" {
+                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "query_string" {
+                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "ja3_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "ja4_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "single_header" {
+                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                          content {
+                            name = single_header.value.name
+                          }
+                        }
+
+                        dynamic "single_query_argument" {
+                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                          content {
+                            name = single_query_argument.value.name
+                          }
+                        }
+
+                        dynamic "uri_path" {
+                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                          content {}
+                        }
+                      }
+                    }
+
+                    dynamic "text_transformation" {
+                      for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+                dynamic "label_match_statement" {
+                  for_each = scope_down_statement.value.label_match_statement != null ? [scope_down_statement.value.label_match_statement] : []
+                  content {
+                    scope = label_match_statement.value.scope
+                    key   = label_match_statement.value.key
+                  }
+                }
+                dynamic "size_constraint_statement" {
+                  for_each = scope_down_statement.value.size_constraint_statement != null ? [scope_down_statement.value.size_constraint_statement] : []
+                  content {
+                    comparison_operator = size_constraint_statement.value.comparison_operator
+                    size                = size_constraint_statement.value.size
+
+                    dynamic "field_to_match" {
+                      for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                      content {
+                        dynamic "all_query_arguments" {
+                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "body" {
+                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                          content {
+                            # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                            # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                            # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                            # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                            oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                          }
                         }
 
                         dynamic "method" {
@@ -1179,15 +2929,1536 @@ resource "aws_wafv2_web_acl" "default" {
                     }
 
                     dynamic "text_transformation" {
-                      for_each = lookup(byte_match_statement.value, "text_transformation", null) != null ? [
-                        for rule in byte_match_statement.value.text_transformation : {
-                          priority = rule.priority
-                          type     = rule.type
-                      }] : []
+                      for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
 
                       content {
                         priority = text_transformation.value.priority
                         type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+                dynamic "byte_match_statement" {
+                  for_each = scope_down_statement.value.byte_match_statement != null ? [scope_down_statement.value.byte_match_statement] : []
+                  content {
+                    positional_constraint = byte_match_statement.value.positional_constraint
+                    search_string         = byte_match_statement.value.search_string
+
+                    dynamic "field_to_match" {
+                      for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+
+                      content {
+                        dynamic "all_query_arguments" {
+                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "body" {
+                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "method" {
+                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "query_string" {
+                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "ja3_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "ja4_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "single_header" {
+                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                          content {
+                            name = single_header.value.name
+                          }
+                        }
+
+                        dynamic "single_query_argument" {
+                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                          content {
+                            name = single_query_argument.value.name
+                          }
+                        }
+
+                        dynamic "uri_path" {
+                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                          content {}
+                        }
+                      }
+                    }
+
+                    dynamic "text_transformation" {
+                      for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+                dynamic "not_statement" {
+                  for_each = scope_down_statement.value.not_byte_match_statement != null || scope_down_statement.value.not_label_match_statement != null || scope_down_statement.value.not_regex_pattern_set_reference_statement != null || scope_down_statement.value.not_size_constraint_statement != null || scope_down_statement.value.not_ip_set_reference_statement != null ? [1] : []
+                  content {
+                    dynamic "statement" {
+                      for_each = scope_down_statement.value.not_size_constraint_statement != null ? [1] : []
+                      content {
+                        dynamic "size_constraint_statement" {
+                          for_each = scope_down_statement.value.not_size_constraint_statement != null ? [scope_down_statement.value.not_size_constraint_statement] : []
+                          content {
+                            comparison_operator = size_constraint_statement.value.comparison_operator
+                            size                = size_constraint_statement.value.size
+
+                            dynamic "field_to_match" {
+                              for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {
+                                    # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                    # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                    # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                    # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                    oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                  }
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = scope_down_statement.value.not_byte_match_statement != null ? [1] : []
+                      content {
+                        dynamic "byte_match_statement" {
+                          for_each = statement.value.not_byte_match_statement != null ? [statement.value.not_byte_match_statement] : []
+                          content {
+                            positional_constraint = byte_match_statement.value.positional_constraint
+                            search_string         = byte_match_statement.value.search_string
+
+                            dynamic "field_to_match" {
+                              for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = scope_down_statement.value.not_label_match_statement != null ? [1] : []
+                      content {
+                        dynamic "label_match_statement" {
+                          for_each = statement.value.not_label_match_statement != null ? [statement.value.not_label_match_statement] : []
+                          content {
+                            scope = label_match_statement.value.scope
+                            key   = label_match_statement.value.key
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = scope_down_statement.value.not_ip_set_reference_statement != null ? [1] : []
+                      content {
+                        dynamic "ip_set_reference_statement" {
+                          for_each = statement.value.not_ip_set_reference_statement != null ? [statement.value.not_ip_set_reference_statement] : []
+                          content {
+                            arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                            dynamic "ip_set_forwarded_ip_config" {
+                              for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                              content {
+                                fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                header_name       = ip_set_forwarded_ip_config.value.header_name
+                                position          = ip_set_forwarded_ip_config.value.position
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = scope_down_statement.value.not_regex_pattern_set_reference_statement != null ? [1] : []
+                      content {
+                        dynamic "regex_pattern_set_reference_statement" {
+                          for_each = statement.value.not_regex_pattern_set_reference_statement != null ? [statement.value.not_regex_pattern_set_reference_statement] : []
+                          content {
+                            arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                            dynamic "field_to_match" {
+                              for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                // Working Rendering from encoded json
+                dynamic "and_statement" {
+                  for_each = lookup(scope_down_statement.value, "and_statement", null) != null ? [scope_down_statement.value.and_statement] : []
+                  content {
+                    dynamic "statement" {
+                      iterator = nested_statement
+                      for_each = and_statement.value.statements
+                      content {
+                        dynamic "size_constraint_statement" {
+                          for_each = nested_statement.value.type == "size_constraint_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            comparison_operator = size_constraint_statement.value.comparison_operator
+                            size                = size_constraint_statement.value.size
+
+                            dynamic "field_to_match" {
+                              for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {
+                                    # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                    # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                    # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                    # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                    oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                  }
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "byte_match_statement" {
+                          for_each = nested_statement.value.type == "byte_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            positional_constraint = byte_match_statement.value.positional_constraint
+                            search_string         = byte_match_statement.value.search_string
+
+                            dynamic "field_to_match" {
+                              for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "regex_pattern_set_reference_statement" {
+                          for_each = nested_statement.value.type == "regex_pattern_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                            dynamic "field_to_match" {
+                              for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "ip_set_reference_statement" {
+                          for_each = nested_statement.value.type == "ip_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                            dynamic "ip_set_forwarded_ip_config" {
+                              for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                              content {
+                                fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                header_name       = ip_set_forwarded_ip_config.value.header_name
+                                position          = ip_set_forwarded_ip_config.value.position
+                              }
+                            }
+                          }
+                        }
+                        dynamic "label_match_statement" {
+                          for_each = nested_statement.value.type == "label_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            scope = label_match_statement.value.scope
+                            key   = label_match_statement.value.key
+                          }
+                        }
+                        dynamic "not_statement" {
+                          for_each = nested_statement.value.type == "not_byte_match_statement" || nested_statement.value.type == "not_label_match_statement" || nested_statement.value.type == "not_regex_pattern_set_reference_statement" || nested_statement.value.type == "not_size_constraint_statement" || nested_statement.value.type == "not_ip_set_reference_statement" ? [1] : []
+                          content {
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_size_constraint_statement" ? [1] : []
+                              content {
+                                dynamic "size_constraint_statement" {
+                                  for_each = nested_statement.value.type == "not_size_constraint_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    comparison_operator = size_constraint_statement.value.comparison_operator
+                                    size                = size_constraint_statement.value.size
+
+                                    dynamic "field_to_match" {
+                                      for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {
+                                            # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                            # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                            # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                            # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                            oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                          }
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_byte_match_statement" ? [1] : []
+                              content {
+
+                                dynamic "byte_match_statement" {
+                                  for_each = nested_statement.value.type == "not_byte_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    positional_constraint = byte_match_statement.value.positional_constraint
+                                    search_string         = byte_match_statement.value.search_string
+
+                                    dynamic "field_to_match" {
+                                      for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "ja3_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "ja4_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_label_match_statement" ? [1] : []
+                              content {
+                                dynamic "label_match_statement" {
+                                  for_each = nested_statement.value.type == "not_label_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    scope = label_match_statement.value.scope
+                                    key   = label_match_statement.value.key
+                                  }
+                                }
+                              }
+                            }
+
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_ip_set_reference_statement" ? [1] : []
+                              content {
+                                dynamic "ip_set_reference_statement" {
+                                  for_each = nested_statement.value.type == "not_ip_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                                    dynamic "ip_set_forwarded_ip_config" {
+                                      for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                                      content {
+                                        fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                        header_name       = ip_set_forwarded_ip_config.value.header_name
+                                        position          = ip_set_forwarded_ip_config.value.position
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_regex_pattern_set_reference_statement" ? [1] : []
+                              content {
+                                dynamic "regex_pattern_set_reference_statement" {
+                                  for_each = nested_statement.value.type == "not_regex_pattern_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                                    dynamic "field_to_match" {
+                                      for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "ja3_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "ja4_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+
+                  }
+                }
+                dynamic "or_statement" {
+                  for_each = lookup(scope_down_statement.value, "or_statement", null) != null ? [scope_down_statement.value.or_statement] : []
+                  content {
+                    dynamic "statement" {
+                      iterator = nested_statement
+                      for_each = or_statement.value.statements
+                      content {
+                        dynamic "size_constraint_statement" {
+                          for_each = nested_statement.value.type == "size_constraint_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            comparison_operator = size_constraint_statement.value.comparison_operator
+                            size                = size_constraint_statement.value.size
+
+                            dynamic "field_to_match" {
+                              for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {
+                                    # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                    # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                    # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                    # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                    oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                  }
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "byte_match_statement" {
+                          for_each = nested_statement.value.type == "byte_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            positional_constraint = byte_match_statement.value.positional_constraint
+                            search_string         = byte_match_statement.value.search_string
+
+                            dynamic "field_to_match" {
+                              for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "regex_pattern_set_reference_statement" {
+                          for_each = nested_statement.value.type == "regex_pattern_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                            dynamic "field_to_match" {
+                              for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "ip_set_reference_statement" {
+                          for_each = nested_statement.value.type == "ip_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                            dynamic "ip_set_forwarded_ip_config" {
+                              for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                              content {
+                                fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                header_name       = ip_set_forwarded_ip_config.value.header_name
+                                position          = ip_set_forwarded_ip_config.value.position
+                              }
+                            }
+                          }
+                        }
+                        dynamic "label_match_statement" {
+                          for_each = nested_statement.value.type == "label_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            scope = label_match_statement.value.scope
+                            key   = label_match_statement.value.key
+                          }
+                        }
+                        dynamic "not_statement" {
+                          for_each = nested_statement.value.type == "not_byte_match_statement" || nested_statement.value.type == "not_label_match_statement" || nested_statement.value.type == "not_regex_pattern_set_reference_statement" || nested_statement.value.type == "not_size_constraint_statement" || nested_statement.value.type == "not_ip_set_reference_statement" ? [1] : []
+                          content {
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_size_constraint_statement" ? [1] : []
+                              content {
+                                dynamic "size_constraint_statement" {
+                                  for_each = nested_statement.value.type == "not_size_constraint_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    comparison_operator = size_constraint_statement.value.comparison_operator
+                                    size                = size_constraint_statement.value.size
+
+                                    dynamic "field_to_match" {
+                                      for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {
+                                            # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                            # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                            # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                            # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                            oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                          }
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_byte_match_statement" ? [1] : []
+                              content {
+                                dynamic "byte_match_statement" {
+                                  for_each = nested_statement.value.type == "not_byte_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    positional_constraint = byte_match_statement.value.positional_constraint
+                                    search_string         = byte_match_statement.value.search_string
+
+                                    dynamic "field_to_match" {
+                                      for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "ja3_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "ja4_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_label_match_statement" ? [1] : []
+                              content {
+                                dynamic "label_match_statement" {
+                                  for_each = nested_statement.value.type == "not_label_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    scope = label_match_statement.value.scope
+                                    key   = label_match_statement.value.key
+                                  }
+                                }
+                              }
+                            }
+
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_ip_set_reference_statement" ? [1] : []
+                              content {
+                                dynamic "ip_set_reference_statement" {
+                                  for_each = nested_statement.value.type == "not_ip_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                                    dynamic "ip_set_forwarded_ip_config" {
+                                      for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                                      content {
+                                        fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                        header_name       = ip_set_forwarded_ip_config.value.header_name
+                                        position          = ip_set_forwarded_ip_config.value.position
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_regex_pattern_set_reference_statement" ? [1] : []
+                              content {
+                                dynamic "regex_pattern_set_reference_statement" {
+                                  for_each = nested_statement.value.type == "not_regex_pattern_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                                    dynamic "field_to_match" {
+                                      for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "ja3_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "ja4_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
                       }
                     }
                   }
@@ -1251,10 +4522,11 @@ resource "aws_wafv2_web_acl" "default" {
 
       statement {
         dynamic "regex_pattern_set_reference_statement" {
+          iterator = stmt
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
           content {
-            arn = regex_pattern_set_reference_statement.value.arn
+            arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[stmt.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[stmt.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(stmt.value.arn, null))
 
             dynamic "field_to_match" {
               for_each = lookup(rule.value.statement, "field_to_match", null) != null ? [rule.value.statement.field_to_match] : []
@@ -1282,6 +4554,22 @@ resource "aws_wafv2_web_acl" "default" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
 
                   content {}
+                }
+
+                dynamic "ja3_fingerprint" {
+                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                  content {
+                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                  }
+                }
+
+                dynamic "ja4_fingerprint" {
+                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                  content {
+                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                  }
                 }
 
                 dynamic "single_header" {
@@ -1377,6 +4665,7 @@ resource "aws_wafv2_web_acl" "default" {
 
       statement {
         dynamic "regex_match_statement" {
+          iterator = stmt
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
           content {
@@ -1408,6 +4697,22 @@ resource "aws_wafv2_web_acl" "default" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
 
                   content {}
+                }
+
+                dynamic "ja3_fingerprint" {
+                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                  content {
+                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                  }
+                }
+
+                dynamic "ja4_fingerprint" {
+                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                  content {
+                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                  }
                 }
 
                 dynamic "single_header" {
@@ -1444,6 +4749,1715 @@ resource "aws_wafv2_web_acl" "default" {
               content {
                 priority = text_transformation.value.priority
                 type     = text_transformation.value.type
+              }
+            }
+            dynamic "scope_down_statement" {
+              for_each = lookup(stmt.value, "scope_down_statement", null) != null ? [stmt.value.scope_down_statement] : []
+              content {
+                dynamic "ip_set_reference_statement" {
+                  for_each = scope_down_statement.value.ip_set_reference_statement != null ? [scope_down_statement.value.ip_set_reference_statement] : []
+                  content {
+                    arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                    dynamic "ip_set_forwarded_ip_config" {
+                      for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                      content {
+                        fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                        header_name       = ip_set_forwarded_ip_config.value.header_name
+                        position          = ip_set_forwarded_ip_config.value.position
+                      }
+                    }
+                  }
+                }
+                dynamic "regex_pattern_set_reference_statement" {
+                  for_each = scope_down_statement.value.regex_pattern_set_reference_statement != null ? [scope_down_statement.value.regex_pattern_set_reference_statement] : []
+                  content {
+                    arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                    dynamic "field_to_match" {
+                      for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                      content {
+                        dynamic "all_query_arguments" {
+                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "body" {
+                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "method" {
+                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "query_string" {
+                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "ja3_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "ja4_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "single_header" {
+                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                          content {
+                            name = single_header.value.name
+                          }
+                        }
+
+                        dynamic "single_query_argument" {
+                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                          content {
+                            name = single_query_argument.value.name
+                          }
+                        }
+
+                        dynamic "uri_path" {
+                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                          content {}
+                        }
+                      }
+                    }
+
+                    dynamic "text_transformation" {
+                      for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+                dynamic "label_match_statement" {
+                  for_each = scope_down_statement.value.label_match_statement != null ? [scope_down_statement.value.label_match_statement] : []
+                  content {
+                    scope = label_match_statement.value.scope
+                    key   = label_match_statement.value.key
+                  }
+                }
+                dynamic "size_constraint_statement" {
+                  for_each = scope_down_statement.value.size_constraint_statement != null ? [scope_down_statement.value.size_constraint_statement] : []
+                  content {
+                    comparison_operator = size_constraint_statement.value.comparison_operator
+                    size                = size_constraint_statement.value.size
+
+                    dynamic "field_to_match" {
+                      for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                      content {
+                        dynamic "all_query_arguments" {
+                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "body" {
+                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                          content {
+                            # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                            # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                            # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                            # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                            oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                          }
+                        }
+
+                        dynamic "method" {
+                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "query_string" {
+                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "single_header" {
+                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                          content {
+                            name = single_header.value.name
+                          }
+                        }
+
+                        dynamic "single_query_argument" {
+                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                          content {
+                            name = single_query_argument.value.name
+                          }
+                        }
+
+                        dynamic "uri_path" {
+                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                          content {}
+                        }
+                      }
+                    }
+
+                    dynamic "text_transformation" {
+                      for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+                dynamic "byte_match_statement" {
+                  for_each = scope_down_statement.value.byte_match_statement != null ? [scope_down_statement.value.byte_match_statement] : []
+                  content {
+                    positional_constraint = byte_match_statement.value.positional_constraint
+                    search_string         = byte_match_statement.value.search_string
+
+                    dynamic "field_to_match" {
+                      for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+
+                      content {
+                        dynamic "all_query_arguments" {
+                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "body" {
+                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "method" {
+                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "query_string" {
+                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "ja3_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "ja4_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "single_header" {
+                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                          content {
+                            name = single_header.value.name
+                          }
+                        }
+
+                        dynamic "single_query_argument" {
+                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                          content {
+                            name = single_query_argument.value.name
+                          }
+                        }
+
+                        dynamic "uri_path" {
+                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                          content {}
+                        }
+                      }
+                    }
+
+                    dynamic "text_transformation" {
+                      for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+                dynamic "not_statement" {
+                  for_each = scope_down_statement.value.not_byte_match_statement != null || scope_down_statement.value.not_label_match_statement != null || scope_down_statement.value.not_regex_pattern_set_reference_statement != null || scope_down_statement.value.not_size_constraint_statement != null || scope_down_statement.value.not_ip_set_reference_statement != null ? [1] : []
+                  content {
+                    dynamic "statement" {
+                      for_each = scope_down_statement.value.not_size_constraint_statement != null ? [1] : []
+                      content {
+                        dynamic "size_constraint_statement" {
+                          for_each = scope_down_statement.value.not_size_constraint_statement != null ? [scope_down_statement.value.not_size_constraint_statement] : []
+                          content {
+                            comparison_operator = size_constraint_statement.value.comparison_operator
+                            size                = size_constraint_statement.value.size
+
+                            dynamic "field_to_match" {
+                              for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {
+                                    # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                    # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                    # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                    # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                    oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                  }
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = scope_down_statement.value.not_byte_match_statement != null ? [1] : []
+                      content {
+                        dynamic "byte_match_statement" {
+                          for_each = statement.value.not_byte_match_statement != null ? [statement.value.not_byte_match_statement] : []
+                          content {
+                            positional_constraint = byte_match_statement.value.positional_constraint
+                            search_string         = byte_match_statement.value.search_string
+
+                            dynamic "field_to_match" {
+                              for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = scope_down_statement.value.not_label_match_statement != null ? [1] : []
+                      content {
+                        dynamic "label_match_statement" {
+                          for_each = statement.value.not_label_match_statement != null ? [statement.value.not_label_match_statement] : []
+                          content {
+                            scope = label_match_statement.value.scope
+                            key   = label_match_statement.value.key
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = scope_down_statement.value.not_ip_set_reference_statement != null ? [1] : []
+                      content {
+                        dynamic "ip_set_reference_statement" {
+                          for_each = statement.value.not_ip_set_reference_statement != null ? [statement.value.not_ip_set_reference_statement] : []
+                          content {
+                            arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                            dynamic "ip_set_forwarded_ip_config" {
+                              for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                              content {
+                                fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                header_name       = ip_set_forwarded_ip_config.value.header_name
+                                position          = ip_set_forwarded_ip_config.value.position
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = scope_down_statement.value.not_regex_pattern_set_reference_statement != null ? [1] : []
+                      content {
+                        dynamic "regex_pattern_set_reference_statement" {
+                          for_each = statement.value.not_regex_pattern_set_reference_statement != null ? [statement.value.not_regex_pattern_set_reference_statement] : []
+                          content {
+                            arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                            dynamic "field_to_match" {
+                              for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                // Working Rendering from encoded json
+                dynamic "and_statement" {
+                  for_each = lookup(scope_down_statement.value, "and_statement", null) != null ? [scope_down_statement.value.and_statement] : []
+                  content {
+                    dynamic "statement" {
+                      iterator = nested_statement
+                      for_each = and_statement.value.statements
+                      content {
+                        dynamic "size_constraint_statement" {
+                          for_each = nested_statement.value.type == "size_constraint_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            comparison_operator = size_constraint_statement.value.comparison_operator
+                            size                = size_constraint_statement.value.size
+
+                            dynamic "field_to_match" {
+                              for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {
+                                    # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                    # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                    # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                    # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                    oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                  }
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "byte_match_statement" {
+                          for_each = nested_statement.value.type == "byte_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            positional_constraint = byte_match_statement.value.positional_constraint
+                            search_string         = byte_match_statement.value.search_string
+
+                            dynamic "field_to_match" {
+                              for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "regex_pattern_set_reference_statement" {
+                          for_each = nested_statement.value.type == "regex_pattern_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                            dynamic "field_to_match" {
+                              for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "ip_set_reference_statement" {
+                          for_each = nested_statement.value.type == "ip_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                            dynamic "ip_set_forwarded_ip_config" {
+                              for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                              content {
+                                fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                header_name       = ip_set_forwarded_ip_config.value.header_name
+                                position          = ip_set_forwarded_ip_config.value.position
+                              }
+                            }
+                          }
+                        }
+                        dynamic "label_match_statement" {
+                          for_each = nested_statement.value.type == "label_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            scope = label_match_statement.value.scope
+                            key   = label_match_statement.value.key
+                          }
+                        }
+                        dynamic "not_statement" {
+                          for_each = nested_statement.value.type == "not_byte_match_statement" || nested_statement.value.type == "not_label_match_statement" || nested_statement.value.type == "not_regex_pattern_set_reference_statement" || nested_statement.value.type == "not_size_constraint_statement" || nested_statement.value.type == "not_ip_set_reference_statement" ? [1] : []
+                          content {
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_size_constraint_statement" ? [1] : []
+                              content {
+                                dynamic "size_constraint_statement" {
+                                  for_each = nested_statement.value.type == "not_size_constraint_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    comparison_operator = size_constraint_statement.value.comparison_operator
+                                    size                = size_constraint_statement.value.size
+
+                                    dynamic "field_to_match" {
+                                      for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {
+                                            # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                            # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                            # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                            # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                            oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                          }
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_byte_match_statement" ? [1] : []
+                              content {
+
+                                dynamic "byte_match_statement" {
+                                  for_each = nested_statement.value.type == "not_byte_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    positional_constraint = byte_match_statement.value.positional_constraint
+                                    search_string         = byte_match_statement.value.search_string
+
+                                    dynamic "field_to_match" {
+                                      for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "ja3_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "ja4_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_label_match_statement" ? [1] : []
+                              content {
+                                dynamic "label_match_statement" {
+                                  for_each = nested_statement.value.type == "not_label_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    scope = label_match_statement.value.scope
+                                    key   = label_match_statement.value.key
+                                  }
+                                }
+                              }
+                            }
+
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_ip_set_reference_statement" ? [1] : []
+                              content {
+                                dynamic "ip_set_reference_statement" {
+                                  for_each = nested_statement.value.type == "not_ip_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                                    dynamic "ip_set_forwarded_ip_config" {
+                                      for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                                      content {
+                                        fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                        header_name       = ip_set_forwarded_ip_config.value.header_name
+                                        position          = ip_set_forwarded_ip_config.value.position
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_regex_pattern_set_reference_statement" ? [1] : []
+                              content {
+                                dynamic "regex_pattern_set_reference_statement" {
+                                  for_each = nested_statement.value.type == "not_regex_pattern_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                                    dynamic "field_to_match" {
+                                      for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "ja3_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "ja4_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+
+                  }
+                }
+                dynamic "or_statement" {
+                  for_each = lookup(scope_down_statement.value, "or_statement", null) != null ? [scope_down_statement.value.or_statement] : []
+                  content {
+                    dynamic "statement" {
+                      iterator = nested_statement
+                      for_each = or_statement.value.statements
+                      content {
+                        dynamic "size_constraint_statement" {
+                          for_each = nested_statement.value.type == "size_constraint_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            comparison_operator = size_constraint_statement.value.comparison_operator
+                            size                = size_constraint_statement.value.size
+
+                            dynamic "field_to_match" {
+                              for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {
+                                    # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                    # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                    # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                    # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                    oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                  }
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "byte_match_statement" {
+                          for_each = nested_statement.value.type == "byte_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            positional_constraint = byte_match_statement.value.positional_constraint
+                            search_string         = byte_match_statement.value.search_string
+
+                            dynamic "field_to_match" {
+                              for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "regex_pattern_set_reference_statement" {
+                          for_each = nested_statement.value.type == "regex_pattern_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                            dynamic "field_to_match" {
+                              for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                        dynamic "ip_set_reference_statement" {
+                          for_each = nested_statement.value.type == "ip_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                            dynamic "ip_set_forwarded_ip_config" {
+                              for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                              content {
+                                fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                header_name       = ip_set_forwarded_ip_config.value.header_name
+                                position          = ip_set_forwarded_ip_config.value.position
+                              }
+                            }
+                          }
+                        }
+                        dynamic "label_match_statement" {
+                          for_each = nested_statement.value.type == "label_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                          content {
+                            scope = label_match_statement.value.scope
+                            key   = label_match_statement.value.key
+                          }
+                        }
+                        dynamic "not_statement" {
+                          for_each = nested_statement.value.type == "not_byte_match_statement" || nested_statement.value.type == "not_label_match_statement" || nested_statement.value.type == "not_regex_pattern_set_reference_statement" || nested_statement.value.type == "not_size_constraint_statement" || nested_statement.value.type == "not_ip_set_reference_statement" ? [1] : []
+                          content {
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_size_constraint_statement" ? [1] : []
+                              content {
+                                dynamic "size_constraint_statement" {
+                                  for_each = nested_statement.value.type == "not_size_constraint_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    comparison_operator = size_constraint_statement.value.comparison_operator
+                                    size                = size_constraint_statement.value.size
+
+                                    dynamic "field_to_match" {
+                                      for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {
+                                            # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                            # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                            # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                            # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                            oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                          }
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_byte_match_statement" ? [1] : []
+                              content {
+                                dynamic "byte_match_statement" {
+                                  for_each = nested_statement.value.type == "not_byte_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    positional_constraint = byte_match_statement.value.positional_constraint
+                                    search_string         = byte_match_statement.value.search_string
+
+                                    dynamic "field_to_match" {
+                                      for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "ja3_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "ja4_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_label_match_statement" ? [1] : []
+                              content {
+                                dynamic "label_match_statement" {
+                                  for_each = nested_statement.value.type == "not_label_match_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    scope = label_match_statement.value.scope
+                                    key   = label_match_statement.value.key
+                                  }
+                                }
+                              }
+                            }
+
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_ip_set_reference_statement" ? [1] : []
+                              content {
+                                dynamic "ip_set_reference_statement" {
+                                  for_each = nested_statement.value.type == "not_ip_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                                    dynamic "ip_set_forwarded_ip_config" {
+                                      for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                                      content {
+                                        fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                        header_name       = ip_set_forwarded_ip_config.value.header_name
+                                        position          = ip_set_forwarded_ip_config.value.position
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                            dynamic "statement" {
+                              iterator = nested_not_statement
+                              for_each = nested_statement.value.type != null && nested_statement.value.type == "not_regex_pattern_set_reference_statement" ? [1] : []
+                              content {
+                                dynamic "regex_pattern_set_reference_statement" {
+                                  for_each = nested_statement.value.type == "not_regex_pattern_set_reference_statement" ? [jsondecode(nested_statement.value.statement)] : []
+                                  content {
+                                    arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                                    dynamic "field_to_match" {
+                                      for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                                      content {
+                                        dynamic "all_query_arguments" {
+                                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "body" {
+                                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "method" {
+                                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "query_string" {
+                                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+
+                                        dynamic "ja3_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "ja4_fingerprint" {
+                                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                          content {
+                                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                          }
+                                        }
+
+                                        dynamic "single_header" {
+                                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                          content {
+                                            name = single_header.value.name
+                                          }
+                                        }
+
+                                        dynamic "single_query_argument" {
+                                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                          content {
+                                            name = single_query_argument.value.name
+                                          }
+                                        }
+
+                                        dynamic "uri_path" {
+                                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                          content {}
+                                        }
+                                      }
+                                    }
+
+                                    dynamic "text_transformation" {
+                                      for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                                      content {
+                                        priority = text_transformation.value.priority
+                                        type     = text_transformation.value.type
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
               }
             }
           }
@@ -1671,11 +6685,12 @@ resource "aws_wafv2_web_acl" "default" {
 
       statement {
         dynamic "size_constraint_statement" {
+          iterator = stmt
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
           content {
-            comparison_operator = size_constraint_statement.value.comparison_operator
-            size                = size_constraint_statement.value.size
+            comparison_operator = stmt.value.comparison_operator
+            size                = stmt.value.size
 
             dynamic "field_to_match" {
               for_each = lookup(rule.value.statement, "field_to_match", null) != null ? [rule.value.statement.field_to_match] : []
@@ -1709,6 +6724,22 @@ resource "aws_wafv2_web_acl" "default" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
 
                   content {}
+                }
+
+                dynamic "ja3_fingerprint" {
+                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                  content {
+                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                  }
+                }
+
+                dynamic "ja4_fingerprint" {
+                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                  content {
+                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                  }
                 }
 
                 dynamic "single_header" {
@@ -1808,9 +6839,11 @@ resource "aws_wafv2_web_acl" "default" {
 
       statement {
         dynamic "sqli_match_statement" {
+          iterator = stmt
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
           content {
+            sensitivity_level = lookup(rule.value.statement, "sensitivity_level")
 
             dynamic "field_to_match" {
               for_each = lookup(rule.value.statement, "field_to_match", null) != null ? [rule.value.statement.field_to_match] : []
@@ -1838,6 +6871,22 @@ resource "aws_wafv2_web_acl" "default" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
 
                   content {}
+                }
+
+                dynamic "ja3_fingerprint" {
+                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                  content {
+                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                  }
+                }
+
+                dynamic "ja4_fingerprint" {
+                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                  content {
+                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                  }
                 }
 
                 dynamic "single_header" {
@@ -1937,10 +6986,10 @@ resource "aws_wafv2_web_acl" "default" {
 
       statement {
         dynamic "xss_match_statement" {
+          iterator = stmt
           for_each = lookup(rule.value, "statement", null) != null ? [rule.value.statement] : []
 
           content {
-
             dynamic "field_to_match" {
               for_each = lookup(rule.value.statement, "field_to_match", null) != null ? [rule.value.statement.field_to_match] : []
 
@@ -1967,6 +7016,22 @@ resource "aws_wafv2_web_acl" "default" {
                   for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
 
                   content {}
+                }
+
+                dynamic "ja3_fingerprint" {
+                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                  content {
+                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                  }
+                }
+
+                dynamic "ja4_fingerprint" {
+                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                  content {
+                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                  }
                 }
 
                 dynamic "single_header" {
@@ -2080,46 +7145,1131 @@ resource "aws_wafv2_web_acl" "default" {
       }
 
       statement {
-        and_statement {
-          dynamic "statement" {
-            for_each = rule.value.statements
-            content {
-              dynamic "label_match_statement" {
-                for_each = statement.value.label_match_statement != null ? [statement.value.label_match_statement] : []
-                content {
-                  scope = label_match_statement.value.scope
-                  key   = label_match_statement.value.key
-                }
-              }
-              dynamic "not_statement" {
-                for_each = statement.value.not_byte_match_statement != null ? [1] : []
-                content {
-                  statement {
-                    dynamic "byte_match_statement" {
-                      for_each = statement.value.not_byte_match_statement != null ? [statement.value.not_byte_match_statement] : []
+        dynamic "and_statement" {
+          for_each = rule.value.and_statement != null ? [rule.value.and_statement] : []
+          content {
+            dynamic "statement" {
+              for_each = try(and_statement.value.statements, [])
+              content {
+                dynamic "ip_set_reference_statement" {
+                  for_each = statement.value.ip_set_reference_statement != null ? [statement.value.ip_set_reference_statement] : []
+                  content {
+
+                    arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                    dynamic "ip_set_forwarded_ip_config" {
+                      for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
                       content {
-                        positional_constraint = byte_match_statement.value.positional_constraint
-                        search_string         = byte_match_statement.value.search_string
+                        fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                        header_name       = ip_set_forwarded_ip_config.value.header_name
+                        position          = ip_set_forwarded_ip_config.value.position
+                      }
+                    }
+                  }
+                }
+                dynamic "regex_pattern_set_reference_statement" {
+                  for_each = statement.value.regex_pattern_set_reference_statement != null ? [statement.value.regex_pattern_set_reference_statement] : []
+                  content {
+                    arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
 
-                        field_to_match {
-                          dynamic "uri_path" {
-                            for_each = try(byte_match_statement.value.field_to_match.uri_path, null) != null ? [{}] : []
-                            content {}
-                          }
+                    dynamic "field_to_match" {
+                      for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                      content {
+                        dynamic "all_query_arguments" {
+                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
 
-                          dynamic "single_header" {
-                            for_each = try(byte_match_statement.value.field_to_match.single_header, null) != null ? [byte_match_statement.value.field_to_match.single_header] : []
-                            content {
-                              name = single_header.value.name
-                            }
+                          content {}
+                        }
+
+                        dynamic "body" {
+                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "method" {
+                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "query_string" {
+                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "ja3_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
                           }
                         }
 
-                        dynamic "text_transformation" {
-                          for_each = byte_match_statement.value.text_transformation
+                        dynamic "ja4_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
                           content {
-                            priority = text_transformation.value.priority
-                            type     = text_transformation.value.type
+                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "single_header" {
+                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                          content {
+                            name = single_header.value.name
+                          }
+                        }
+
+                        dynamic "single_query_argument" {
+                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                          content {
+                            name = single_query_argument.value.name
+                          }
+                        }
+
+                        dynamic "uri_path" {
+                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                          content {}
+                        }
+                      }
+                    }
+
+                    dynamic "text_transformation" {
+                      for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+                dynamic "label_match_statement" {
+                  for_each = statement.value.label_match_statement != null ? [statement.value.label_match_statement] : []
+                  content {
+                    scope = label_match_statement.value.scope
+                    key   = label_match_statement.value.key
+                  }
+                }
+                dynamic "size_constraint_statement" {
+                  for_each = statement.value.size_constraint_statement != null ? [statement.value.size_constraint_statement] : []
+                  content {
+                    comparison_operator = size_constraint_statement.value.comparison_operator
+                    size                = size_constraint_statement.value.size
+
+                    dynamic "field_to_match" {
+                      for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                      content {
+                        dynamic "all_query_arguments" {
+                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "body" {
+                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                          content {
+                            # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                            # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                            # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                            # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                            oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                          }
+                        }
+
+                        dynamic "method" {
+                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "query_string" {
+                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "single_header" {
+                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                          content {
+                            name = single_header.value.name
+                          }
+                        }
+
+                        dynamic "single_query_argument" {
+                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                          content {
+                            name = single_query_argument.value.name
+                          }
+                        }
+
+                        dynamic "uri_path" {
+                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                          content {}
+                        }
+                      }
+                    }
+
+                    dynamic "text_transformation" {
+                      for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+                dynamic "byte_match_statement" {
+                  for_each = statement.value.byte_match_statement != null ? [statement.value.byte_match_statement] : []
+                  content {
+                    positional_constraint = byte_match_statement.value.positional_constraint
+                    search_string         = byte_match_statement.value.search_string
+
+                    dynamic "field_to_match" {
+                      for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+
+                      content {
+                        dynamic "all_query_arguments" {
+                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "body" {
+                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "method" {
+                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "query_string" {
+                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "ja3_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "ja4_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "single_header" {
+                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                          content {
+                            name = single_header.value.name
+                          }
+                        }
+
+                        dynamic "single_query_argument" {
+                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                          content {
+                            name = single_query_argument.value.name
+                          }
+                        }
+
+                        dynamic "uri_path" {
+                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                          content {}
+                        }
+                      }
+                    }
+
+                    dynamic "text_transformation" {
+                      for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+                dynamic "not_statement" {
+                  for_each = statement.value.not_byte_match_statement != null || statement.value.not_label_match_statement != null || statement.value.not_regex_pattern_set_reference_statement != null || statement.value.not_size_constraint_statement != null || statement.value.not_ip_set_reference_statement != null ? [1] : []
+                  content {
+                    dynamic "statement" {
+                      for_each = statement.value.not_byte_match_statement != null ? [1] : []
+                      content {
+
+                        dynamic "byte_match_statement" {
+                          for_each = statement.value.not_byte_match_statement != null ? [statement.value.not_byte_match_statement] : []
+                          content {
+                            positional_constraint = byte_match_statement.value.positional_constraint
+                            search_string         = byte_match_statement.value.search_string
+
+                            dynamic "field_to_match" {
+                              for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = statement.value.not_size_constraint_statement != null ? [1] : []
+                      content {
+                        dynamic "size_constraint_statement" {
+                          for_each = statement.value.not_size_constraint_statement != null ? [statement.value.not_size_constraint_statement] : []
+                          content {
+                            comparison_operator = size_constraint_statement.value.comparison_operator
+                            size                = size_constraint_statement.value.size
+
+                            dynamic "field_to_match" {
+                              for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {
+                                    # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                    # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                    # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                    # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                    oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                  }
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = statement.value.not_label_match_statement != null ? [1] : []
+                      content {
+                        dynamic "label_match_statement" {
+                          for_each = statement.value.not_label_match_statement != null ? [statement.value.not_label_match_statement] : []
+                          content {
+                            scope = label_match_statement.value.scope
+                            key   = label_match_statement.value.key
+                          }
+                        }
+                      }
+                    }
+
+                    dynamic "statement" {
+                      for_each = statement.value.not_ip_set_reference_statement != null ? [1] : []
+                      content {
+                        dynamic "ip_set_reference_statement" {
+                          for_each = statement.value.not_ip_set_reference_statement != null ? [statement.value.not_ip_set_reference_statement] : []
+                          content {
+                            arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                            dynamic "ip_set_forwarded_ip_config" {
+                              for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                              content {
+                                fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                header_name       = ip_set_forwarded_ip_config.value.header_name
+                                position          = ip_set_forwarded_ip_config.value.position
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = statement.value.not_regex_pattern_set_reference_statement != null ? [1] : []
+                      content {
+                        dynamic "regex_pattern_set_reference_statement" {
+                          for_each = statement.value.not_regex_pattern_set_reference_statement != null ? [statement.value.not_regex_pattern_set_reference_statement] : []
+                          content {
+                            arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                            dynamic "field_to_match" {
+                              for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        dynamic "or_statement" {
+          for_each = rule.value.or_statement != null ? [rule.value.or_statement] : []
+          content {
+            dynamic "statement" {
+              for_each = try(or_statement.value.statements, [])
+              content {
+                dynamic "ip_set_reference_statement" {
+                  for_each = statement.value.ip_set_reference_statement != null ? [statement.value.ip_set_reference_statement] : []
+                  content {
+
+                    arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                    dynamic "ip_set_forwarded_ip_config" {
+                      for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                      content {
+                        fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                        header_name       = ip_set_forwarded_ip_config.value.header_name
+                        position          = ip_set_forwarded_ip_config.value.position
+                      }
+                    }
+                  }
+                }
+                dynamic "regex_pattern_set_reference_statement" {
+                  for_each = statement.value.regex_pattern_set_reference_statement != null ? [statement.value.regex_pattern_set_reference_statement] : []
+                  content {
+                    arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                    dynamic "field_to_match" {
+                      for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                      content {
+                        dynamic "all_query_arguments" {
+                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "body" {
+                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "method" {
+                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "query_string" {
+                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "ja3_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "ja4_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "single_header" {
+                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                          content {
+                            name = single_header.value.name
+                          }
+                        }
+
+                        dynamic "single_query_argument" {
+                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                          content {
+                            name = single_query_argument.value.name
+                          }
+                        }
+
+                        dynamic "uri_path" {
+                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                          content {}
+                        }
+                      }
+                    }
+
+                    dynamic "text_transformation" {
+                      for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+                dynamic "label_match_statement" {
+                  for_each = statement.value.label_match_statement != null ? [statement.value.label_match_statement] : []
+                  content {
+                    scope = label_match_statement.value.scope
+                    key   = label_match_statement.value.key
+                  }
+                }
+                dynamic "size_constraint_statement" {
+                  for_each = statement.value.size_constraint_statement != null ? [statement.value.size_constraint_statement] : []
+                  content {
+                    comparison_operator = size_constraint_statement.value.comparison_operator
+                    size                = size_constraint_statement.value.size
+
+                    dynamic "field_to_match" {
+                      for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                      content {
+                        dynamic "all_query_arguments" {
+                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "body" {
+                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                          content {
+                            # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                            # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                            # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                            # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                            oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                          }
+                        }
+
+                        dynamic "method" {
+                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "query_string" {
+                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "single_header" {
+                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                          content {
+                            name = single_header.value.name
+                          }
+                        }
+
+                        dynamic "single_query_argument" {
+                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                          content {
+                            name = single_query_argument.value.name
+                          }
+                        }
+
+                        dynamic "uri_path" {
+                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                          content {}
+                        }
+                      }
+                    }
+
+                    dynamic "text_transformation" {
+                      for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+                dynamic "byte_match_statement" {
+                  for_each = statement.value.byte_match_statement != null ? [statement.value.byte_match_statement] : []
+                  content {
+                    positional_constraint = byte_match_statement.value.positional_constraint
+                    search_string         = byte_match_statement.value.search_string
+
+                    dynamic "field_to_match" {
+                      for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+
+                      content {
+                        dynamic "all_query_arguments" {
+                          for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "body" {
+                          for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "method" {
+                          for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "query_string" {
+                          for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                          content {}
+                        }
+
+                        dynamic "ja3_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "ja4_fingerprint" {
+                          for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                          content {
+                            fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                          }
+                        }
+
+                        dynamic "single_header" {
+                          for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                          content {
+                            name = single_header.value.name
+                          }
+                        }
+
+                        dynamic "single_query_argument" {
+                          for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                          content {
+                            name = single_query_argument.value.name
+                          }
+                        }
+
+                        dynamic "uri_path" {
+                          for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                          content {}
+                        }
+                      }
+                    }
+
+                    dynamic "text_transformation" {
+                      for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                      content {
+                        priority = text_transformation.value.priority
+                        type     = text_transformation.value.type
+                      }
+                    }
+                  }
+                }
+                dynamic "not_statement" {
+                  for_each = statement.value.not_byte_match_statement != null || statement.value.not_label_match_statement != null || statement.value.not_regex_pattern_set_reference_statement != null || statement.value.not_size_constraint_statement != null || statement.value.not_ip_set_reference_statement != null ? [1] : []
+                  content {
+                    dynamic "statement" {
+                      for_each = statement.value.not_byte_match_statement != null ? [1] : []
+                      content {
+
+                        dynamic "byte_match_statement" {
+                          for_each = statement.value.not_byte_match_statement != null ? [statement.value.not_byte_match_statement] : []
+                          content {
+                            positional_constraint = byte_match_statement.value.positional_constraint
+                            search_string         = byte_match_statement.value.search_string
+
+                            dynamic "field_to_match" {
+                              for_each = byte_match_statement.value.field_to_match != null ? [byte_match_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = byte_match_statement.value.text_transformation != null ? byte_match_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = statement.value.not_size_constraint_statement != null ? [1] : []
+                      content {
+                        dynamic "size_constraint_statement" {
+                          for_each = statement.value.not_size_constraint_statement != null ? [statement.value.not_size_constraint_statement] : []
+                          content {
+                            comparison_operator = size_constraint_statement.value.comparison_operator
+                            size                = size_constraint_statement.value.size
+
+                            dynamic "field_to_match" {
+                              for_each = size_constraint_statement.value.field_to_match != null ? [size_constraint_statement.value.field_to_match] : []
+
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {
+                                    # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                                    # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                                    # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                                    # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                                    oversize_handling = try(field_to_match.value.body.oversize_handling, "CONTINUE")
+                                  }
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = size_constraint_statement.value.text_transformation != null ? size_constraint_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = statement.value.not_ip_set_reference_statement != null ? [1] : []
+                      content {
+                        dynamic "ip_set_reference_statement" {
+                          for_each = statement.value.not_ip_set_reference_statement != null ? [statement.value.not_ip_set_reference_statement] : []
+                          content {
+                            arn = try(aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_reusable_ip_set[ip_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]], null) != null ? aws_wafv2_ip_set.default[local.ip_rule_to_ip_set[rule.key]].arn : try(ip_set_reference_statement.value.arn, null))
+
+                            dynamic "ip_set_forwarded_ip_config" {
+                              for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) != null ? [ip_set_reference_statement.value.ip_set_forwarded_ip_config] : []
+
+                              content {
+                                fallback_behavior = ip_set_forwarded_ip_config.value.fallback_behavior
+                                header_name       = ip_set_forwarded_ip_config.value.header_name
+                                position          = ip_set_forwarded_ip_config.value.position
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = statement.value.not_label_match_statement != null ? [1] : []
+                      content {
+                        dynamic "label_match_statement" {
+                          for_each = statement.value.not_label_match_statement != null ? [statement.value.not_label_match_statement] : []
+                          content {
+                            scope = label_match_statement.value.scope
+                            key   = label_match_statement.value.key
+                          }
+                        }
+                      }
+                    }
+                    dynamic "statement" {
+                      for_each = statement.value.not_regex_pattern_set_reference_statement != null ? [1] : []
+                      content {
+                        dynamic "regex_pattern_set_reference_statement" {
+                          for_each = statement.value.not_regex_pattern_set_reference_statement != null ? [statement.value.not_regex_pattern_set_reference_statement] : []
+                          content {
+                            arn = try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_reusable_regex_pattern_set[regex_pattern_set_reference_statement.value.set_name]].arn : (try(aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]], null) != null ? aws_wafv2_regex_pattern_set.default[local.regex_rule_to_regex_pattern_set[rule.key]].arn : try(regex_pattern_set_reference_statement.value.arn, null))
+
+                            dynamic "field_to_match" {
+                              for_each = regex_pattern_set_reference_statement.value.field_to_match != null ? [regex_pattern_set_reference_statement.value.field_to_match] : []
+                              content {
+                                dynamic "all_query_arguments" {
+                                  for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "body" {
+                                  for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "method" {
+                                  for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "query_string" {
+                                  for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+
+                                  content {}
+                                }
+
+                                dynamic "ja3_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja3_fingerprint", null) != null ? [field_to_match.value.ja3_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja3_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "ja4_fingerprint" {
+                                  for_each = lookup(field_to_match.value, "ja4_fingerprint", null) != null ? [field_to_match.value.ja4_fingerprint] : []
+
+                                  content {
+                                    fallback_behavior = ja4_fingerprint.value.fallback_behavior
+                                  }
+                                }
+
+                                dynamic "single_header" {
+                                  for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+
+                                  content {
+                                    name = single_header.value.name
+                                  }
+                                }
+
+                                dynamic "single_query_argument" {
+                                  for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+
+                                  content {
+                                    name = single_query_argument.value.name
+                                  }
+                                }
+
+                                dynamic "uri_path" {
+                                  for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+
+                                  content {}
+                                }
+                              }
+                            }
+
+                            dynamic "text_transformation" {
+                              for_each = regex_pattern_set_reference_statement.value.text_transformation != null ? regex_pattern_set_reference_statement.value.text_transformation : []
+
+                              content {
+                                priority = text_transformation.value.priority
+                                type     = text_transformation.value.type
+                              }
+                            }
                           }
                         }
                       }
@@ -2161,4 +8311,3 @@ resource "aws_wafv2_web_acl" "default" {
     }
   }
 }
-
