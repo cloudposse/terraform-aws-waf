@@ -628,7 +628,7 @@ variable "rate_based_statement_rules" {
         }), null)
       })), null)
       scope_down_statement = optional(object({
-        byte_match_statement = object({
+        byte_match_statement = optional(object({
           positional_constraint = string
           search_string         = string
           field_to_match = object({
@@ -644,7 +644,28 @@ variable "rate_based_statement_rules" {
             priority = number
             type     = string
           }))
-        })
+        }), null)
+        or_statement = optional(object({
+          statements = list(object({
+            byte_match_statement = object({
+              positional_constraint = string
+              search_string         = string
+              field_to_match = object({
+                all_query_arguments   = optional(bool)
+                body                  = optional(bool)
+                method                = optional(bool)
+                query_string          = optional(bool)
+                single_header         = optional(object({ name = string }))
+                single_query_argument = optional(object({ name = string }))
+                uri_path              = optional(bool)
+              })
+              text_transformation = list(object({
+                priority = number
+                type     = string
+              }))
+            })
+          }))
+        }), null)
       }), null)
     })
     visibility_config = optional(object({
@@ -704,19 +725,29 @@ variable "rate_based_statement_rules" {
           Possible values: `MATCH`, `NO_MATCH`
         header_name:
           The name of the HTTP header to use for the IP address.
-      byte_match_statement:
-        field_to_match:
-          Part of a web request that you want AWS WAF to inspect.
-        positional_constraint:
-          Area within the portion of a web request that you want AWS WAF to search for search_string.
-          Valid values include the following: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`.
-        search_string:
-          String value that you want AWS WAF to search for.
-          AWS WAF searches only in the part of web requests that you designate for inspection in `field_to_match`.
-          The maximum length of the value is 50 bytes.
-        text_transformation:
-          Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
-          See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
+      scope_down_statement:
+        Narrows the scope of the requests that the rate-based rule counts.
+        Set either `byte_match_statement` for a single condition, or `or_statement` to match any one of several conditions.
+
+        byte_match_statement:
+          field_to_match:
+            Part of a web request that you want AWS WAF to inspect.
+          positional_constraint:
+            Area within the portion of a web request that you want AWS WAF to search for search_string.
+            Valid values include the following: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`.
+          search_string:
+            String value that you want AWS WAF to search for.
+            AWS WAF searches only in the part of web requests that you designate for inspection in `field_to_match`.
+            The maximum length of the value is 50 bytes.
+          text_transformation:
+            Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
+            See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#text-transformation
+
+        or_statement:
+          statements:
+            A list of at least two byte match statements. The scope-down matches when any one of them matches.
+            Each entry takes a `byte_match_statement` with the same schema as above.
+            See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl#or-statement
 
     visibility_config:
       Defines and enables Amazon CloudWatch metrics and web request sample collection.
@@ -728,6 +759,25 @@ variable "rate_based_statement_rules" {
       sampled_requests_enabled:
         Whether AWS WAF should store a sampling of the web requests that match the rules.
   DOC
+
+  validation {
+    condition = var.rate_based_statement_rules == null ? true : alltrue([
+      for rule in var.rate_based_statement_rules :
+      rule.statement.scope_down_statement == null ? true :
+      (rule.statement.scope_down_statement.byte_match_statement != null) != (rule.statement.scope_down_statement.or_statement != null)
+    ])
+    error_message = "Each scope_down_statement must set exactly one of byte_match_statement or or_statement."
+  }
+
+  validation {
+    condition = var.rate_based_statement_rules == null ? true : alltrue([
+      for rule in var.rate_based_statement_rules :
+      rule.statement.scope_down_statement == null ? true :
+      rule.statement.scope_down_statement.or_statement == null ? true :
+      length(rule.statement.scope_down_statement.or_statement.statements) >= 2
+    ])
+    error_message = "A scope_down_statement or_statement requires at least two statements."
+  }
 }
 
 
