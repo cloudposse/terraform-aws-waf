@@ -2102,6 +2102,22 @@ resource "aws_wafv2_web_acl" "default" {
                         search_string         = byte_match_statement.value.search_string
 
                         field_to_match {
+                          dynamic "body" {
+                            for_each = try(byte_match_statement.value.field_to_match.body, null) != null ? [1] : []
+                            content {
+                              # Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits.
+                              # WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes).
+                              # Only the first 8 KB of the request body are forwarded to WAF by the underlying host service
+                              # Valid values include the following: CONTINUE, MATCH, NO_MATCH
+                              oversize_handling = try(byte_match_statement.value.field_to_match.body.oversize_handling, "CONTINUE")
+                            }
+                          }
+
+                          dynamic "method" {
+                            for_each = try(byte_match_statement.value.field_to_match.method, null) != null ? [1] : []
+                            content {}
+                          }
+
                           dynamic "uri_path" {
                             for_each = try(byte_match_statement.value.field_to_match.uri_path, null) != null ? [{}] : []
                             content {}

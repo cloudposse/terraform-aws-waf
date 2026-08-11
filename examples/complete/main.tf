@@ -579,6 +579,36 @@ module "waf" {
                   type     = "LOWERCASE"
                 }]
               })
+            },
+            {
+              type = "not_byte_match_statement"
+              statement = jsonencode({
+                positional_constraint = "CONTAINS"
+                search_string         = "allowedOperation"
+                field_to_match = {
+                  body = {
+                    oversize_handling = "CONTINUE"
+                  }
+                }
+                text_transformation = [{
+                  priority = 1,
+                  type     = "NONE"
+                }]
+              })
+            },
+            {
+              type = "not_byte_match_statement"
+              statement = jsonencode({
+                positional_constraint = "EXACTLY"
+                search_string         = "GET"
+                field_to_match = {
+                  method = {}
+                }
+                text_transformation = [{
+                  priority = 1,
+                  type     = "NONE"
+                }]
+              })
             }
           ]
         }
