@@ -319,6 +319,60 @@ module "waf" {
         sampled_requests_enabled   = false
         metric_name                = "rule-40-metric"
       }
+    },
+    {
+      name     = "rule-41"
+      action   = "block"
+      priority = 41
+
+      statement = {
+        limit              = 1000
+        aggregate_key_type = "IP"
+
+        # Rate limit several paths at once instead of collapsing them into one broad match
+        scope_down_statement = {
+          or_statement = {
+            statements = [
+              {
+                byte_match_statement = {
+                  positional_constraint = "STARTS_WITH"
+                  search_string         = "/api/login"
+                  field_to_match = {
+                    uri_path = true
+                  }
+                  text_transformation = [
+                    {
+                      priority = 0
+                      type     = "NONE"
+                    }
+                  ]
+                }
+              },
+              {
+                byte_match_statement = {
+                  positional_constraint = "STARTS_WITH"
+                  search_string         = "/console/login"
+                  field_to_match = {
+                    uri_path = true
+                  }
+                  text_transformation = [
+                    {
+                      priority = 0
+                      type     = "NONE"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+
+      visibility_config = {
+        cloudwatch_metrics_enabled = false
+        sampled_requests_enabled   = false
+        metric_name                = "rule-41-metric"
+      }
     }
   ]
 
