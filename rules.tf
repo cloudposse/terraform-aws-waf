@@ -107,6 +107,15 @@ locals {
     }
   }
 
+  # Composite AND(host-regex, NOT-geo | label) rules.
+  and_match_statement_rules = local.enabled && var.and_match_statement_rules != null ? {
+    for rule in var.and_match_statement_rules : rule.name => rule
+  } : {}
+
+  not_host_match_statement_rules = local.enabled && var.not_host_match_statement_rules != null ? {
+    for rule in var.not_host_match_statement_rules : rule.name => rule
+  } : {}
+
   default_custom_response_body_key = var.default_block_custom_response_body_key != null ? contains(keys(var.custom_response_body), var.default_block_custom_response_body_key) ? var.default_block_custom_response_body_key : null : null
 }
 
@@ -189,6 +198,16 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []
+
+          content {}
+        }
+        dynamic "captcha" {
+          for_each = rule.value.action == "captcha" ? [1] : []
+
+          content {}
+        }
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
 
           content {}
         }
@@ -1192,6 +1211,79 @@ resource "aws_wafv2_web_acl" "default" {
                     }
                   }
                 }
+
+                # OR of byte_match conditions in the rate scope_down
+                # (e.g. uri_path /api/ OR host -svc.) so one rate rule counts all "API"
+                # traffic against a single per-IP counter. Mutually exclusive with the
+                # single byte_match_statement above (only one of the two is set).
+                dynamic "or_statement" {
+                  for_each = lookup(scope_down_statement.value, "or_byte_match_statements", null) != null ? [scope_down_statement.value.or_byte_match_statements] : []
+
+                  content {
+                    dynamic "statement" {
+                      for_each = or_statement.value
+
+                      content {
+                        byte_match_statement {
+                          positional_constraint = statement.value.positional_constraint
+                          search_string         = statement.value.search_string
+
+                          dynamic "field_to_match" {
+                            for_each = lookup(statement.value, "field_to_match", null) != null ? [statement.value.field_to_match] : []
+
+                            content {
+                              dynamic "all_query_arguments" {
+                                for_each = lookup(field_to_match.value, "all_query_arguments", null) != null ? [1] : []
+                                content {}
+                              }
+                              dynamic "body" {
+                                for_each = lookup(field_to_match.value, "body", null) != null ? [1] : []
+                                content {}
+                              }
+                              dynamic "method" {
+                                for_each = lookup(field_to_match.value, "method", null) != null ? [1] : []
+                                content {}
+                              }
+                              dynamic "query_string" {
+                                for_each = lookup(field_to_match.value, "query_string", null) != null ? [1] : []
+                                content {}
+                              }
+                              dynamic "single_header" {
+                                for_each = lookup(field_to_match.value, "single_header", null) != null ? [field_to_match.value.single_header] : []
+                                content {
+                                  name = single_header.value.name
+                                }
+                              }
+                              dynamic "single_query_argument" {
+                                for_each = lookup(field_to_match.value, "single_query_argument", null) != null ? [field_to_match.value.single_query_argument] : []
+                                content {
+                                  name = single_query_argument.value.name
+                                }
+                              }
+                              dynamic "uri_path" {
+                                for_each = lookup(field_to_match.value, "uri_path", null) != null ? [1] : []
+                                content {}
+                              }
+                            }
+                          }
+
+                          dynamic "text_transformation" {
+                            for_each = lookup(statement.value, "text_transformation", null) != null ? [
+                              for r in statement.value.text_transformation : {
+                                priority = r.priority
+                                type     = r.type
+                            }] : []
+
+                            content {
+                              priority = text_transformation.value.priority
+                              type     = text_transformation.value.type
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
               }
             }
           }
@@ -1371,6 +1463,14 @@ resource "aws_wafv2_web_acl" "default" {
         }
         dynamic "count" {
           for_each = rule.value.action == "count" ? [1] : []
+          content {}
+        }
+        dynamic "captcha" {
+          for_each = rule.value.action == "captcha" ? [1] : []
+          content {}
+        }
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
           content {}
         }
       }
@@ -2172,6 +2272,189 @@ resource "aws_wafv2_web_acl" "default" {
         for_each = lookup(rule.value, "rule_label", null) != null ? rule.value.rule_label : []
         content {
           name = rule_label.value
+        }
+      }
+    }
+  }
+
+  # Composite AND(regex_match Host, <NOT geo_match | label_match>) rules.
+  dynamic "rule" {
+    for_each = local.and_match_statement_rules
+
+    content {
+      name     = rule.value.name
+      priority = rule.value.priority
+
+      action {
+        dynamic "allow" {
+          for_each = rule.value.action == "allow" ? [1] : []
+          content {}
+        }
+        dynamic "block" {
+          for_each = rule.value.action == "block" ? [1] : []
+          content {}
+        }
+        dynamic "count" {
+          for_each = rule.value.action == "count" ? [1] : []
+          content {}
+        }
+        dynamic "captcha" {
+          for_each = rule.value.action == "captcha" ? [1] : []
+          content {}
+        }
+        dynamic "challenge" {
+          for_each = rule.value.action == "challenge" ? [1] : []
+          content {}
+        }
+      }
+
+      statement {
+        and_statement {
+          # First AND leg: a regex_match on either the Host header (host_regex) or the
+          # uri_path (uri_path_regex). Exactly one is set per rule. (and_statement needs
+          # >= 2 legs, satisfied by the not_geo / label_match leg below.)
+          dynamic "statement" {
+            for_each = rule.value.statement.host_regex != null ? [1] : []
+            content {
+              regex_match_statement {
+                regex_string = rule.value.statement.host_regex
+                field_to_match {
+                  single_header {
+                    name = "host"
+                  }
+                }
+                text_transformation {
+                  priority = 0
+                  type     = "LOWERCASE"
+                }
+              }
+            }
+          }
+          dynamic "statement" {
+            for_each = rule.value.statement.uri_path_regex != null ? [1] : []
+            content {
+              regex_match_statement {
+                regex_string = rule.value.statement.uri_path_regex
+                field_to_match {
+                  uri_path {}
+                }
+                text_transformation {
+                  priority = 0
+                  type     = "LOWERCASE"
+                }
+              }
+            }
+          }
+          dynamic "statement" {
+            for_each = rule.value.statement.not_geo_country_codes != null ? [1] : []
+            content {
+              not_statement {
+                statement {
+                  geo_match_statement {
+                    country_codes = rule.value.statement.not_geo_country_codes
+                  }
+                }
+              }
+            }
+          }
+          dynamic "statement" {
+            for_each = rule.value.statement.label_match != null ? [rule.value.statement.label_match] : []
+            content {
+              label_match_statement {
+                scope = statement.value.scope
+                key   = statement.value.key
+              }
+            }
+          }
+        }
+      }
+
+      dynamic "captcha_config" {
+        for_each = rule.value.captcha_config != null ? [rule.value.captcha_config] : []
+        content {
+          immunity_time_property {
+            immunity_time = captcha_config.value.immunity_time_property.immunity_time
+          }
+        }
+      }
+
+      dynamic "rule_label" {
+        for_each = rule.value.rule_label != null ? rule.value.rule_label : []
+        content {
+          name = rule_label.value
+        }
+      }
+
+      dynamic "visibility_config" {
+        for_each = rule.value.visibility_config != null ? [rule.value.visibility_config] : []
+        content {
+          cloudwatch_metrics_enabled = lookup(visibility_config.value, "cloudwatch_metrics_enabled", true)
+          metric_name                = visibility_config.value.metric_name
+          sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
+        }
+      }
+    }
+  }
+
+  # Block (or count) requests whose Host header does NOT match an
+  # allowed-domain regex. not_statement(regex_match host) matches when the regex does
+  # not match — which includes raw-IP-as-host AND absent/empty Host (an absent field is
+  # a non-match, so not() => true). Catches host-less / IP-literal vulnerability scanners
+  # that never carry a real hostname, so they evade every host-scoped rule.
+  dynamic "rule" {
+    for_each = local.not_host_match_statement_rules
+
+    content {
+      name     = rule.value.name
+      priority = rule.value.priority
+
+      action {
+        dynamic "allow" {
+          for_each = rule.value.action == "allow" ? [1] : []
+          content {}
+        }
+        dynamic "block" {
+          for_each = rule.value.action == "block" ? [1] : []
+          content {}
+        }
+        dynamic "count" {
+          for_each = rule.value.action == "count" ? [1] : []
+          content {}
+        }
+      }
+
+      statement {
+        not_statement {
+          statement {
+            regex_match_statement {
+              regex_string = rule.value.statement.host_regex
+              field_to_match {
+                single_header {
+                  name = "host"
+                }
+              }
+              text_transformation {
+                priority = 0
+                type     = "LOWERCASE"
+              }
+            }
+          }
+        }
+      }
+
+      dynamic "rule_label" {
+        for_each = rule.value.rule_label != null ? rule.value.rule_label : []
+        content {
+          name = rule_label.value
+        }
+      }
+
+      dynamic "visibility_config" {
+        for_each = rule.value.visibility_config != null ? [rule.value.visibility_config] : []
+        content {
+          cloudwatch_metrics_enabled = lookup(visibility_config.value, "cloudwatch_metrics_enabled", true)
+          metric_name                = visibility_config.value.metric_name
+          sampled_requests_enabled   = lookup(visibility_config.value, "sampled_requests_enabled", true)
         }
       }
     }
