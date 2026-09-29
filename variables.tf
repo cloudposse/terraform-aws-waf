@@ -628,7 +628,7 @@ variable "rate_based_statement_rules" {
         }), null)
       })), null)
       scope_down_statement = optional(object({
-        byte_match_statement = object({
+        byte_match_statement = optional(object({
           positional_constraint = string
           search_string         = string
           field_to_match = object({
@@ -644,7 +644,28 @@ variable "rate_based_statement_rules" {
             priority = number
             type     = string
           }))
-        })
+        }), null)
+        # OR of multiple byte_match conditions (e.g. uri_path /api/
+        # OR host -svc.) so ONE rate rule counts all "API" traffic against a single
+        # per-IP counter (vs splitting load across two rules). AWS requires >= 2
+        # statements in an or_statement. Mutually exclusive with byte_match_statement.
+        or_byte_match_statements = optional(list(object({
+          positional_constraint = string
+          search_string         = string
+          field_to_match = object({
+            all_query_arguments   = optional(bool)
+            body                  = optional(bool)
+            method                = optional(bool)
+            query_string          = optional(bool)
+            single_header         = optional(object({ name = string }))
+            single_query_argument = optional(object({ name = string }))
+            uri_path              = optional(bool)
+          })
+          text_transformation = list(object({
+            priority = number
+            type     = string
+          }))
+        })), null)
       }), null)
     })
     visibility_config = optional(object({
@@ -1308,4 +1329,65 @@ variable "default_block_custom_response_body_key" {
     Only takes effect if default_action is set to `block`.
   DOC
   nullable    = true
+}
+
+# Purpose-built composite rule.
+variable "and_match_statement_rules" {
+  type = list(object({
+    name     = string
+    priority = number
+    action   = string
+    captcha_config = optional(object({
+      immunity_time_property = object({
+        immunity_time = number
+      })
+    }), null)
+    rule_label = optional(list(string), null)
+    statement = object({
+      host_regex            = optional(string, null)
+      uri_path_regex        = optional(string, null)
+      not_geo_country_codes = optional(list(string), null)
+      label_match = optional(object({
+        scope = string
+        key   = string
+      }), null)
+    })
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+    Composite rule = AND( regex_match(Host host_regex | uri_path uri_path_regex), <NOT geo_match | label_match> ).
+    Scopes an action (e.g. captcha) to a Host AND a geo/label condition without the generic
+    and/or/not plumbing. Express "host AND (foreign OR anonymous)" as two rules: one with
+    not_geo_country_codes, one with label_match.
+  DOC
+}
+
+variable "not_host_match_statement_rules" {
+  type = list(object({
+    name       = string
+    priority   = number
+    action     = string
+    rule_label = optional(list(string), null)
+    statement = object({
+      host_regex = string
+    })
+    visibility_config = optional(object({
+      cloudwatch_metrics_enabled = optional(bool)
+      metric_name                = string
+      sampled_requests_enabled   = optional(bool)
+    }), null)
+  }))
+  default     = null
+  description = <<-DOC
+    Block/count requests whose Host header does NOT match host_regex (a not_statement
+    around a regex_match on the Host header). Matches raw-IP-as-host and absent/empty Host
+    (a missing field is a non-match, so not() => true) — i.e. host-less vulnerability
+    scanners that evade host-scoped rules. Set host_regex to an allowed-domain suffix
+    pattern.
+  DOC
 }
