@@ -128,6 +128,51 @@ resource "aws_wafv2_web_acl" "default" {
   token_domains = var.token_domains
   tags          = module.this.tags
 
+  dynamic "association_config" {
+    for_each = try(length(var.association_config.request_body), 0) > 0 ? [var.association_config] : []
+    content {
+      dynamic "request_body" {
+        for_each = [association_config.value.request_body]
+        content {
+          dynamic "api_gateway" {
+            for_each = try(request_body.value.api_gateway, null) != null ? [request_body.value.api_gateway] : []
+            content {
+              default_size_inspection_limit = api_gateway.value.default_size_inspection_limit
+            }
+          }
+
+          dynamic "app_runner_service" {
+            for_each = try(request_body.value.app_runner_service, null) != null ? [request_body.value.app_runner_service] : []
+            content {
+              default_size_inspection_limit = app_runner_service.value.default_size_inspection_limit
+            }
+          }
+
+          dynamic "cloudfront" {
+            for_each = try(request_body.value.cloudfront, null) != null ? [request_body.value.cloudfront] : []
+            content {
+              default_size_inspection_limit = cloudfront.value.default_size_inspection_limit
+            }
+          }
+
+          dynamic "cognito_user_pool" {
+            for_each = try(request_body.value.cognito_user_pool, null) != null ? [request_body.value.cognito_user_pool] : []
+            content {
+              default_size_inspection_limit = cognito_user_pool.value.default_size_inspection_limit
+            }
+          }
+
+          dynamic "verified_access_instance" {
+            for_each = try(request_body.value.verified_access_instance, null) != null ? [request_body.value.verified_access_instance] : []
+            content {
+              default_size_inspection_limit = verified_access_instance.value.default_size_inspection_limit
+            }
+          }
+        }
+      }
+    }
+  }
+
   default_action {
     dynamic "allow" {
       for_each = var.default_action == "allow" ? [true] : []

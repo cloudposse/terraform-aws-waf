@@ -50,6 +50,39 @@ variable "scope" {
   }
 }
 
+variable "association_config" {
+  type = object({
+    request_body = map(object({
+      default_size_inspection_limit = string
+    }))
+  })
+  default     = null
+  nullable    = true
+  description = <<-DOC
+    Optional request body inspection limits for protected resource types.
+    request_body keys: api_gateway, app_runner_service, cloudfront, cognito_user_pool, verified_access_instance.
+    Each configured resource type requires default_size_inspection_limit: KB_16, KB_32, KB_48, or KB_64.
+    Null or an empty request_body map omits association_config and preserves service defaults.
+    Inspection beyond 16 KB incurs additional AWS WAF charges. Application Load Balancer has a fixed 8 KB limit.
+  DOC
+
+  validation {
+    condition = var.association_config == null ? true : try(alltrue([
+      for resource_type in keys(var.association_config.request_body) :
+      contains(["api_gateway", "app_runner_service", "cloudfront", "cognito_user_pool", "verified_access_instance"], resource_type)
+    ]), false)
+    error_message = "request_body must be a non-null map with only api_gateway, app_runner_service, cloudfront, cognito_user_pool, or verified_access_instance keys."
+  }
+
+  validation {
+    condition = var.association_config == null ? true : try(alltrue([
+      for config in values(var.association_config.request_body) :
+      contains(["KB_16", "KB_32", "KB_48", "KB_64"], config.default_size_inspection_limit)
+    ]), false)
+    error_message = "Each request_body entry must set default_size_inspection_limit to KB_16, KB_32, KB_48, or KB_64."
+  }
+}
+
 variable "visibility_config" {
   type = object({
     cloudwatch_metrics_enabled = bool
